@@ -11,6 +11,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { useState } from 'react';
+import { ShareButton } from './ShareButton';
 
 const navLinks = [
   { href: '/products', label: 'جميع المنتجات' },
@@ -45,7 +46,8 @@ export function Header() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <ShareButton />
           {user ? (
             <Button asChild variant="ghost" size="icon">
               <Link href="/account">
