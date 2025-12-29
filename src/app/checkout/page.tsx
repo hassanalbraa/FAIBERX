@@ -25,8 +25,8 @@ const formSchema = z.object({
   lastName: z.string().min(1, "الاسم الأخير مطلوب"),
   address: z.string().min(1, "العنوان مطلوب"),
   city: z.string().min(1, "المدينة مطلوبة"),
-  zip: z.string().min(1, "الرمز البريدي مطلوب"),
   country: z.string().min(1, "الدولة مطلوبة"),
+  whatsappNumber: z.string().min(10, "رقم الواتساب غير صالح ويبدو قصيراً جداً").regex(/^\+\d+$/, "يجب أن يبدأ الرقم بـ + متبوعًا بمفتاح الدولة والرقم."),
   cardName: z.string().min(1, "الاسم على البطاقة مطلوب"),
   cardNumber: z.string().regex(/^\d{16}$/, "يجب أن يتكون رقم البطاقة من 16 رقمًا"),
   expiryDate: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "يجب أن يكون تاريخ انتهاء الصلاحية بتنسيق MM/YY"),
@@ -46,8 +46,8 @@ export default function CheckoutPage() {
       lastName: "",
       address: "",
       city: "",
-      zip: "",
       country: "",
+      whatsappNumber: "",
       cardName: "",
       cardNumber: "",
       expiryDate: "",
@@ -135,15 +135,19 @@ export default function CheckoutPage() {
                     <FormItem><FormLabel>العنوان</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                   )}/>
                   <div className="flex gap-4">
-                    <FormField control={form.control} name="city" render={({ field }) => (
+                     <FormField control={form.control} name="city" render={({ field }) => (
                       <FormItem className="flex-1"><FormLabel>المدينة</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
-                    <FormField control={form.control} name="zip" render={({ field }) => (
-                      <FormItem className="w-1/3"><FormLabel>الرمز البريدي</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                     <FormField control={form.control} name="country" render={({ field }) => (
+                      <FormItem className="flex-1"><FormLabel>الدولة</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
                   </div>
-                   <FormField control={form.control} name="country" render={({ field }) => (
-                      <FormItem><FormLabel>الدولة</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                   <FormField control={form.control} name="whatsappNumber" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>رقم واتساب (مع مفتاح الدولة)</FormLabel>
+                        <FormControl><Input placeholder="+249912345678" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}/>
                 </CardContent>
               </Card>
@@ -179,3 +183,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    
