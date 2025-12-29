@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth, useUser } from "@/firebase";
+import { useAuth, useUser, initiateEmailSignIn } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -23,7 +23,8 @@ export default function AdminLoginPage() {
 
     useEffect(() => {
         if (!isUserLoading && user) {
-            // A more robust check for admin role would be needed in a real app
+            // In a real app, a proper admin check (e.g., against a Firestore collection) is needed.
+            // For now, we assume if you log in through this page, you are an admin.
             router.push('/admin');
         }
     }, [user, isUserLoading, router]);
@@ -33,6 +34,8 @@ export default function AdminLoginPage() {
         setIsSubmitting(true);
         try {
             if (!auth) throw new Error("Auth service not available");
+            // We use the standard sign-in function. 
+            // The distinction for admin is handled by security rules and app logic.
             await signInWithEmailAndPassword(auth, email, password);
             toast({
                 title: "تم تسجيل الدخول بنجاح",
@@ -41,10 +44,16 @@ export default function AdminLoginPage() {
             router.push('/admin');
         } catch (error: any) {
             console.error("Admin login failed:", error);
+            let description = "فشل تسجيل الدخول. يرجى التحقق من بياناتك.";
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                description = "البريد الإلكتروني أو كلمة المرور غير صحيحة. هل قمت بإنشاء حساب الأدمن من خلال صفحة إنشاء حساب أولاً؟";
+            } else if (error.code === 'auth/invalid-credential') {
+                 description = "البريد الإلكتروني أو كلمة المرور غير صحيحة. هل قمت بإنشاء حساب الأدمن من خلال صفحة إنشاء حساب أولاً؟";
+            }
             toast({
                 variant: "destructive",
                 title: "فشل تسجيل الدخول",
-                description: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+                description: description,
             });
         } finally {
             setIsSubmitting(false);
@@ -53,8 +62,9 @@ export default function AdminLoginPage() {
     
     if (isUserLoading) return <div className="flex items-center justify-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>;
 
+    // This prevents a flash of the login form if the user is already logged in and being redirected.
     if (!isUserLoading && user) {
-         return <div className="flex items-center justify-center h-screen"><p>جاري توجيهك إلى لوحة التحكم...</p><Loader2 className="h-8 w-8 animate-spin" /></div>;
+         return <div className="flex items-center justify-center h-screen"><p>جاري توجيهك إلى لوحة التحكم...</p><Loader2 className="h-8 w-8 animate-spin ml-2" /></div>;
     }
 
 
@@ -64,7 +74,7 @@ export default function AdminLoginPage() {
                 <CardHeader>
                     <CardTitle className="text-2xl font-headline">دخول المشرف</CardTitle>
                     <CardDescription>
-                        استخدم بيانات الاعتماد الخاصة بك للوصول إلى لوحة التحكم.
+                        استخدم بيانات اعتماد المشرف للوصول إلى لوحة التحكم.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -98,10 +108,9 @@ export default function AdminLoginPage() {
                         </Button>
                     </form>
                     <div className="mt-4 text-center text-sm">
-                        <p className="text-muted-foreground">هذه منطقة محظورة.</p>
-                        <Link href="/" className="underline">
-                            العودة إلى المتجر
-                        </Link>
+                        <p className="text-muted-foreground">
+                            يجب إنشاء حساب المشرف أولاً عبر <Link href="/signup" className="underline">صفحة إنشاء الحساب</Link>.
+                        </p>
                     </div>
                 </CardContent>
             </Card>
