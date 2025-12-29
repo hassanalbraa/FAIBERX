@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
-import { ListOrdered, MapPin, User, LogOut, Loader2 } from "lucide-react"
+import { ListOrdered, MapPin, User, LogOut, Loader2, Shield } from "lucide-react"
 import { useUser } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,8 @@ import { useEffect } from "react";
 export default function AccountPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+
+  const isAdmin = user?.email === 'admin@example.com';
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -50,6 +52,11 @@ export default function AccountPage() {
                             <Button variant="ghost" className="justify-start bg-secondary" asChild>
                                 <Link href="/account"><User className="ml-2 h-4 w-4" />الملف الشخصي</Link>
                             </Button>
+                             {isAdmin && (
+                                <Button variant="ghost" className="justify-start" asChild>
+                                    <Link href="/admin"><Shield className="ml-2 h-4 w-4" />لوحة التحكم</Link>
+                                </Button>
+                            )}
                             <Button variant="ghost" className="justify-start" asChild>
                                 <Link href="#"><ListOrdered className="ml-2 h-4 w-4" />سجل الطلبات</Link>
                             </Button>
