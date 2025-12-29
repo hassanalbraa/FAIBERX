@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ListOrdered, ShoppingBag } from 'lucide-react';
 import { collection, query, where, orderBy } from 'firebase/firestore';
-import type { Order, OrderStatus } from '@/lib/orders';
+import type { Order } from '@/lib/orders';
+import { OrderStatus } from '@/lib/orders';
 
 
 export default function OrderHistoryPage() {
