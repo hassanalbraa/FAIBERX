@@ -1,6 +1,6 @@
 'use client';
 
-import { notFound, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { mockOrders as initialOrders, OrderStatus } from "@/lib/orders";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { OrderTracker } from "@/components/OrderTracker";
@@ -8,9 +8,10 @@ import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/firebase";
 import { Button } from "@/components/ui/button";
-import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical } from "lucide-react";
+import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,26 +44,35 @@ export default function OrderTrackingPage({ params }: { params: { id: string } }
     }
 
     if (!order) {
-        // In a real app, you might show a generic "Order not found" page
-        // For this mock, we'll just show the first order if ID doesn't match
-        const fallbackOrder = orders[0];
-        if (!fallbackOrder) notFound();
-        return <OrderDetails order={fallbackOrder} isFallback={true} requestedId={params.id} isAdmin={isAdmin} onStatusChange={handleStatusChange} />;
+        return (
+            <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
+                 <SearchX className="h-24 w-24 text-muted-foreground mb-4" />
+                <h1 className="font-headline text-4xl font-bold">لم يتم العثور على الطلب</h1>
+                <p className="text-muted-foreground mt-2">عذرًا، لم نتمكن من العثور على الطلب رقم #{params.id}.</p>
+                <p className="text-muted-foreground">قد يكون الرقم غير صحيح أو تم حذف الطلب.</p>
+                <div className="flex gap-4 mt-6">
+                    <Button asChild>
+                        <Link href="/account/orders">العودة إلى سجل الطلبات</Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                        <Link href="/">العودة إلى الصفحة الرئيسية</Link>
+                    </Button>
+                </div>
+            </div>
+        );
     }
 
     return <OrderDetails order={order} isAdmin={isAdmin} onStatusChange={handleStatusChange} />;
 }
 
-function OrderDetails({ order, isFallback = false, requestedId, isAdmin, onStatusChange }: { order: any; isFallback?: boolean; requestedId?: string; isAdmin: boolean; onStatusChange: (id: string, status: OrderStatus) => void }) {
-    const displayId = isFallback ? requestedId : order.id;
+function OrderDetails({ order, isAdmin, onStatusChange }: { order: any; isAdmin: boolean; onStatusChange: (id: string, status: OrderStatus) => void }) {
 
     return (
         <div className="container mx-auto px-4 py-8 md:py-12">
             <div className="flex justify-between items-start mb-8">
                 <div>
                     <h1 className="font-headline text-4xl font-bold">تفاصيل الطلب</h1>
-                    <p className="text-muted-foreground">تتبع الطلب #{displayId}</p>
-                    {isFallback && <p className="text-sm text-destructive mt-2">تعذر العثور على الطلب #{displayId}. يتم عرض طلب نموذجي بدلاً من ذلك.</p>}
+                    <p className="text-muted-foreground">تتبع الطلب #{order.id}</p>
                 </div>
                  {isAdmin && (
                      <DropdownMenu>
@@ -143,9 +153,9 @@ function OrderDetails({ order, isFallback = false, requestedId, isAdmin, onStatu
                                         <div>
                                             <p className="font-semibold">{item.product.name}</p>
                                             <p className="text-sm text-muted-foreground">الكمية: {item.quantity}</p>
-                                            <p className="text-sm text-muted-foreground">السعر: {item.price.toFixed(2)} جنيه</p>
+                                            <p className="text-sm text-muted-foreground">السعر: {item.price.toFixed(2)} SDG</p>
                                         </div>
-                                        <p className="mr-auto font-semibold">{(item.price * item.quantity).toFixed(2)} جنيه</p>
+                                        <p className="mr-auto font-semibold">{(item.price * item.quantity).toFixed(2)} SDG</p>
                                     </div>
                                 ))}
                             </div>
@@ -172,9 +182,9 @@ function OrderDetails({ order, isFallback = false, requestedId, isAdmin, onStatu
                             <div>
                                 <h3 className="font-semibold mb-1">ملخص الطلب</h3>
                                 <div className="text-sm space-y-1">
-                                    <div className="flex justify-between"><span>المجموع الفرعي:</span> <span>{order.total.toFixed(2)} جنيه</span></div>
-                                    <div className="flex justify-between"><span>الشحن:</span> <span>0.00 جنيه</span></div>
-                                    <div className="flex justify-between font-bold"><span>الإجمالي:</span> <span>{order.total.toFixed(2)} جنيه</span></div>
+                                    <div className="flex justify-between"><span>المجموع الفرعي:</span> <span>{order.total.toFixed(2)} SDG</span></div>
+                                    <div className="flex justify-between"><span>الشحن:</span> <span>0.00 SDG</span></div>
+                                    <div className="flex justify-between font-bold text-lg"><span>الإجمالي:</span> <span>{order.total.toFixed(2)} SDG</span></div>
                                 </div>
                             </div>
                         </CardContent>

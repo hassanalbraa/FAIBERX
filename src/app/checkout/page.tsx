@@ -95,14 +95,14 @@ export default function CheckoutPage() {
                         <p className="text-sm text-muted-foreground">الكمية: {item.quantity}</p>
                       </div>
                     </div>
-                    <p className="font-semibold">{(item.product.price * item.quantity).toFixed(2)} جنيه</p>
+                    <p className="font-semibold">{(item.product.price * item.quantity).toFixed(2)} SDG</p>
                   </div>
                 ))}
               </div>
               <div className="border-t mt-4 pt-4 space-y-2">
-                <div className="flex justify-between"><span>المجموع الفرعي</span><span>{cartTotal.toFixed(2)} جنيه</span></div>
+                <div className="flex justify-between"><span>المجموع الفرعي</span><span>{cartTotal.toFixed(2)} SDG</span></div>
                 <div className="flex justify-between"><span>الشحن</span><span>مجاني</span></div>
-                <div className="flex justify-between font-bold text-lg"><span>الإجمالي</span><span>{cartTotal.toFixed(2)} جنيه</span></div>
+                <div className="flex justify-between font-bold text-lg"><span>الإجمالي</span><span>{cartTotal.toFixed(2)} SDG</span></div>
               </div>
             </CardContent>
           </Card>

@@ -37,7 +37,8 @@ export function ProductList({ products }: ProductListProps) {
         if (!firestore) return;
         if (confirm(`هل أنت متأكد أنك تريد حذف المنتج "${productName}"؟`)) {
             const productRef = doc(firestore, 'products', productId);
-            deleteDocumentNonBlocking(productRef);
+            // This function is non-blocking and will update the UI through the real-time listener.
+            deleteDocumentNonBlocking(productRef); 
             toast({
                 title: "تم حذف المنتج",
                 description: `تم حذف "${productName}" بنجاح.`
@@ -92,7 +93,7 @@ export function ProductList({ products }: ProductListProps) {
             <TableCell>
               <Badge variant="outline">{getCategoryArabicName(product.category)}</Badge>
             </TableCell>
-            <TableCell className="hidden md:table-cell">{product.price.toFixed(2)} جنيه</TableCell>
+            <TableCell className="hidden md:table-cell">{product.price.toFixed(2)} SDG</TableCell>
             <TableCell className="hidden md:table-cell">{product.stock}</TableCell>
             <TableCell>
                <DropdownMenu>

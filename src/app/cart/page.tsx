@@ -48,7 +48,7 @@ export default function CartPage() {
                       <Link href={`/products/${item.product.id}`} className="font-semibold hover:underline">
                         {item.product.name}
                       </Link>
-                      <p className="text-sm text-muted-foreground">{item.product.price.toFixed(2)} جنيه</p>
+                      <p className="text-sm text-muted-foreground">{item.product.price.toFixed(2)} SDG</p>
                     </div>
                      <div className="flex items-center border rounded-md w-fit mt-2">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.product.id, item.quantity - 1)}>
@@ -61,7 +61,7 @@ export default function CartPage() {
                     </div>
                   </div>
                   <div className="flex flex-col justify-between items-end">
-                     <p className="font-bold text-lg">{(item.product.price * item.quantity).toFixed(2)} جنيه</p>
+                     <p className="font-bold text-lg">{(item.product.price * item.quantity).toFixed(2)} SDG</p>
                      <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.product.id)} className="text-muted-foreground hover:text-destructive">
                        <Trash2 className="h-4 w-4" />
                      </Button>
@@ -79,7 +79,7 @@ export default function CartPage() {
                 <CardContent className="space-y-4">
                     <div className="flex justify-between">
                         <span>المجموع الفرعي</span>
-                        <span className="font-semibold">{cartTotal.toFixed(2)} جنيه</span>
+                        <span className="font-semibold">{cartTotal.toFixed(2)} SDG</span>
                     </div>
                     <div className="flex justify-between">
                         <span>الشحن</span>
@@ -87,7 +87,7 @@ export default function CartPage() {
                     </div>
                      <div className="flex justify-between text-lg font-bold border-t pt-4">
                         <span>الإجمالي</span>
-                        <span>{cartTotal.toFixed(2)} جنيه</span>
+                        <span>{cartTotal.toFixed(2)} SDG</span>
                     </div>
                     <Button asChild size="lg" className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
                         <Link href="/checkout">الانتقال إلى الدفع</Link>

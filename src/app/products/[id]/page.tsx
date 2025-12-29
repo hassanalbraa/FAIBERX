@@ -84,7 +84,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         <div>
           <span className="text-sm text-muted-foreground font-semibold tracking-widest uppercase">{getCategoryArabicName(product.category)}</span>
           <h1 className="font-headline text-3xl md:text-5xl font-bold mt-2">{product.name}</h1>
-          <p className="text-3xl font-bold mt-4">{product.price.toFixed(2)} جنيه</p>
+          <p className="text-3xl font-bold mt-4">{product.price.toFixed(2)} SDG</p>
           <p className="mt-6 text-muted-foreground leading-relaxed">{product.description}</p>
           
           <div className="mt-8 flex items-center gap-4">

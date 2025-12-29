@@ -46,7 +46,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </h3>
         <p className="text-muted-foreground text-sm">{getCategoryArabicName(product.category)}</p>
         <div className="flex justify-between items-center mt-4">
-          <p className="font-bold text-lg">{product.price.toFixed(2)} جنيه</p>
+          <p className="font-bold text-lg">{product.price.toFixed(2)} SDG</p>
           <Button size="icon" variant="outline" onClick={() => addToCart(product, 1)} aria-label={`أضف ${product.name} إلى السلة`}>
             <ShoppingCart className="h-4 w-4" />
           </Button>
