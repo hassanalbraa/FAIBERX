@@ -16,10 +16,12 @@ export function ShareButton({ variant = "ghost", size = "icon", className, ...pr
   const { toast } = useToast();
 
   const handleShare = async () => {
+    if (typeof window === 'undefined') return;
+
     const shareData = {
       title: document.title,
       text: `ألق نظرة على هذا الموقع: ${document.title}`,
-      url: window.location.origin, // Use origin to share the base URL
+      url: window.location.href, // Corrected from .origin to .href
     };
 
     try {
