@@ -20,8 +20,6 @@ export function Footer() {
             <h3 className="font-semibold mb-4">تسوق</h3>
             <ul className="space-y-2">
               <li><Link href="/products" className="text-sm text-muted-foreground hover:text-foreground">جميع المنتجات</Link></li>
-              <li><Link href="/products?category=Tops" className="text-sm text-muted-foreground hover:text-foreground">بلوزات</Link></li>
-              <li><Link href="/products?category=Dresses" className="text-sm text-muted-foreground hover:text-foreground">فساتين</Link></li>
               <li><Link href="/products?category=Outerwear" className="text-sm text-muted-foreground hover:text-foreground">ملابس خارجية</Link></li>
             </ul>
           </div>
