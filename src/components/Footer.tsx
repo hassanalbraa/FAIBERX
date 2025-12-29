@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Shirt, Instagram, Twitter, Facebook } from 'lucide-react';
+import { Shirt, Palette, Twitter, Facebook } from 'lucide-react';
 import { Button } from './ui/button';
 import { ShareButton } from './ShareButton';
 
@@ -37,9 +37,9 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">تابعنا</h3>
             <div className="flex space-x-4">
-              <Button variant="ghost" size="icon" asChild>
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
-                  <Instagram className="h-5 w-5" />
+               <Button variant="ghost" size="icon" asChild>
+                <a href="#" target="_blank" rel="noopener noreferrer">
+                  <Palette className="h-5 w-5" />
                 </a>
               </Button>
               <Button variant="ghost" size="icon" asChild>
@@ -56,7 +56,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} FiberX. جميع الحقوق محفوظة.</p>
+          <p className="text-sm text-muted-foreground">&copy; 2026 FiberX. جميع الحقوق محفوظة.</p>
           <div className="flex space-x-4 mt-4 md:mt-0">
             <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">شروط الخدمة</Link>
             <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">سياسة الخصوصية</Link>
