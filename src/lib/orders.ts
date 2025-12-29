@@ -11,6 +11,8 @@ export type OrderStatus = 'Order Placed' | 'Processing' | 'Shipped' | 'Out for D
 export interface Order {
     id: string;
     date: string;
+    subTotal: number;
+    shippingCost: number;
     total: number;
     status: OrderStatus;
     items: OrderItem[];
@@ -28,7 +30,9 @@ export const mockOrders: Order[] = [
     {
         id: "TOC12345",
         date: "2024-05-20T14:30:00Z",
-        total: 430.00,
+        subTotal: 430.00,
+        shippingCost: 20.00,
+        total: 450.00,
         status: "Out for Delivery",
         items: [
             { product: products[0], quantity: 1, price: 180.00 },
@@ -46,6 +50,8 @@ export const mockOrders: Order[] = [
     {
         id: "TOC67890",
         date: "2024-04-15T10:00:00Z",
+        subTotal: 450.00,
+        shippingCost: 0.00,
         total: 450.00,
         status: "Delivered",
         items: [

@@ -82,10 +82,10 @@ export default function CartPage() {
                     </div>
                     <div className="flex justify-between">
                         <span>الشحن</span>
-                        <span className="font-semibold">مجاني</span>
+                        <span className="font-semibold">تُحسب عند الدفع</span>
                     </div>
                      <div className="flex justify-between text-lg font-bold border-t pt-4">
-                        <span>الإجمالي</span>
+                        <span>الإجمالي (مبدئي)</span>
                         <span>{cartTotal.toFixed(2)} SDG</span>
                     </div>
                     <Button asChild size="lg" className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90">

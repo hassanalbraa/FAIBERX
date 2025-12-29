@@ -182,8 +182,8 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: any; isAdmin:
                             <div>
                                 <h3 className="font-semibold mb-1">ملخص الطلب</h3>
                                 <div className="text-sm space-y-1">
-                                    <div className="flex justify-between"><span>المجموع الفرعي:</span> <span>{order.total.toFixed(2)} SDG</span></div>
-                                    <div className="flex justify-between"><span>الشحن:</span> <span>0.00 SDG</span></div>
+                                    <div className="flex justify-between"><span>المجموع الفرعي:</span> <span>{order.subTotal.toFixed(2)} SDG</span></div>
+                                    <div className="flex justify-between"><span>الشحن:</span> <span>{order.shippingCost.toFixed(2)} SDG</span></div>
                                     <div className="flex justify-between font-bold text-lg"><span>الإجمالي:</span> <span>{order.total.toFixed(2)} SDG</span></div>
                                 </div>
                             </div>

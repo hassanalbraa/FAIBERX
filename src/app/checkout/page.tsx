@@ -101,7 +101,7 @@ export default function CheckoutPage() {
               </div>
               <div className="border-t mt-4 pt-4 space-y-2">
                 <div className="flex justify-between"><span>المجموع الفرعي</span><span>{cartTotal.toFixed(2)} SDG</span></div>
-                <div className="flex justify-between"><span>الشحن</span><span>مجاني</span></div>
+                <div className="flex justify-between"><span>الشحن</span><span>حسب المكان</span></div>
                 <div className="flex justify-between font-bold text-lg"><span>الإجمالي</span><span>{cartTotal.toFixed(2)} SDG</span></div>
               </div>
             </CardContent>
