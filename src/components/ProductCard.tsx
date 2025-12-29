@@ -7,6 +7,7 @@ import { Button } from './ui/button';
 import { useCart } from '@/context/CartContext';
 import { ShoppingCart } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
+import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -24,29 +25,36 @@ export function ProductCard({ product }: ProductCardProps) {
   }
 
   return (
-    <div className="group relative transition-all duration-300 hover:shadow-xl rounded-lg overflow-hidden border">
-      <Link href={`/products/${product.id}`}>
-        <div className="aspect-[3/4] overflow-hidden">
-           <Image
+    <div className="group relative overflow-hidden rounded-lg border shadow-sm transition-shadow duration-300 hover:shadow-lg">
+      <div className="relative aspect-[3/4] overflow-hidden">
+        <Link href={`/products/${product.id}`}>
+          <Image
             src={product.image}
             alt={product.name}
             width={600}
             height={800}
-            className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+            className="object-cover w-full h-full transition-transform duration-500 ease-in-out group-hover:scale-105"
           />
-        </div>
-      </Link>
-      <div className="p-4 bg-card">
-        <h3 className="font-semibold text-lg truncate">
-          <Link href={`/products/${product.id}`}>{product.name}</Link>
-        </h3>
-        <p className="text-muted-foreground text-sm">{getCategoryArabicName(product.category)}</p>
-        <div className="flex justify-between items-center mt-4">
-          <p className="font-bold text-lg">{product.price.toFixed(2)} SDG</p>
-          <Button size="icon" variant="outline" onClick={() => addToCart(product, 1)} aria-label={`أضف ${product.name} إلى السلة`}>
-            <ShoppingCart className="h-4 w-4" />
+        </Link>
+        <div className="absolute bottom-0 left-0 right-0 p-2 transition-transform duration-300 ease-in-out translate-y-full group-hover:translate-y-0">
+          <Button 
+            className="w-full"
+            onClick={() => addToCart(product, 1)} 
+            aria-label={`أضف ${product.name} إلى السلة`}
+          >
+            <ShoppingCart className="ml-2 h-4 w-4" />
+            أضف إلى السلة
           </Button>
         </div>
+      </div>
+      <div className="p-4 bg-card">
+        <p className="text-sm text-muted-foreground">{getCategoryArabicName(product.category)}</p>
+        <h3 className="font-semibold text-base truncate mt-1">
+          <Link href={`/products/${product.id}`} className="hover:underline">
+            {product.name}
+          </Link>
+        </h3>
+        <p className="font-bold text-lg mt-2">{product.price.toFixed(2)} SDG</p>
       </div>
     </div>
   );
