@@ -12,15 +12,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input }s from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Banknote, Upload, FileText } from "lucide-react";
-import { useState, useRef } from "react";
+import { Banknote } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string().email("بريد إلكتروني غير صالح"),
@@ -30,14 +29,13 @@ const formSchema = z.object({
   city: z.string().min(1, "المدينة مطلوبة"),
   country: z.string().min(1, "الدولة مطلوبة"),
   whatsappNumber: z.string().min(10, "رقم الواتساب غير صالح ويبدو قصيراً جداً").regex(/^\+?\d{10,}$/, "يجب أن يبدأ الرقم بـ + متبوعًا بمفتاح الدولة أو أن يكون رقمًا محليًا صالحًا."),
+  transactionId: z.string().min(4, "رقم العملية مطلوب ويبدو قصيراً جداً"),
 });
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const router = useRouter();
   const { toast } = useToast();
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,35 +45,14 @@ export default function CheckoutPage() {
       lastName: "",
       address: "",
       city: "",
-      country: "Sudan", // Default country
-      whatsappNumber: "+249", // Default country code
+      country: "Sudan",
+      whatsappNumber: "+249",
+      transactionId: "",
     },
   });
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setReceiptFile(file);
-      toast({
-        title: "تم اختيار الإشعار",
-        description: `تم اختيار الملف: ${file.name}`,
-      });
-    }
-  };
-
   function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!receiptFile) {
-        toast({
-            variant: "destructive",
-            title: "لم يتم إرفاق الإشعار",
-            description: "يرجى إرفاق إشعار التحويل البنكي للمتابعة.",
-        });
-        return;
-    }
-    
     console.log("Mock order placed:", values);
-    console.log("Receipt file:", receiptFile.name);
-    // In a real app, you would upload the receiptFile here.
 
     toast({
         title: "تم استلام الطلب!",
@@ -83,6 +60,7 @@ export default function CheckoutPage() {
     });
     const mockOrderId = "TOC" + Math.floor(Math.random() * 90000) + 10000;
     clearCart();
+    // In a real app, we would pass the transactionId to the confirmation page
     router.push(`/orders/${mockOrderId}`);
   }
 
@@ -175,7 +153,7 @@ export default function CheckoutPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>تفاصيل الدفع</CardTitle>
-                   <CardDescription>أكمل الدفع عبر التحويل البنكي ثم أرفق إشعار التحويل.</CardDescription>
+                   <CardDescription>أكمل الدفع عبر التحويل البنكي ثم أدخل رقم العملية.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <Accordion type="single" collapsible className="w-full">
@@ -183,7 +161,7 @@ export default function CheckoutPage() {
                             <AccordionTrigger className="font-semibold">
                                 <div className="flex items-center gap-2">
                                     <Banknote className="h-5 w-5"/>
-                                    الدفع عن طريق التحويل البنكي
+                                    الدفع عن طريق بنكك
                                 </div>
                             </AccordionTrigger>
                             <AccordionContent className="pt-4 space-y-2 bg-muted/50 p-4 rounded-md">
@@ -191,35 +169,22 @@ export default function CheckoutPage() {
                                 <div className="font-mono bg-background p-3 rounded-md text-center">
                                     <p><span className="font-semibold">اسم الحساب:</span> يوسف عصام</p>
                                     <p><span className="font-semibold">رقم الحساب:</span> 8312783</p>
-                                    <p><span className="font-semibold">البنك:</span> بنكك</p>
                                 </div>
-                                <p className="text-xs text-muted-foreground pt-2">بعد التحويل، يرجى إرفاق صورة من إشعار الدفع أدناه لإكمال طلبك.</p>
+                                <p className="text-xs text-muted-foreground pt-2">بعد التحويل، يرجى إدخال رقم العملية في الحقل أدناه لإكمال طلبك.</p>
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
                     
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        className="hidden"
-                        accept="image/*,application/pdf"
-                    />
-                    <Button 
-                        type="button" 
-                        variant="outline" 
-                        className="w-full"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        <Upload className="ml-2 h-4 w-4" />
-                        إرفاق إشعار التحويل
-                    </Button>
-                    {receiptFile && (
-                        <div className="flex items-center justify-center text-sm text-green-600 border border-green-200 bg-green-50 p-3 rounded-md">
-                            <FileText className="ml-2 h-4 w-4" />
-                            <span>تم اختيار الملف: {receiptFile.name}</span>
-                        </div>
-                    )}
+                    <FormField control={form.control} name="transactionId" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>رقم العملية</FormLabel>
+                            <FormControl>
+                                <Input placeholder="أدخل رقم العملية هنا..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}/>
+
                 </CardContent>
               </Card>
 

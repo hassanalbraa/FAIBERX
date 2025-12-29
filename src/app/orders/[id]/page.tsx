@@ -8,7 +8,7 @@ import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/firebase";
 import { Button } from "@/components/ui/button";
-import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX } from "lucide-react";
+import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -173,9 +173,10 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: any; isAdmin:
                                 <div className="text-sm text-muted-foreground">
                                     <p>{order.shippingAddress.name}</p>
                                     <p>{order.shippingAddress.address}</p>
-                                    <p>{order.shippingAddress.city}, {order.shippingAddress.zip}</p>
+                                    <p>{order.shippingAddress.city}</p>
                                     <p>{order.shippingAddress.country}</p>
                                     <a href={`mailto:${order.shippingAddress.email}`} className="text-primary hover:underline block mt-1">{order.shippingAddress.email}</a>
+                                     <a href={`https://wa.me/${order.shippingAddress.whatsappNumber.replace('+', '')}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline block mt-1">{order.shippingAddress.whatsappNumber}</a>
                                 </div>
                             </div>
                             <Separator />
@@ -183,8 +184,21 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: any; isAdmin:
                                 <h3 className="font-semibold mb-1">ملخص الطلب</h3>
                                 <div className="text-sm space-y-1">
                                     <div className="flex justify-between"><span>المجموع الفرعي:</span> <span>{order.subTotal.toFixed(2)} SDG</span></div>
-                                    <div className="flex justify-between"><span>الشحن:</span> <span>{order.shippingCost.toFixed(2)} SDG</span></div>
+                                    <div className="flex justify-between"><span>الشحن:</span> <span>{order.shippingCost > 0 ? `${order.shippingCost.toFixed(2)} SDG` : 'حسب المكان'}</span></div>
                                     <div className="flex justify-between font-bold text-lg"><span>الإجمالي:</span> <span>{order.total.toFixed(2)} SDG</span></div>
+                                </div>
+                            </div>
+                             <Separator />
+                            <div>
+                                <h3 className="font-semibold mb-1">معلومات الدفع</h3>
+                                <div className="text-sm space-y-1">
+                                    <div className="flex justify-between"><span>طريقة الدفع:</span> <span>{order.payment.method}</span></div>
+                                    {order.payment.transactionId && (
+                                    <div className="flex justify-between items-center">
+                                        <span className='flex items-center gap-1'><Hash className="h-3 w-3"/>رقم العملية:</span> 
+                                        <span className="font-mono text-xs bg-muted p-1 rounded-md">{order.payment.transactionId}</span>
+                                    </div>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>

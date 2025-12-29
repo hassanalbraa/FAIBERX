@@ -20,9 +20,13 @@ export interface Order {
         name: string;
         address: string;
         city: string;
-        zip: string;
         country: string;
-        email: string; // Added email for communication
+        email: string;
+        whatsappNumber: string;
+    };
+    payment: {
+        method: string;
+        transactionId?: string;
     };
 }
 
@@ -42,9 +46,13 @@ export const mockOrders: Order[] = [
             name: "Jane Doe",
             address: "123 Couture Lane",
             city: "Styleville",
-            zip: "90210",
             country: "USA",
-            email: "jane.doe@example.com"
+            email: "jane.doe@example.com",
+            whatsappNumber: "+15551234567"
+        },
+        payment: {
+            method: 'Bank Transfer',
+            transactionId: 'BT-88234B'
         }
     },
     {
@@ -61,9 +69,13 @@ export const mockOrders: Order[] = [
             name: "John Smith",
             address: "456 Fashion Ave",
             city: "Chicburg",
-            zip: "10001",
             country: "USA",
-            email: "john.smith@example.com"
+            email: "john.smith@example.com",
+            whatsappNumber: "+15559876543"
+        },
+        payment: {
+            method: 'Bank Transfer',
+            transactionId: 'BT-AD94C1'
         }
     }
 ];
