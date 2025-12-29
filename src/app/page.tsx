@@ -86,7 +86,7 @@ export default function Home() {
       <section className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="font-headline text-3xl md:text-4xl font-bold">#فايبركس</h2>
-          <p className="text-muted-foreground mt-2">تابع رحلتنا وشاركنا أسلوبك على إنستغرام</p>
+          <p className="text-muted-foreground mt-2">تابع رحلتنا واكتشف فن الطباعة</p>
         </div>
         <InstagramFeed />
       </section>
