@@ -1,15 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ShoppingCart, MoreHorizontal, CheckCircle, Truck, XCircle, PauseCircle } from 'lucide-react';
-import { mockOrders as initialOrders, Order, OrderStatus } from '@/lib/orders';
+import { collection, query, orderBy, doc } from 'firebase/firestore';
+import type { Order, OrderStatus } from '@/lib/orders';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,10 +28,18 @@ import { useToast } from '@/hooks/use-toast';
 export default function AdminOrdersPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const firestore = useFirestore();
   const { toast } = useToast();
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
 
   const isAdmin = user?.email === 'admin@example.com';
+  
+  const allOrdersQuery = useMemoFirebase(() => {
+    if (!firestore || !isAdmin) return null;
+    return query(collection(firestore, 'orders'), orderBy('createdAt', 'desc'));
+  }, [firestore, isAdmin]);
+
+  const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(allOrdersQuery);
+
 
   useEffect(() => {
     if (!isUserLoading) {
@@ -43,14 +52,18 @@ export default function AdminOrdersPage() {
   }, [user, isUserLoading, isAdmin, router]);
 
   const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
-    setOrders(prevOrders => prevOrders.map(o => o.id === orderId ? {...o, status: newStatus} : o));
+    if (!firestore) return;
+    const orderRef = doc(firestore, 'orders', orderId);
+    updateDocumentNonBlocking(orderRef, { status: newStatus });
     toast({
         title: "تم تحديث حالة الطلب",
-        description: `تم تغيير حالة الطلب #${orderId} إلى "${newStatus}".`,
+        description: `تم تغيير حالة الطلب #${orderId.slice(0,7).toUpperCase()} إلى "${newStatus}".`,
     });
   }
 
-  if (isUserLoading || !isAdmin) {
+  const isLoading = isUserLoading || isOrdersLoading;
+
+  if (isLoading || !isAdmin) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -88,13 +101,13 @@ export default function AdminOrdersPage() {
         <CardHeader>
             <CardTitle>جميع الطلبات</CardTitle>
             <CardDescription>
-                {orders.length > 0
+                {orders && orders.length > 0
                 ? `لديك ${orders.length} طلبات إجمالاً.`
                 : 'لا توجد طلبات لعرضها حاليًا.'}
             </CardDescription>
         </CardHeader>
         <CardContent>
-          {orders.length > 0 ? (
+          {orders && orders.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -110,10 +123,10 @@ export default function AdminOrdersPage() {
                 {orders.map(order => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">
-                        <Link href={`/orders/${order.id}`} className="hover:underline">#{order.id}</Link>
+                        <Link href={`/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
                     </TableCell>
                     <TableCell>{order.shippingAddress.name}</TableCell>
-                    <TableCell>{new Date(order.date).toLocaleDateString('ar-EG')}</TableCell>
+                    <TableCell>{order.createdAt?.toDate().toLocaleDateString('ar-EG')}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(order.status) as any}>{order.status}</Badge>
                     </TableCell>
@@ -146,6 +159,10 @@ export default function AdminOrdersPage() {
                                         <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'Out for Delivery')}>
                                             <Truck className="ml-2 h-4 w-4" />
                                             قيد التوصيل
+                                        </DropdownMenuItem>
+                                         <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'Delivered')}>
+                                            <CheckCircle className="ml-2 h-4 w-4" />
+                                            تم التوصيل
                                         </DropdownMenuItem>
                                     </DropdownMenuSubContent>
                                     </DropdownMenuPortal>

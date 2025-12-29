@@ -19,7 +19,10 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Banknote } from "lucide-react";
+import { Banknote, Loader2 } from "lucide-react";
+import { useUser, useFirestore, addDocumentNonBlocking } from "@/firebase";
+import { collection, serverTimestamp } from "firebase/firestore";
+import { useState } from "react";
 
 const formSchema = z.object({
   email: z.string().email("بريد إلكتروني غير صالح"),
@@ -36,32 +39,103 @@ export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const router = useRouter();
   const { toast } = useToast();
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      email: user?.email || "",
       firstName: "",
       lastName: "",
       address: "",
-      city: "",
+      city: "الخرطوم",
       country: "Sudan",
       whatsappNumber: "+249",
       transactionId: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Mock order placed:", values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user || !firestore) {
+        toast({
+            variant: "destructive",
+            title: "خطأ في المصادقة",
+            description: "يجب أن تكون مسجلاً للدخول لإتمام الطلب.",
+        });
+        return;
+    }
 
-    toast({
-        title: "تم استلام الطلب!",
-        description: "شكرا لك على شرائك. طلبك قيد المراجعة والتحقق من الدفع."
-    });
-    const mockOrderId = "TOC" + Math.floor(Math.random() * 90000) + 10000;
-    clearCart();
-    // In a real app, we would pass the transactionId to the confirmation page
-    router.push(`/orders/${mockOrderId}`);
+    setIsSubmitting(true);
+
+    const orderData = {
+        userId: user.uid,
+        createdAt: serverTimestamp(),
+        status: 'Order Placed' as const,
+        items: cartItems.map(item => ({
+            productId: item.product.id,
+            name: item.product.name,
+            image: item.product.image,
+            quantity: item.quantity,
+            price: item.product.price,
+        })),
+        shippingAddress: {
+            name: `${values.firstName} ${values.lastName}`,
+            email: values.email,
+            address: values.address,
+            city: values.city,
+            country: values.country,
+            whatsappNumber: values.whatsappNumber,
+        },
+        payment: {
+            method: 'Bank Transfer',
+            transactionId: values.transactionId,
+        },
+        subTotal: cartTotal,
+        shippingCost: 0, // To be calculated later
+        total: cartTotal, // For now, total is same as subtotal
+    };
+
+    try {
+        const ordersCollection = collection(firestore, 'orders');
+        const docRef = await addDocumentNonBlocking(ordersCollection, orderData);
+
+        toast({
+            title: "تم استلام الطلب!",
+            description: "شكرا لك على شرائك. طلبك قيد المراجعة والتحقق من الدفع."
+        });
+
+        clearCart();
+        router.push(`/orders/${docRef.id}`);
+
+    } catch (error) {
+        console.error("Error placing order:", error);
+        toast({
+            variant: "destructive",
+            title: "حدث خطأ",
+            description: "فشل في إرسال الطلب. يرجى المحاولة مرة أخرى.",
+        });
+        setIsSubmitting(false);
+    }
+  }
+
+  if (isUserLoading) {
+      return (
+          <div className="flex h-screen items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+      )
+  }
+
+  if (!user) {
+      toast({
+          title: "يرجى تسجيل الدخول",
+          description: "يجب عليك تسجيل الدخول للمتابعة إلى الدفع.",
+          variant: 'destructive'
+      });
+      router.push('/login?redirect=/checkout');
+      return null;
   }
 
   if (cartItems.length === 0 && typeof window !== 'undefined') {
@@ -188,7 +262,9 @@ export default function CheckoutPage() {
                 </CardContent>
               </Card>
 
-              <Button type="submit" size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">إتمام الطلب</Button>
+              <Button type="submit" size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "إتمام الطلب"}
+              </Button>
             </form>
           </Form>
         </div>

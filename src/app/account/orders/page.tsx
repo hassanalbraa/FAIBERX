@@ -3,19 +3,31 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ListOrdered, ShoppingBag } from 'lucide-react';
-import { mockOrders } from '@/lib/orders';
-import { cn } from '@/lib/utils';
-import type { OrderStatus } from '@/lib/orders';
+import { collection, query, where, orderBy } from 'firebase/firestore';
+import type { Order, OrderStatus } from '@/lib/orders';
+
 
 export default function OrderHistoryPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const firestore = useFirestore();
+
+  const userOrdersQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(
+      collection(firestore, 'orders'), 
+      where('userId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
+  }, [firestore, user]);
+
+  const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(userOrdersQuery);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -23,7 +35,9 @@ export default function OrderHistoryPage() {
     }
   }, [user, isUserLoading, router]);
 
-  if (isUserLoading || !user) {
+  const isLoading = isUserLoading || isOrdersLoading;
+
+  if (isLoading || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -60,13 +74,13 @@ export default function OrderHistoryPage() {
         <CardHeader>
             <CardTitle>طلباتك</CardTitle>
             <CardDescription>
-                {mockOrders.length > 0
-                ? `لديك ${mockOrders.length} طلبات.`
+                {orders && orders.length > 0
+                ? `لديك ${orders.length} طلبات.`
                 : 'ليس لديك أي طلبات حتى الآن.'}
             </CardDescription>
         </CardHeader>
         <CardContent>
-          {mockOrders.length > 0 ? (
+          {orders && orders.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -78,10 +92,12 @@ export default function OrderHistoryPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockOrders.map(order => (
+                {orders.map(order => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-medium">#{order.id}</TableCell>
-                    <TableCell>{new Date(order.date).toLocaleDateString('ar-EG')}</TableCell>
+                    <TableCell className="font-medium">
+                        <Link href={`/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
+                    </TableCell>
+                    <TableCell>{order.createdAt?.toDate().toLocaleDateString('ar-EG')}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                     </TableCell>

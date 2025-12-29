@@ -18,12 +18,9 @@
           "type": "string",
           "description": "Detailed description of the product."
         },
-        "images": {
-          "type": "array",
-          "description": "Array of image URLs for the product.",
-          "items": {
-            "type": "string"
-          }
+        "image": {
+          "type": "string",
+          "description": "Image URL for the product."
         },
         "price": {
           "type": "number",
@@ -33,45 +30,19 @@
           "type": "string",
           "description": "Category of the product (e.g., shirts, pants, dresses)."
         },
-        "availableSizes": {
-          "type": "array",
-          "description": "Array of available sizes for the product.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "availableColors": {
-          "type": "array",
-          "description": "Array of available colors for the product.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "stockQuantity": {
+        "stock": {
           "type": "number",
           "description": "The number of items currently in stock."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the product was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the product was last updated.",
-          "format": "date-time"
         }
       },
       "required": [
         "id",
         "name",
         "description",
-        "images",
+        "image",
         "price",
         "category",
-        "availableSizes",
-        "availableColors",
-        "stockQuantity"
+        "stock"
       ]
     },
     "Admin": {
@@ -167,6 +138,109 @@
         "email",
         "accountNumber"
       ]
+    },
+    "Order": {
+      "title": "Order",
+      "type": "object",
+      "description": "Represents a customer's order.",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user who placed the order."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Order Placed",
+            "Processing",
+            "Shipped",
+            "Out for Delivery",
+            "Delivered",
+            "Cancelled",
+            "Suspended"
+          ]
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "image": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "number"
+              },
+              "price": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "shippingAddress": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "name": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string"
+            },
+            "city": {
+              "type": "string"
+            },
+            "country": {
+              "type": "string"
+            },
+            "whatsappNumber": {
+              "type": "string"
+            }
+          }
+        },
+        "payment": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "transactionId": {
+              "type": "string"
+            }
+          }
+        },
+        "subTotal": {
+          "type": "number"
+        },
+        "shippingCost": {
+          "type": "number"
+        },
+        "total": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "userId",
+        "createdAt",
+        "status",
+        "items",
+        "shippingAddress",
+        "payment",
+        "total"
+      ]
     }
   },
   "auth": {
@@ -221,6 +295,22 @@
             {
               "name": "userId",
               "description": "The Firebase UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores customer order information. Users can read their own orders. Admins can read and update all orders.",
+          "params": [
+            {
+              "name": "orderId",
+              "description": "Unique identifier for the order."
             }
           ]
         }

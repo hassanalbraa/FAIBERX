@@ -1,7 +1,10 @@
 import { products, type Product } from "./products";
+import { Timestamp } from "firebase/firestore";
 
 export type OrderItem = {
-    product: Product;
+    productId: string;
+    name: string;
+    image: string;
     quantity: number;
     price: number;
 }
@@ -9,11 +12,9 @@ export type OrderItem = {
 export type OrderStatus = 'Order Placed' | 'Processing' | 'Shipped' | 'Out for Delivery' | 'Delivered' | 'Cancelled' | 'Suspended';
 
 export interface Order {
-    id: string;
-    date: string;
-    subTotal: number;
-    shippingCost: number;
-    total: number;
+    id: string; // Document ID from Firestore
+    userId: string;
+    createdAt: Timestamp;
     status: OrderStatus;
     items: OrderItem[];
     shippingAddress: {
@@ -28,9 +29,14 @@ export interface Order {
         method: string;
         transactionId?: string;
     };
+    subTotal: number;
+    shippingCost: number;
+    total: number;
 }
 
-export const mockOrders: Order[] = [
+// This mock data is now for reference and can be removed later.
+// The app will fetch real orders from Firestore.
+export const mockOrders: any[] = [
     {
         id: "TOC12345",
         date: "2024-05-20T14:30:00Z",

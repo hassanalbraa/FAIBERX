@@ -12,6 +12,7 @@
  * - /roles_admin/{userId}: A collection where the existence of a document
  *   with a user's UID as the ID grants them administrative privileges. (DEPRECATED by email check)
  * - /users/{userId}: Stores profile information for individual users.
+ * - /orders/{orderId}: Stores customer orders.
  *
  * Key Security Decisions:
  * - Admin-Only Product Writes: All write operations (create, update, delete) on products
@@ -20,6 +21,7 @@
  * - User-Owned Profiles: Users can create, read, and update their own document in the `/users` collection.
  *   They cannot access anyone else's data.
  * - Admin User Management: Admins can list, read, and update any user's profile (e.g., to ban them).
+ * - Orders: Users can create their own orders and read them. Admins can read and update all orders.
  * - Locked Admin Roles: The `/roles_admin` collection is not writeable from the
  *   client. This is a critical security measure ensuring that admin roles can only
  *   be assigned through the Firebase Console or a trusted server-side process.
@@ -69,6 +71,17 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow get, update: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
+    }
+    
+    /**
+     * @description
+     *   Manages order data.
+     */
+    match /orders/{orderId} {
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+      allow get: if isOwner(resource.data.userId) || isAdmin();
+      allow list: if isAdmin(); // Only admins can list all orders. Users list their own via queries.
+      allow update: if isAdmin();
     }
 
     /**

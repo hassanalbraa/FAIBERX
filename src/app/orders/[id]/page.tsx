@@ -1,16 +1,16 @@
 'use client';
 
 import { useRouter } from "next/navigation";
-import { mockOrders as initialOrders, OrderStatus } from "@/lib/orders";
+import { OrderStatus, type Order } from "@/lib/orders";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { OrderTracker } from "@/components/OrderTracker";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
-import { useUser } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
-import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash } from "lucide-react";
+import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -24,23 +24,56 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
+import { doc } from "firebase/firestore";
 
 
 export default function OrderTrackingPage({ params }: { params: { id: string } }) {
-    // We use state to make status changes reflect in the UI
-    const [orders, setOrders] = useState(initialOrders);
-    const { toast } = useToast();
+    const firestore = useFirestore();
     const { user } = useUser();
     const isAdmin = user?.email === 'admin@example.com';
-
-    const order = orders.find(o => o.id === params.id);
+    const { toast } = useToast();
     
+    const orderRef = useMemoFirebase(() => {
+        if (!firestore || !params.id) return null;
+        return doc(firestore, 'orders', params.id);
+    }, [firestore, params.id]);
+
+    const { data: order, isLoading } = useDoc<Order>(orderRef);
+    
+    // Store the previous status to detect changes
+    const prevStatusRef = useRef<OrderStatus | undefined>();
+
+    useEffect(() => {
+        if (order && prevStatusRef.current && order.status !== prevStatusRef.current) {
+            // Don't show notification for initial load or for the user who made the change (admin)
+            if (!isAdmin) {
+                toast({
+                    title: "تحديث حالة الطلب",
+                    description: `تم تحديث حالة طلبك #${order.id.slice(0, 7).toUpperCase()} إلى: ${order.status}`
+                });
+            }
+        }
+        // Update previous status ref
+        prevStatusRef.current = order?.status;
+    }, [order, isAdmin, toast]);
+
+
     const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
-        setOrders(prevOrders => prevOrders.map(o => o.id === orderId ? {...o, status: newStatus} : o));
+        if (!firestore) return;
+        const orderDocRef = doc(firestore, 'orders', orderId);
+        updateDocumentNonBlocking(orderDocRef, { status: newStatus });
         toast({
             title: "تم تحديث حالة الطلب",
-            description: `تم تغيير حالة الطلب #${orderId} إلى "${newStatus}".`,
+            description: `تم تغيير حالة الطلب #${orderId.slice(0, 7).toUpperCase()} إلى "${newStatus}".`,
         });
+    }
+
+    if (isLoading) {
+        return (
+             <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+             </div>
+        )
     }
 
     if (!order) {
@@ -61,18 +94,29 @@ export default function OrderTrackingPage({ params }: { params: { id: string } }
             </div>
         );
     }
+    
+    // Authorization check
+    if (!isAdmin && user?.uid !== order.userId) {
+         return (
+            <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
+                 <SearchX className="h-24 w-24 text-muted-foreground mb-4" />
+                <h1 className="font-headline text-4xl font-bold">غير مصرح به</h1>
+                <p className="text-muted-foreground mt-2">أنت غير مصرح لك بعرض هذا الطلب.</p>
+            </div>
+        );
+    }
 
     return <OrderDetails order={order} isAdmin={isAdmin} onStatusChange={handleStatusChange} />;
 }
 
-function OrderDetails({ order, isAdmin, onStatusChange }: { order: any; isAdmin: boolean; onStatusChange: (id: string, status: OrderStatus) => void }) {
+function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmin: boolean; onStatusChange: (id: string, status: OrderStatus) => void }) {
 
     return (
         <div className="container mx-auto px-4 py-8 md:py-12">
             <div className="flex justify-between items-start mb-8">
                 <div>
                     <h1 className="font-headline text-4xl font-bold">تفاصيل الطلب</h1>
-                    <p className="text-muted-foreground">تتبع الطلب #{order.id}</p>
+                    <p className="text-muted-foreground">تتبع الطلب #{order.id.slice(0, 7).toUpperCase()}</p>
                 </div>
                  {isAdmin && (
                      <DropdownMenu>
@@ -146,12 +190,12 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: any; isAdmin:
                         <CardContent>
                             <div className="space-y-4">
                                 {order.items.map((item: any) => (
-                                    <div key={item.product.id} className="flex items-center gap-4">
+                                    <div key={item.productId} className="flex items-center gap-4">
                                         <div className="relative w-20 h-24 rounded-md overflow-hidden">
-                                            <Image src={item.product.image} alt={item.product.name} fill className="object-cover" sizes="80px"/>
+                                            <Image src={item.image} alt={item.name} fill className="object-cover" sizes="80px"/>
                                         </div>
                                         <div>
-                                            <p className="font-semibold">{item.product.name}</p>
+                                            <p className="font-semibold">{item.name}</p>
                                             <p className="text-sm text-muted-foreground">الكمية: {item.quantity}</p>
                                             <p className="text-sm text-muted-foreground">السعر: {item.price.toFixed(2)} SDG</p>
                                         </div>
