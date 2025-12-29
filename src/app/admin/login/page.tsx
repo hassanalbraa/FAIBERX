@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth, useUser, initiateEmailSignIn } from "@/firebase";
+import { useAuth, useUser } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function AdminLoginPage() {
     const router = useRouter();
@@ -22,6 +23,7 @@ export default function AdminLoginPage() {
 
     useEffect(() => {
         if (!isUserLoading && user) {
+            // A more robust check for admin role would be needed in a real app
             router.push('/admin');
         }
     }, [user, isUserLoading, router]);
@@ -30,6 +32,7 @@ export default function AdminLoginPage() {
         e.preventDefault();
         setIsSubmitting(true);
         try {
+            if (!auth) throw new Error("Auth service not available");
             await signInWithEmailAndPassword(auth, email, password);
             toast({
                 title: "تم تسجيل الدخول بنجاح",
@@ -48,8 +51,12 @@ export default function AdminLoginPage() {
         }
     };
     
-    // In a real app, you'd want a better loading state
     if (isUserLoading) return <div className="flex items-center justify-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+
+    if (!isUserLoading && user) {
+         return <div className="flex items-center justify-center h-screen"><p>جاري توجيهك إلى لوحة التحكم...</p><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    }
+
 
     return (
         <div className="container mx-auto px-4 py-16 md:py-24 flex items-center justify-center min-h-[70vh]">
@@ -101,4 +108,3 @@ export default function AdminLoginPage() {
         </div>
     );
 }
-import { signInWithEmailAndPassword } from "firebase/auth";
