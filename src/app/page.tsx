@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/ProductCard';
-import { TikTokFeed } from '@/components/TikTokFeed';
 import { ArrowLeft } from 'lucide-react';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { useCollection } from '@/firebase';
@@ -81,14 +80,6 @@ export default function Home() {
               </Link>
             </Button>
         </div>
-      </section>
-
-      <section className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="font-headline text-3xl md:text-4xl font-bold">#فايبركس_على_تيك_توك</h2>
-          <p className="text-muted-foreground mt-2">تابع رحلتنا واكتشف فن الطباعة من خلال فيديوهاتنا.</p>
-        </div>
-        <TikTokFeed />
       </section>
     </div>
   );
