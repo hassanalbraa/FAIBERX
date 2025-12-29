@@ -19,6 +19,7 @@
  * - Public Product Reads: Any user (authenticated or not) can read the entire collection of products.
  * - User-Owned Profiles: Users can create, read, and update their own document in the `/users` collection.
  *   They cannot access anyone else's data.
+ * - Admin User Management: Admins can list, read, and update any user's profile (e.g., to ban them).
  * - Locked Admin Roles: The `/roles_admin` collection is not writeable from the
  *   client. This is a critical security measure ensuring that admin roles can only
  *   be assigned through the Firebase Console or a trusted server-side process.
@@ -63,10 +64,12 @@ service cloud.firestore {
     /**
      * @description
      *   Manages user profile data. Users can only access and modify their own data.
+     *   Admins can read all user data and update it (e.g. for banning).
      */
     match /users/{userId} {
-      allow read, update: if isOwner(userId);
       allow create: if isSignedIn();
+      allow get, update: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
     }
 
     /**

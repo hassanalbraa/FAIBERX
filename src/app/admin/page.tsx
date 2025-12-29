@@ -5,13 +5,20 @@ import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, PlusCircle, LogOut, ShoppingCart } from 'lucide-react';
+import { Loader2, PlusCircle, LogOut, ShoppingCart, Users } from 'lucide-react';
 import AddProductForm from '@/components/admin/AddProductForm';
 import { ProductList } from '@/components/admin/ProductList';
 import { collection } from 'firebase/firestore';
 import type { Product } from '@/lib/products';
 import { getAuth, signOut } from 'firebase/auth';
 import Link from 'next/link';
+
+type UserProfile = {
+    email: string;
+    createdAt: any;
+    accountNumber?: string;
+    isBanned?: boolean;
+}
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -23,6 +30,13 @@ export default function AdminDashboard() {
     [firestore]
   );
   const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
+
+  const usersQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'users') : null),
+    [firestore]
+  );
+  const { data: users, isLoading: usersLoading } = useCollection<UserProfile>(usersQuery);
+
 
   const isAdmin = user?.email === 'admin@example.com';
 
@@ -93,6 +107,22 @@ export default function AdminDashboard() {
                 <CardContent>
                     <Button asChild className="w-full">
                         <Link href="/admin/orders">عرض الطلبات</Link>
+                    </Button>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Users />
+                        إدارة المستخدمين
+                    </CardTitle>
+                    <CardDescription>
+                        {usersLoading ? "جاري تحميل عدد المستخدمين..." : `لديك ${users?.length || 0} مستخدم مسجل.`}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild className="w-full">
+                        <Link href="/admin/users">عرض المستخدمين</Link>
                     </Button>
                 </CardContent>
             </Card>
