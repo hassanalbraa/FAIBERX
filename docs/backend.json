@@ -135,6 +135,10 @@
           "description": "Email address for the user.",
           "format": "email"
         },
+        "accountNumber": {
+          "type": "string",
+          "description": "A unique, customer-facing account number."
+        },
         "firstName": {
           "type": "string",
           "description": "First name of the user."
@@ -156,7 +160,8 @@
       },
       "required": [
         "id",
-        "email"
+        "email",
+        "accountNumber"
       ]
     }
   },

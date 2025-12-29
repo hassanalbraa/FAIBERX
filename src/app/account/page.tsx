@@ -4,15 +4,32 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
-import { ListOrdered, MapPin, User, LogOut, Loader2, Shield } from "lucide-react"
-import { useUser } from "@/firebase";
+import { ListOrdered, MapPin, User, LogOut, Loader2, Shield, Copy } from "lucide-react"
+import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { doc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+
+type UserProfile = {
+  email: string;
+  createdAt: any;
+  accountNumber?: string;
+}
 
 export default function AccountPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   const isAdmin = user?.email === 'admin@example.com';
 
@@ -29,7 +46,12 @@ export default function AccountPage() {
     router.push('/');
   };
 
-  if (isUserLoading || !user) {
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: 'تم نسخ رقم الحساب!' });
+  };
+
+  if (isUserLoading || !user || isProfileLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -81,12 +103,26 @@ export default function AccountPage() {
                         <div className="space-y-4">
                           <div>
                             <h3 className="font-semibold">البريد الإلكتروني</h3>
-                            <p className="text-muted-foreground">{user.email}</p>
+                            <p className="text-muted-foreground">{userProfile?.email}</p>
                           </div>
                           <Separator />
+                           {userProfile?.accountNumber && (
+                             <>
+                              <div>
+                                <h3 className="font-semibold">رقم الحساب</h3>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-muted-foreground font-mono">{userProfile.accountNumber}</p>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyToClipboard(userProfile.accountNumber!)}>
+                                    <Copy className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <Separator />
+                             </>
+                           )}
                            <div>
                             <h3 className="font-semibold">تاريخ الإنشاء</h3>
-                            <p className="text-muted-foreground">{user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('ar-EG') : 'غير متوفر'}</p>
+                            <p className="text-muted-foreground">{userProfile?.createdAt?.toDate().toLocaleDateString('ar-EG') || 'غير متوفر'}</p>
                           </div>
                           <Separator />
                            <Button>تعديل الملف الشخصي</Button>

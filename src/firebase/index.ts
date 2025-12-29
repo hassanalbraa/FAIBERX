@@ -3,7 +3,7 @@
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, User, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore'
+import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -37,12 +37,27 @@ export function getSdks(firebaseApp: FirebaseApp) {
   const auth = getAuth(firebaseApp);
 
   // Create user document on sign up
-  onAuthStateChanged(auth, (user: User | null) => {
+  onAuthStateChanged(auth, async (user: User | null) => {
     if (user) {
       const userRef = doc(firestore, 'users', user.uid);
-      setDoc(userRef, { email: user.email, createdAt: new Date() }, { merge: true });
+      const userDoc = await getDoc(userRef);
+
+      // If the user document does not exist, it's a new user. Create it.
+      if (!userDoc.exists()) {
+        const accountNumber = `ACC${Date.now()}${Math.floor(Math.random() * 100)}`;
+        try {
+          await setDoc(userRef, {
+            email: user.email,
+            createdAt: serverTimestamp(),
+            accountNumber: accountNumber,
+          });
+        } catch (error) {
+          console.error("Error creating user document:", error);
+        }
+      }
     }
   });
+
 
   return {
     firebaseApp,
