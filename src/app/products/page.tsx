@@ -58,15 +58,7 @@ export default function ProductsPage() {
       </Breadcrumb>
     
       <div className="text-center mb-12">
-        <div className="flex justify-center items-center gap-4 mb-2">
-            <h1 className="font-headline text-4xl md:text-5xl font-bold">{title}</h1>
-            <Button asChild variant="outline" size="icon">
-                <Link href="/">
-                    <Home className="h-5 w-5" />
-                    <span className="sr-only">الصفحة الرئيسية</span>
-                </Link>
-            </Button>
-        </div>
+        <h1 className="font-headline text-4xl md:text-5xl font-bold">{title}</h1>
         <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
           {category 
             ? `استكشف مجموعتنا المختارة من ${getCategoryArabicName(category)?.toLowerCase()}.`
