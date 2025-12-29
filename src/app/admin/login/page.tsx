@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth, useUser, initiateEmailSignIn } from "@/firebase";
+import { useAuth, useUser } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -21,10 +21,11 @@ export default function AdminLoginPage() {
     const [password, setPassword] = useState('password');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Redirect if a non-admin user is already logged in and tries to access this page.
     useEffect(() => {
-        if (!isUserLoading && user) {
-            // In a real app, a proper admin check (e.g., against a Firestore collection) is needed.
-            // For now, we assume if you log in through this page, you are an admin.
+        if (!isUserLoading && user && user.email !== 'admin@example.com') {
+            router.push('/account');
+        } else if (!isUserLoading && user && user.email === 'admin@example.com') {
             router.push('/admin');
         }
     }, [user, isUserLoading, router]);
@@ -34,8 +35,6 @@ export default function AdminLoginPage() {
         setIsSubmitting(true);
         try {
             if (!auth) throw new Error("Auth service not available");
-            // We use the standard sign-in function. 
-            // The distinction for admin is handled by security rules and app logic.
             await signInWithEmailAndPassword(auth, email, password);
             toast({
                 title: "تم تسجيل الدخول بنجاح",
@@ -45,10 +44,8 @@ export default function AdminLoginPage() {
         } catch (error: any) {
             console.error("Admin login failed:", error);
             let description = "فشل تسجيل الدخول. يرجى التحقق من بياناتك.";
-            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
                 description = "البريد الإلكتروني أو كلمة المرور غير صحيحة. هل قمت بإنشاء حساب الأدمن من خلال صفحة إنشاء حساب أولاً؟";
-            } else if (error.code === 'auth/invalid-credential') {
-                 description = "البريد الإلكتروني أو كلمة المرور غير صحيحة. هل قمت بإنشاء حساب الأدمن من خلال صفحة إنشاء حساب أولاً؟";
             }
             toast({
                 variant: "destructive",
@@ -60,13 +57,14 @@ export default function AdminLoginPage() {
         }
     };
     
-    if (isUserLoading) return <div className="flex items-center justify-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>;
-
-    // This prevents a flash of the login form if the user is already logged in and being redirected.
-    if (!isUserLoading && user) {
-         return <div className="flex items-center justify-center h-screen"><p>جاري توجيهك إلى لوحة التحكم...</p><Loader2 className="h-8 w-8 animate-spin ml-2" /></div>;
+    if (isUserLoading || (!isUserLoading && user)) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <p className="ml-2">جاري التحقق والمتابعة...</p>
+            </div>
+        );
     }
-
 
     return (
         <div className="container mx-auto px-4 py-16 md:py-24 flex items-center justify-center min-h-[70vh]">

@@ -30,19 +30,22 @@ export default function AdminDashboard() {
       if (!user) {
         router.replace('/admin/login');
       } else if (!isAdmin) {
-        // If user is logged in but not an admin, redirect to account page
         router.replace('/account');
       }
     }
   }, [user, isUserLoading, isAdmin, router]);
 
   const handleLogout = async () => {
-    const auth = getAuth();
-    await signOut(auth);
-    router.push('/admin/login');
+    try {
+        const auth = getAuth();
+        await signOut(auth);
+        router.push('/admin/login');
+    } catch(error) {
+        console.error("Logout failed:", error);
+    }
   };
 
-  if (isUserLoading || !user || !isAdmin) {
+  if (isUserLoading || !isAdmin) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
