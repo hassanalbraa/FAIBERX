@@ -36,7 +36,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const whatsappNumber = "+249909466854";
-  const whatsappUrl = `https://wa.me/${whatsappNumber.replace('+', '')}`;
+  const defaultMessage = encodeURIComponent("مرحباً، أحتاج إلى مساعدة.");
+  const whatsappUrl = `https://wa.me/${whatsappNumber.replace('+', '')}?text=${defaultMessage}`;
 
   return (
     <html lang="ar" dir="rtl" className="light">
