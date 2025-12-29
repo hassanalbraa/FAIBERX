@@ -31,7 +31,7 @@ const formSchema = z.object({
   name: z.string().min(3, 'يجب أن يكون الاسم 3 أحرف على الأقل'),
   description: z.string().min(10, 'يجب أن يكون الوصف 10 أحرف على الأقل'),
   price: z.coerce.number().positive('يجب أن يكون السعر رقمًا موجبًا'),
-  category: z.enum(['Tops', 'Bottoms', 'Dresses', 'Outerwear', 'Accessories']),
+  category: z.enum(['T-shirts', 'Hoodies']),
   image: z.string().url('يجب أن يكون عنوان URL صالحًا للصورة'),
   imageHint: z.string().min(2, 'مطلوب تلميح صورة'),
   stock: z.coerce.number().int().nonnegative('يجب أن يكون المخزون رقمًا صحيحًا غير سالب'),
@@ -48,7 +48,7 @@ export default function AddProductForm() {
       name: '',
       description: '',
       price: 0,
-      category: 'Tops',
+      category: 'T-shirts',
       image: '',
       imageHint: '',
       stock: 0,
@@ -90,7 +90,7 @@ export default function AddProductForm() {
             <FormItem>
               <FormLabel>اسم المنتج</FormLabel>
               <FormControl>
-                <Input placeholder="مثال: بلوزة حرير" {...field} />
+                <Input placeholder="مثال: تيشيرت قطني" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -150,11 +150,8 @@ export default function AddProductForm() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Tops">بلوزات</SelectItem>
-                  <SelectItem value="Bottoms">بناطيل وتنانير</SelectItem>
-                  <SelectItem value="Dresses">فساتين</SelectItem>
-                  <SelectItem value="Outerwear">ملابس خارجية</SelectItem>
-                  <SelectItem value="Accessories">إكسسوارات</SelectItem>
+                  <SelectItem value="T-shirts">تشيرتات</SelectItem>
+                  <SelectItem value="Hoodies">هودي</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -181,7 +178,7 @@ export default function AddProductForm() {
             <FormItem>
               <FormLabel>تلميح الصورة (لـ AI)</FormLabel>
               <FormControl>
-                <Input placeholder="مثال: silk blouse" {...field} />
+                <Input placeholder="مثال: cotton t-shirt" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

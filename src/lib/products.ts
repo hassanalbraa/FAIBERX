@@ -6,7 +6,7 @@ export type Product = {
   description: string;
   price: number;
   image: string;
-  category: 'Tops' | 'Bottoms' | 'Dresses' | 'Outerwear' | 'Accessories';
+  category: 'T-shirts' | 'Hoodies';
   imageHint: string;
   stock?: number;
 };
@@ -27,7 +27,7 @@ export const products: Product[] = [
     price: 180.00,
     image: getPlaceholder('product-1').imageUrl,
     imageHint: getPlaceholder('product-1').imageHint,
-    category: 'Tops',
+    category: 'T-shirts',
   },
   {
     id: '2',
@@ -36,7 +36,7 @@ export const products: Product[] = [
     price: 250.00,
     image: getPlaceholder('product-2').imageUrl,
     imageHint: getPlaceholder('product-2').imageHint,
-    category: 'Bottoms',
+    category: 'Hoodies',
   },
   {
     id: '3',
@@ -45,7 +45,7 @@ export const products: Product[] = [
     price: 220.00,
     image: getPlaceholder('product-3').imageUrl,
     imageHint: getPlaceholder('product-3').imageHint,
-    category: 'Bottoms',
+    category: 'Hoodies',
   },
   {
     id: '4',
@@ -54,7 +54,7 @@ export const products: Product[] = [
     price: 450.00,
     image: getPlaceholder('product-4').imageUrl,
     imageHint: getPlaceholder('product-4').imageHint,
-    category: 'Outerwear',
+    category: 'Hoodies',
   },
   {
     id: '5',
@@ -63,7 +63,7 @@ export const products: Product[] = [
     price: 320.00,
     image: getPlaceholder('product-5').imageUrl,
     imageHint: getPlaceholder('product-5').imageHint,
-    category: 'Tops',
+    category: 'T-shirts',
   },
   {
     id: '6',
@@ -72,7 +72,7 @@ export const products: Product[] = [
     price: 750.00,
     image: getPlaceholder('product-6').imageUrl,
     imageHint: getPlaceholder('product-6').imageHint,
-    category: 'Dresses',
+    category: 'Hoodies',
   },
   {
     id: '7',
@@ -81,7 +81,7 @@ export const products: Product[] = [
     price: 400.00,
     image: getPlaceholder('product-7').imageUrl,
     imageHint: getPlaceholder('product-7').imageHint,
-    category: 'Accessories',
+    category: 'Hoodies',
   },
   {
     id: '8',
@@ -90,6 +90,6 @@ export const products: Product[] = [
     price: 350.00,
     image: getPlaceholder('product-8').imageUrl,
     imageHint: getPlaceholder('product-8').imageHint,
-    category: 'Accessories',
+    category: 'Hoodies',
   },
 ];

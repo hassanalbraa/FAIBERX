@@ -17,11 +17,8 @@ export function ProductCard({ product }: ProductCardProps) {
     
   const getCategoryArabicName = (category: string | undefined) => {
     switch (category) {
-      case 'Tops': return 'بلوزات';
-      case 'Bottoms': return 'بناطيل وتنانير';
-      case 'Dresses': return 'فساتين';
-      case 'Outerwear': return 'ملابس خارجية';
-      case 'Accessories': return 'إكسسوارات';
+      case 'T-shirts': return 'تشيرتات';
+      case 'Hoodies': return 'هودي';
       default: return '';
     }
   }
