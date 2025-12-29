@@ -23,6 +23,7 @@ import { Banknote, Loader2 } from "lucide-react";
 import { useUser, useFirestore, addDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
   email: z.string().email("بريد إلكتروني غير صالح"),
@@ -79,6 +80,7 @@ export default function CheckoutPage() {
             image: item.product.image,
             quantity: item.quantity,
             price: item.product.price,
+            size: item.size,
         })),
         shippingAddress: {
             name: `${values.firstName} ${values.lastName}`,
@@ -157,14 +159,17 @@ export default function CheckoutPage() {
             <CardContent>
               <div className="space-y-4">
                 {cartItems.map(item => (
-                  <div key={item.product.id} className="flex items-center justify-between">
+                  <div key={item.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="relative w-16 h-20 rounded-md overflow-hidden">
                         <Image src={item.product.image} alt={item.product.name} fill className="object-cover" sizes="64px"/>
                       </div>
                       <div>
                         <p className="font-semibold">{item.product.name}</p>
-                        <p className="text-sm text-muted-foreground">الكمية: {item.quantity}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>الكمية: {item.quantity}</span>
+                            <Badge variant="secondary">مقاس: {item.size}</Badge>
+                        </div>
                       </div>
                     </div>
                     <p className="font-semibold">{(item.product.price * item.quantity).toFixed(2)} SDG</p>

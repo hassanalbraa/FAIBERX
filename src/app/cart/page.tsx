@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, cartTotal, cartCount } = useCart();
@@ -31,7 +32,7 @@ export default function CartPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
             {cartItems.map(item => (
-              <Card key={item.product.id} className="overflow-hidden">
+              <Card key={item.id} className="overflow-hidden">
                 <CardContent className="p-4 flex gap-4">
                   <div className="w-24 h-32 relative rounded-md overflow-hidden flex-shrink-0">
                     <Image
@@ -47,21 +48,24 @@ export default function CartPage() {
                       <Link href={`/products/${item.product.id}`} className="font-semibold hover:underline">
                         {item.product.name}
                       </Link>
-                      <p className="text-sm text-muted-foreground">{item.product.price.toFixed(2)} SDG</p>
+                      <div className='flex items-center gap-2 mt-1'>
+                        <p className="text-sm text-muted-foreground">{item.product.price.toFixed(2)} SDG</p>
+                        <Badge variant="secondary">مقاس: {item.size}</Badge>
+                      </div>
                     </div>
                      <div className="flex items-center border rounded-md w-fit mt-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.product.id, item.quantity - 1)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
                         <Minus className="h-4 w-4" />
                       </Button>
                       <span className="w-10 text-center text-sm font-bold">{item.quantity}</span>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.product.id, item.quantity + 1)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                   <div className="flex flex-col justify-between items-end">
                      <p className="font-bold text-lg">{(item.product.price * item.quantity).toFixed(2)} SDG</p>
-                     <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.product.id)} className="text-muted-foreground hover:text-destructive">
+                     <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)} className="text-muted-foreground hover:text-destructive">
                        <Trash2 className="h-4 w-4" />
                      </Button>
                   </div>

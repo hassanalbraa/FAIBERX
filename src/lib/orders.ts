@@ -7,6 +7,7 @@ export type OrderItem = {
     image: string;
     quantity: number;
     price: number;
+    size?: string;
 }
 
 export type OrderStatus = 'Order Placed' | 'Processing' | 'Shipped' | 'Out for Delivery' | 'Delivered' | 'Cancelled' | 'Suspended';

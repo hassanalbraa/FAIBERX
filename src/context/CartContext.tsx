@@ -7,13 +7,15 @@ import { useToast } from "@/hooks/use-toast"
 interface CartItem {
   product: Product;
   quantity: number;
+  size: string;
+  id: string; // Unique ID for cart item (product.id + size)
 }
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: Product, quantity: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addToCart: (product: Product, quantity: number, size: string) => void;
+  removeFromCart: (cartItemId: string) => void;
+  updateQuantity: (cartItemId: string, quantity: number) => void;
   clearCart: () => void;
   cartCount: number;
   cartTotal: number;
@@ -25,39 +27,40 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const { toast } = useToast()
 
-  const addToCart = (product: Product, quantity: number) => {
+  const addToCart = (product: Product, quantity: number, size: string) => {
     setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.product.id === product.id);
+      const cartItemId = product.id + '-' + size;
+      const existingItem = prevItems.find(item => item.id === cartItemId);
       if (existingItem) {
         return prevItems.map(item =>
-          item.product.id === product.id
+          item.id === cartItemId
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prevItems, { product, quantity }];
+      return [...prevItems, { product, quantity, size, id: cartItemId }];
     });
     toast({
       title: "أضيف إلى السلة",
-      description: `${quantity} x ${product.name}`,
+      description: `${quantity} x ${product.name} (مقاس: ${size})`,
     })
   };
 
-  const removeFromCart = (productId: string) => {
-    setCartItems(prevItems => prevItems.filter(item => item.product.id !== productId));
+  const removeFromCart = (cartItemId: string) => {
+    setCartItems(prevItems => prevItems.filter(item => item.id !== cartItemId));
      toast({
       title: "تمت الإزالة من السلة",
       variant: "destructive",
     })
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (cartItemId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(cartItemId);
     } else {
       setCartItems(prevItems =>
         prevItems.map(item =>
-          item.product.id === productId ? { ...item, quantity } : item
+          item.id === cartItemId ? { ...item, quantity } : item
         )
       );
     }

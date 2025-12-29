@@ -33,6 +33,13 @@
         "stock": {
           "type": "number",
           "description": "The number of items currently in stock."
+        },
+        "sizes": {
+            "type": "array",
+            "description": "Available sizes for the product.",
+            "items": {
+                "type": "string"
+            }
         }
       },
       "required": [
@@ -183,6 +190,9 @@
               },
               "price": {
                 "type": "number"
+              },
+              "size": {
+                  "type": "string"
               }
             }
           }

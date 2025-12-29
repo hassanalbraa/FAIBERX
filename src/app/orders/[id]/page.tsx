@@ -25,6 +25,7 @@ import {
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import { doc } from "firebase/firestore";
+import { Badge } from "@/components/ui/badge";
 
 
 export default function OrderTrackingPage({ params }: { params: { id: string } }) {
@@ -190,13 +191,16 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
                         <CardContent>
                             <div className="space-y-4">
                                 {order.items.map((item: any) => (
-                                    <div key={item.productId} className="flex items-center gap-4">
+                                    <div key={item.productId + (item.size || '')} className="flex items-center gap-4">
                                         <div className="relative w-20 h-24 rounded-md overflow-hidden">
                                             <Image src={item.image} alt={item.name} fill className="object-cover" sizes="80px"/>
                                         </div>
                                         <div>
                                             <p className="font-semibold">{item.name}</p>
-                                            <p className="text-sm text-muted-foreground">الكمية: {item.quantity}</p>
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                                <span>الكمية: {item.quantity}</span>
+                                                {item.size && <Badge variant="secondary">مقاس: {item.size}</Badge>}
+                                            </div>
                                             <p className="text-sm text-muted-foreground">السعر: {item.price.toFixed(2)} SDG</p>
                                         </div>
                                         <p className="mr-auto font-semibold">{(item.price * item.quantity).toFixed(2)} SDG</p>

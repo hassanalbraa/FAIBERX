@@ -15,13 +15,21 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+
+const SIZES: Product['sizes'] = ["L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL", "7XL", "8XL"];
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const firestore = useFirestore();
+  const { toast } = useToast();
 
   const productRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -39,7 +47,15 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   }
   
   const handleAddToCart = () => {
-    addToCart(product, quantity);
+    if (!selectedSize) {
+        toast({
+            title: "يرجى تحديد المقاس",
+            description: "يجب اختيار مقاس قبل إضافة المنتج إلى السلة.",
+            variant: "destructive"
+        })
+        return;
+    }
+    addToCart(product, quantity, selectedSize);
   };
 
   const getCategoryArabicName = (category: string | undefined) => {
@@ -49,6 +65,8 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       default: return 'منتجات';
     }
   }
+
+  const availableSizes = product.sizes || SIZES;
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -83,6 +101,30 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           <p className="text-3xl font-bold mt-4">{product.price.toFixed(2)} SDG</p>
           <p className="mt-6 text-muted-foreground leading-relaxed">{product.description}</p>
           
+          <div className='mt-8'>
+            <Label className='text-base font-semibold'>اختر المقاس</Label>
+             <RadioGroup
+                value={selectedSize || ''}
+                onValueChange={setSelectedSize}
+                className="flex flex-wrap gap-2 mt-4"
+                aria-label='Product sizes'
+            >
+                {availableSizes.map(size => (
+                    <Label
+                        key={size}
+                        htmlFor={`size-${size}`}
+                        className={cn(
+                          "flex items-center justify-center rounded-md border-2 w-14 h-14 cursor-pointer transition-colors text-base font-bold",
+                          selectedSize === size ? "border-primary text-primary-foreground bg-primary" : "hover:bg-accent"
+                        )}
+                    >
+                        <RadioGroupItem value={size} id={`size-${size}`} className="sr-only" />
+                        {size}
+                    </Label>
+                ))}
+            </RadioGroup>
+          </div>
+
           <div className="mt-8 flex items-center gap-4">
             <div className="flex items-center border rounded-md">
               <Button variant="ghost" size="icon" onClick={() => setQuantity(q => Math.max(1, q - 1))}>
