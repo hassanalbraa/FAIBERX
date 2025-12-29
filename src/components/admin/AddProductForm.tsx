@@ -31,6 +31,7 @@ const formSchema = z.object({
   name: z.string().min(3, 'يجب أن يكون الاسم 3 أحرف على الأقل'),
   description: z.string().min(10, 'يجب أن يكون الوصف 10 أحرف على الأقل'),
   price: z.coerce.number().positive('يجب أن يكون السعر رقمًا موجبًا'),
+  costPrice: z.coerce.number().nonnegative('سعر التكلفة يجب أن يكون رقمًا موجبًا'),
   category: z.enum(['T-shirts', 'Hoodies']),
   image: z.string().url('يجب أن يكون عنوان URL صالحًا للصورة'),
   stock: z.coerce.number().int().nonnegative('يجب أن يكون المخزون رقمًا صحيحًا غير سالب'),
@@ -47,6 +48,7 @@ export default function AddProductForm() {
       name: '',
       description: '',
       price: 0,
+      costPrice: 0,
       category: 'T-shirts',
       image: '',
       stock: 0,
@@ -113,14 +115,29 @@ export default function AddProductForm() {
             name="price"
             render={({ field }) => (
                 <FormItem className='flex-1'>
-                <FormLabel>السعر</FormLabel>
+                <FormLabel>سعر البيع</FormLabel>
                 <FormControl>
-                    <Input type="number" placeholder="99.99" {...field} />
+                    <Input type="number" placeholder="150" {...field} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
             )}
             />
+             <FormField
+            control={form.control}
+            name="costPrice"
+            render={({ field }) => (
+                <FormItem className='flex-1'>
+                <FormLabel>سعر التكلفة</FormLabel>
+                <FormControl>
+                    <Input type="number" placeholder="100" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
+         <div className="flex gap-4">
             <FormField
             control={form.control}
             name="stock"
@@ -134,28 +151,28 @@ export default function AddProductForm() {
                 </FormItem>
             )}
             />
+            <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+                <FormItem className='flex-1'>
+                <FormLabel>الفئة</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                    <SelectTrigger>
+                        <SelectValue placeholder="اختر فئة" />
+                    </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                    <SelectItem value="T-shirts">تشيرتات</SelectItem>
+                    <SelectItem value="Hoodies">هودي</SelectItem>
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
         </div>
-        <FormField
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>الفئة</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر فئة" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="T-shirts">تشيرتات</SelectItem>
-                  <SelectItem value="Hoodies">هودي</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <FormField
           control={form.control}
           name="image"

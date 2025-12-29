@@ -26,6 +26,10 @@
           "type": "number",
           "description": "Price of the product."
         },
+        "costPrice": {
+          "type": "number",
+          "description": "Cost price of the product for profit calculation."
+        },
         "category": {
           "type": "string",
           "description": "Category of the product (e.g., shirts, pants, dresses)."
@@ -48,6 +52,7 @@
         "description",
         "image",
         "price",
+        "costPrice",
         "category",
         "stock"
       ]
