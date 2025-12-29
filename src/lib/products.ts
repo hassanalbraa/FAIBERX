@@ -19,8 +19,8 @@ function getPlaceholder(id: string): ImagePlaceholder {
 export const products: Product[] = [
   {
     id: '1',
-    name: 'Ethereal Silk Blouse',
-    description: 'A classic silk blouse with a modern twist, featuring a delicate ruffled collar and pearlescent buttons. Perfect for both office and evening wear.',
+    name: 'بلوزة حرير أثيرية',
+    description: 'بلوزة حريرية كلاسيكية بلمسة عصرية، تتميز بياقة مكشكشة رقيقة وأزرار لؤلؤية. مثالية للعمل والسهرات.',
     price: 180.00,
     image: getPlaceholder('product-1').imageUrl,
     imageHint: getPlaceholder('product-1').imageHint,
@@ -28,8 +28,8 @@ export const products: Product[] = [
   },
   {
     id: '2',
-    name: 'Savile Row Trousers',
-    description: 'Expertly tailored high-waisted trousers in a rich navy blue. The wide-leg cut offers a flattering silhouette that elongates the legs.',
+    name: 'بنطلون سافيل رو',
+    description: 'بنطلون مصمم بخبرة بخصر عالٍ بلون كحلي غني. يوفر القص الواسع صورة ظلية جذابة تطيل الساقين.',
     price: 250.00,
     image: getPlaceholder('product-2').imageUrl,
     imageHint: getPlaceholder('product-2').imageHint,
@@ -37,8 +37,8 @@ export const products: Product[] = [
   },
   {
     id: '3',
-    name: 'Monet\'s Garden Midi Skirt',
-    description: 'An elegant A-line midi skirt adorned with a vibrant floral pattern reminiscent of an impressionist painting. Features a concealed side zipper.',
+    name: 'تنورة ميدي حديقة مونيه',
+    description: 'تنورة ميدي أنيقة على شكل حرف A مزينة بنقشة زهور نابضة بالحياة تذكرنا بلوحة انطباعية. تتميز بسحاب جانبي مخفي.',
     price: 220.00,
     image: getPlaceholder('product-3').imageUrl,
     imageHint: getPlaceholder('product-3').imageHint,
@@ -46,8 +46,8 @@ export const products: Product[] = [
   },
   {
     id: '4',
-    name: 'London Fog Trench Coat',
-    description: 'A timeless double-breasted trench coat in a versatile beige. Crafted from water-resistant cotton gabardine with a detachable belt.',
+    name: 'معطف ترنش ضباب لندن',
+    description: 'معطف ترنش مزدوج الصدر لا يتأثر بمرور الزمن بلون بيج متعدد الاستخدامات. مصنوع من قطن الجبردين المقاوم للماء مع حزام قابل للفصل.',
     price: 450.00,
     image: getPlaceholder('product-4').imageUrl,
     imageHint: getPlaceholder('product-4').imageHint,
@@ -55,8 +55,8 @@ export const products: Product[] = [
   },
   {
     id: '5',
-    name: 'Himalayan Cashmere Sweater',
-    description: 'Indulge in the unparalleled softness of this luxurious cashmere sweater. The relaxed fit and classic crew neck make it a wardrobe staple.',
+    name: 'سترة كشمير هيمالايا',
+    description: 'انغمس في نعومة لا مثيل لها مع سترة الكشمير الفاخرة هذه. المقاس المريح والرقبة الدائرية الكلاسيكية تجعلها قطعة أساسية في خزانة الملابس.',
     price: 320.00,
     image: getPlaceholder('product-5').imageUrl,
     imageHint: getPlaceholder('product-5').imageHint,
@@ -64,8 +64,8 @@ export const products: Product[] = [
   },
   {
     id: '6',
-    name: 'Midnight Gala Gown',
-    description: 'A show-stopping evening gown featuring intricate sequin details on a form-fitting silhouette with a graceful train.',
+    name: 'فستان حفل منتصف الليل',
+    description: 'فستان سهرة يخطف الأنظار يتميز بتفاصيل ترتر معقدة على صورة ظلية ملائمة للجسم مع ذيل رشيق.',
     price: 750.00,
     image: getPlaceholder('product-6').imageUrl,
     imageHint: getPlaceholder('product-6').imageHint,
@@ -73,8 +73,8 @@ export const products: Product[] = [
   },
   {
     id: '7',
-    name: 'Milano Leather Tote',
-    description: 'A structured and spacious tote bag crafted from premium Italian leather. Features multiple compartments to keep you organized.',
+    name: 'حقيبة يد جلدية ميلانو',
+    description: 'حقيبة يد واسعة ومنظمة مصنوعة من جلد إيطالي فاخر. تتميز بأقسام متعددة للحفاظ على تنظيمك.',
     price: 400.00,
     image: getPlaceholder('product-7').imageUrl,
     imageHint: getPlaceholder('product-7').imageHint,
@@ -82,8 +82,8 @@ export const products: Product[] = [
   },
   {
     id: '8',
-    name: 'Femme Fatale Stilettos',
-    description: 'A pair of sophisticated pointed-toe stiletto heels in classic black patent leather. The perfect finishing touch to any elegant outfit.',
+    name: 'حذاء بكعب عالٍ فام فاتال',
+    description: 'زوج من الأحذية ذات الكعب العالي المدبب المتطور من الجلد الأسود اللامع الكلاسيكي. اللمسة النهائية المثالية لأي زي أنيق.',
     price: 350.00,
     image: getPlaceholder('product-8').imageUrl,
     imageHint: getPlaceholder('product-8').imageHint,

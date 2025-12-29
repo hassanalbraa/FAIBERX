@@ -30,16 +30,27 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     addToCart(product, quantity);
   };
 
+  const getCategoryArabicName = (category: string | undefined) => {
+    switch (category) {
+      case 'Tops': return 'بلوزات';
+      case 'Bottoms': return 'بناطيل وتنانير';
+      case 'Dresses': return 'فساتين';
+      case 'Outerwear': return 'ملابس خارجية';
+      case 'Accessories': return 'إكسسوارات';
+      default: return 'منتجات';
+    }
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <Breadcrumb className="mb-8">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            <BreadcrumbLink href="/">الرئيسية</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="/products">Products</BreadcrumbLink>
+            <BreadcrumbLink href="/products">المنتجات</BreadcrumbLink>
           </BreadcrumbItem>
            <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -59,7 +70,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           />
         </div>
         <div>
-          <span className="text-sm text-muted-foreground font-semibold tracking-widest uppercase">{product.category}</span>
+          <span className="text-sm text-muted-foreground font-semibold tracking-widest uppercase">{getCategoryArabicName(product.category)}</span>
           <h1 className="font-headline text-3xl md:text-5xl font-bold mt-2">{product.name}</h1>
           <p className="text-3xl font-bold mt-4">${product.price.toFixed(2)}</p>
           <p className="mt-6 text-muted-foreground leading-relaxed">{product.description}</p>
@@ -75,7 +86,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               </Button>
             </div>
             <Button size="lg" onClick={handleAddToCart} className="flex-grow bg-primary text-primary-foreground hover:bg-primary/90">
-              Add to Cart
+              أضف إلى السلة
             </Button>
           </div>
         </div>

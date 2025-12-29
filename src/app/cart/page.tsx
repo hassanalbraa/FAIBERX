@@ -14,17 +14,17 @@ export default function CartPage() {
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <div className="text-center mb-12">
-        <h1 className="font-headline text-4xl md:text-5xl font-bold">Your Shopping Cart</h1>
-        <p className="text-muted-foreground mt-2">{cartCount} items in your cart</p>
+        <h1 className="font-headline text-4xl md:text-5xl font-bold">سلة التسوق الخاصة بك</h1>
+        <p className="text-muted-foreground mt-2">{cartCount} منتجات في سلتك</p>
       </div>
 
       {cartItems.length === 0 ? (
         <div className="text-center py-16 border-2 border-dashed rounded-lg">
             <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
-            <h2 className="mt-6 text-xl font-semibold">Your cart is empty</h2>
-            <p className="mt-2 text-muted-foreground">Looks like you haven't added anything to your cart yet.</p>
+            <h2 className="mt-6 text-xl font-semibold">سلتك فارغة</h2>
+            <p className="mt-2 text-muted-foreground">يبدو أنك لم تضف أي شيء إلى سلتك بعد.</p>
             <Button asChild className="mt-6">
-              <Link href="/products">Start Shopping</Link>
+              <Link href="/products">ابدأ التسوق</Link>
             </Button>
         </div>
       ) : (
@@ -74,23 +74,23 @@ export default function CartPage() {
           <div className="lg:col-span-1">
              <Card>
                 <CardHeader>
-                    <CardTitle>Order Summary</CardTitle>
+                    <CardTitle>ملخص الطلب</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex justify-between">
-                        <span>Subtotal</span>
+                        <span>المجموع الفرعي</span>
                         <span className="font-semibold">${cartTotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                        <span>Shipping</span>
-                        <span className="font-semibold">Free</span>
+                        <span>الشحن</span>
+                        <span className="font-semibold">مجاني</span>
                     </div>
                      <div className="flex justify-between text-lg font-bold border-t pt-4">
-                        <span>Total</span>
+                        <span>الإجمالي</span>
                         <span>${cartTotal.toFixed(2)}</span>
                     </div>
                     <Button asChild size="lg" className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
-                        <Link href="/checkout">Proceed to Checkout</Link>
+                        <Link href="/checkout">الانتقال إلى الدفع</Link>
                     </Button>
                 </CardContent>
              </Card>

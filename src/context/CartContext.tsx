@@ -38,7 +38,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return [...prevItems, { product, quantity }];
     });
     toast({
-      title: "Added to cart",
+      title: "أضيف إلى السلة",
       description: `${quantity} x ${product.name}`,
     })
   };
@@ -46,7 +46,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const removeFromCart = (productId: string) => {
     setCartItems(prevItems => prevItems.filter(item => item.product.id !== productId));
      toast({
-      title: "Removed from cart",
+      title: "تمت الإزالة من السلة",
       variant: "destructive",
     })
   };

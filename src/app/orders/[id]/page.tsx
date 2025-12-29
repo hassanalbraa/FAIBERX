@@ -25,14 +25,14 @@ function OrderDetails({ order, isFallback = false, requestedId }: { order: any; 
     return (
         <div className="container mx-auto px-4 py-8 md:py-12">
             <div className="mb-8">
-                <h1 className="font-headline text-4xl font-bold">Order Details</h1>
-                <p className="text-muted-foreground">Tracking for order #{displayId}</p>
-                {isFallback && <p className="text-sm text-destructive mt-2">Could not find order #{displayId}. Showing a sample order instead.</p>}
+                <h1 className="font-headline text-4xl font-bold">تفاصيل الطلب</h1>
+                <p className="text-muted-foreground">تتبع الطلب #{displayId}</p>
+                {isFallback && <p className="text-sm text-destructive mt-2">تعذر العثور على الطلب #{displayId}. يتم عرض طلب نموذجي بدلاً من ذلك.</p>}
             </div>
 
             <Card className="mb-8">
                 <CardHeader>
-                    <CardTitle>Order Status</CardTitle>
+                    <CardTitle>حالة الطلب</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <OrderTracker currentStatus={order.status} />
@@ -43,7 +43,7 @@ function OrderDetails({ order, isFallback = false, requestedId }: { order: any; 
                 <div className="md:col-span-2">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Items in this order</CardTitle>
+                            <CardTitle>المنتجات في هذا الطلب</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
@@ -54,10 +54,10 @@ function OrderDetails({ order, isFallback = false, requestedId }: { order: any; 
                                         </div>
                                         <div>
                                             <p className="font-semibold">{item.product.name}</p>
-                                            <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                                            <p className="text-sm text-muted-foreground">Price: ${item.price.toFixed(2)}</p>
+                                            <p className="text-sm text-muted-foreground">الكمية: {item.quantity}</p>
+                                            <p className="text-sm text-muted-foreground">السعر: ${item.price.toFixed(2)}</p>
                                         </div>
-                                        <p className="ml-auto font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                                        <p className="mr-auto font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
                                     </div>
                                 ))}
                             </div>
@@ -67,11 +67,11 @@ function OrderDetails({ order, isFallback = false, requestedId }: { order: any; 
                 <div>
                     <Card>
                          <CardHeader>
-                            <CardTitle>Shipping & Payment</CardTitle>
+                            <CardTitle>الشحن والدفع</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                              <div>
-                                <h3 className="font-semibold mb-1">Shipping Address</h3>
+                                <h3 className="font-semibold mb-1">عنوان الشحن</h3>
                                 <div className="text-sm text-muted-foreground">
                                     <p>{order.shippingAddress.name}</p>
                                     <p>{order.shippingAddress.address}</p>
@@ -81,11 +81,11 @@ function OrderDetails({ order, isFallback = false, requestedId }: { order: any; 
                             </div>
                             <Separator />
                             <div>
-                                <h3 className="font-semibold mb-1">Order Summary</h3>
+                                <h3 className="font-semibold mb-1">ملخص الطلب</h3>
                                 <div className="text-sm space-y-1">
-                                    <div className="flex justify-between"><span>Subtotal:</span> <span>${order.total.toFixed(2)}</span></div>
-                                    <div className="flex justify-between"><span>Shipping:</span> <span>$0.00</span></div>
-                                    <div className="flex justify-between font-bold"><span>Total:</span> <span>${order.total.toFixed(2)}</span></div>
+                                    <div className="flex justify-between"><span>المجموع الفرعي:</span> <span>${order.total.toFixed(2)}</span></div>
+                                    <div className="flex justify-between"><span>الشحن:</span> <span>$0.00</span></div>
+                                    <div className="flex justify-between font-bold"><span>الإجمالي:</span> <span>${order.total.toFixed(2)}</span></div>
                                 </div>
                             </div>
                         </CardContent>

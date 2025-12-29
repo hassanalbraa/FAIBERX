@@ -17,8 +17,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['PT Sans', 'sans-serif'],
-        headline: ['Playfair Display', 'serif'],
+        body: ['Tajawal', 'sans-serif'],
+        headline: ['Cairo', 'serif'],
         code: ['monospace'],
       },
       colors: {

@@ -13,6 +13,17 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+    
+  const getCategoryArabicName = (category: string | undefined) => {
+    switch (category) {
+      case 'Tops': return 'بلوزات';
+      case 'Bottoms': return 'بناطيل وتنانير';
+      case 'Dresses': return 'فساتين';
+      case 'Outerwear': return 'ملابس خارجية';
+      case 'Accessories': return 'إكسسوارات';
+      default: return '';
+    }
+  }
 
   return (
     <div className="group relative transition-all duration-300 hover:shadow-xl rounded-lg overflow-hidden border">
@@ -32,10 +43,10 @@ export function ProductCard({ product }: ProductCardProps) {
         <h3 className="font-semibold text-lg truncate">
           <Link href={`/products/${product.id}`}>{product.name}</Link>
         </h3>
-        <p className="text-muted-foreground text-sm">{product.category}</p>
+        <p className="text-muted-foreground text-sm">{getCategoryArabicName(product.category)}</p>
         <div className="flex justify-between items-center mt-4">
           <p className="font-bold text-lg">${product.price.toFixed(2)}</p>
-          <Button size="icon" variant="outline" onClick={() => addToCart(product, 1)} aria-label={`Add ${product.name} to cart`}>
+          <Button size="icon" variant="outline" onClick={() => addToCart(product, 1)} aria-label={`أضف ${product.name} إلى السلة`}>
             <ShoppingCart className="h-4 w-4" />
           </Button>
         </div>

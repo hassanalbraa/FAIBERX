@@ -2,12 +2,12 @@ import type { OrderStatus } from "@/lib/orders";
 import { cn } from "@/lib/utils";
 import { Check, Package, ShoppingCart, Truck, Home } from 'lucide-react';
 
-const statuses: { name: OrderStatus, icon: React.ElementType }[] = [
-    { name: 'Order Placed', icon: ShoppingCart },
-    { name: 'Processing', icon: Package },
-    { name: 'Shipped', icon: Truck },
-    { name: 'Out for Delivery', icon: Truck },
-    { name: 'Delivered', icon: Home },
+const statuses: { name: OrderStatus, icon: React.ElementType, label: string }[] = [
+    { name: 'Order Placed', icon: ShoppingCart, label: 'تم الطلب' },
+    { name: 'Processing', icon: Package, label: 'قيد المعالجة' },
+    { name: 'Shipped', icon: Truck, label: 'تم الشحن' },
+    { name: 'Out for Delivery', icon: Truck, label: 'قيد التوصيل' },
+    { name: 'Delivered', icon: Home, label: 'تم التوصيل' },
 ];
 
 interface OrderTrackerProps {
@@ -28,7 +28,7 @@ export function OrderTracker({ currentStatus }: OrderTrackerProps) {
                     <div key={status.name} className="flex-1 flex flex-col items-center relative">
                         {index > 0 && (
                             <div className={cn(
-                                "absolute top-4 -left-1/2 h-0.5 w-full",
+                                "absolute top-4 -right-1/2 h-0.5 w-full",
                                 isCompleted || isCurrent ? "bg-primary" : "bg-border"
                             )}></div>
                         )}
@@ -44,7 +44,7 @@ export function OrderTracker({ currentStatus }: OrderTrackerProps) {
                             "text-xs md:text-sm mt-2 text-center",
                             isCurrent ? "font-bold text-primary" : "text-muted-foreground"
                         )}>
-                            {status.name}
+                            {status.label}
                         </p>
                     </div>
                 );

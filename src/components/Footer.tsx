@@ -10,30 +10,30 @@ export function Footer() {
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <Shirt className="h-6 w-6 text-primary" />
-              <span className="font-headline text-xl font-semibold tracking-wider">Threads of Couture</span>
+              <span className="font-headline text-xl font-semibold tracking-wider">خيوط الأناقة</span>
             </Link>
-            <p className="text-sm text-muted-foreground">High-end fashion for the modern individual.</p>
+            <p className="text-sm text-muted-foreground">أزياء راقية للفرد العصري.</p>
           </div>
           <div>
-            <h3 className="font-semibold mb-4">Shop</h3>
+            <h3 className="font-semibold mb-4">تسوق</h3>
             <ul className="space-y-2">
-              <li><Link href="/products" className="text-sm text-muted-foreground hover:text-foreground">All Products</Link></li>
-              <li><Link href="/products?category=Tops" className="text-sm text-muted-foreground hover:text-foreground">Tops</Link></li>
-              <li><Link href="/products?category=Dresses" className="text-sm text-muted-foreground hover:text-foreground">Dresses</Link></li>
-              <li><Link href="/products?category=Outerwear" className="text-sm text-muted-foreground hover:text-foreground">Outerwear</Link></li>
+              <li><Link href="/products" className="text-sm text-muted-foreground hover:text-foreground">جميع المنتجات</Link></li>
+              <li><Link href="/products?category=Tops" className="text-sm text-muted-foreground hover:text-foreground">بلوزات</Link></li>
+              <li><Link href="/products?category=Dresses" className="text-sm text-muted-foreground hover:text-foreground">فساتين</Link></li>
+              <li><Link href="/products?category=Outerwear" className="text-sm text-muted-foreground hover:text-foreground">ملابس خارجية</Link></li>
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold mb-4">Customer Service</h3>
+            <h3 className="font-semibold mb-4">خدمة العملاء</h3>
             <ul className="space-y-2">
-              <li><Link href="/account" className="text-sm text-muted-foreground hover:text-foreground">My Account</Link></li>
-              <li><Link href="/orders/track" className="text-sm text-muted-foreground hover:text-foreground">Order Tracking</Link></li>
-              <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Contact Us</Link></li>
-              <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">FAQs</Link></li>
+              <li><Link href="/account" className="text-sm text-muted-foreground hover:text-foreground">حسابي</Link></li>
+              <li><Link href="/orders/track" className="text-sm text-muted-foreground hover:text-foreground">تتبع الطلب</Link></li>
+              <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">اتصل بنا</Link></li>
+              <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">الأسئلة الشائعة</Link></li>
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold mb-4">Follow Us</h3>
+            <h3 className="font-semibold mb-4">تابعنا</h3>
             <div className="flex space-x-4">
               <Button variant="ghost" size="icon" asChild>
                 <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
@@ -54,10 +54,10 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Threads of Couture. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} خيوط الأناقة. جميع الحقوق محفوظة.</p>
           <div className="flex space-x-4 mt-4 md:mt-0">
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Terms of Service</Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Privacy Policy</Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">شروط الخدمة</Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">سياسة الخصوصية</Link>
           </div>
         </div>
       </div>

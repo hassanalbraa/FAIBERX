@@ -12,11 +12,11 @@ import {
 import { useState } from 'react';
 
 const navLinks = [
-  { href: '/products', label: 'All Products' },
-  { href: '/products?category=Tops', label: 'Tops' },
-  { href: '/products?category=Dresses', label: 'Dresses' },
-  { href: '/products?category=Outerwear', label: 'Outerwear' },
-  { href: '/style-finder', label: 'AI Stylist' },
+  { href: '/products', label: 'جميع المنتجات' },
+  { href: '/products?category=Tops', label: 'بلوزات' },
+  { href: '/products?category=Dresses', label: 'فساتين' },
+  { href: '/products?category=Outerwear', label: 'ملابس خارجية' },
+  { href: '/style-finder', label: 'خبير الأزياء الذكي' },
 ];
 
 export function Header() {
@@ -39,7 +39,7 @@ export function Header() {
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
             <Shirt className="h-6 w-6 text-primary" />
-            <span className="font-headline text-xl font-semibold tracking-wider">Threads of Couture</span>
+            <span className="font-headline text-xl font-semibold tracking-wider">خيوط الأناقة</span>
           </Link>
           <nav className="hidden md:flex items-center gap-2">
             <NavLinkItems />
@@ -50,7 +50,7 @@ export function Header() {
           <Button asChild variant="ghost" size="icon">
             <Link href="/account">
               <User className="h-5 w-5" />
-              <span className="sr-only">Account</span>
+              <span className="sr-only">الحساب</span>
             </Link>
           </Button>
           <Button asChild variant="ghost" size="icon" className="relative">
@@ -61,7 +61,7 @@ export function Header() {
                   {cartCount}
                 </span>
               )}
-              <span className="sr-only">Shopping Cart</span>
+              <span className="sr-only">سلة التسوق</span>
             </Link>
           </Button>
 
@@ -70,14 +70,14 @@ export function Header() {
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Menu className="h-6 w-6" />
-                  <span className="sr-only">Open menu</span>
+                  <span className="sr-only">فتح القائمة</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left">
+              <SheetContent side="right">
                 <div className="p-6">
                   <Link href="/" className="flex items-center gap-2 mb-8" onClick={() => setIsSheetOpen(false)}>
                      <Shirt className="h-6 w-6 text-primary" />
-                     <span className="font-headline text-xl font-semibold tracking-wider">Threads of Couture</span>
+                     <span className="font-headline text-xl font-semibold tracking-wider">خيوط الأनाقة</span>
                   </Link>
                   <nav className="flex flex-col gap-4">
                     <NavLinkItems />

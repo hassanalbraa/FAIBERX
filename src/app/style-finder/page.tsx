@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { getOutfitSuggestions } from './actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Camera, Loader2, Sparkles } from 'lucide-radix';
+import { Camera, Loader2, Sparkles } from 'lucide-react';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { products, type Product } from '@/lib/products';
 import { ProductCard } from '@/components/ProductCard';
@@ -37,8 +37,8 @@ export default function StyleFinderPage() {
     e.preventDefault();
     if (!file || !preview) {
       toast({
-        title: 'No photo selected',
-        description: 'Please upload a photo to get style suggestions.',
+        title: 'لم يتم تحديد صورة',
+        description: 'يرجى تحميل صورة للحصول على اقتراحات أسلوب.',
         variant: 'destructive',
       });
       return;
@@ -50,8 +50,8 @@ export default function StyleFinderPage() {
       const result = await getOutfitSuggestions(preview);
       if (result.suggestions && result.suggestions.length > 0) {
         toast({
-          title: 'Suggestions Ready!',
-          description: "Here are some pieces we think you'll love.",
+          title: 'الاقتراحات جاهزة!',
+          description: "إليك بعض القطع التي نعتقد أنك ستحبها.",
         });
 
         // Match suggestions with products
@@ -69,15 +69,15 @@ export default function StyleFinderPage() {
 
       } else {
         toast({
-          title: 'No suggestions found',
-          description: 'We couldn\'t generate suggestions for this image. Please try another one.',
+          title: 'لم يتم العثور على اقتراحات',
+          description: 'لم نتمكن من إنشاء اقتراحات لهذه الصورة. يرجى تجربة صورة أخرى.',
         });
       }
     } catch (error) {
       console.error(error);
       toast({
-        title: 'An error occurred',
-        description: 'Failed to get style suggestions. Please try again.',
+        title: 'حدث خطأ',
+        description: 'فشل في الحصول على اقتراحات الأسلوب. يرجى المحاولة مرة أخرى.',
         variant: 'destructive',
       });
     } finally {
@@ -88,16 +88,16 @@ export default function StyleFinderPage() {
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <div className="text-center mb-12">
-        <h1 className="font-headline text-4xl md:text-5xl font-bold">AI Style Finder</h1>
+        <h1 className="font-headline text-4xl md:text-5xl font-bold">مكتشف الأسلوب بالذكاء الاصطناعي</h1>
         <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
-          Unleash your personal style. Upload a photo of yourself, and our AI will curate a collection just for you.
+          أطلق العنان لأسلوبك الشخصي. حمّل صورة لنفسك، وسيقوم الذكاء الاصطناعي لدينا بتنسيق مجموعة خاصة بك.
         </p>
       </div>
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
         <Card>
           <CardHeader>
-            <CardTitle>Upload Your Photo</CardTitle>
-            <CardDescription>For best results, use a clear, full-body photo.</CardDescription>
+            <CardTitle>تحميل صورتك</CardTitle>
+            <CardDescription>للحصول على أفضل النتائج، استخدم صورة واضحة لكامل الجسم.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -114,9 +114,9 @@ export default function StyleFinderPage() {
               <Input type="file" accept="image/*" onChange={handleFileChange} disabled={isLoading} />
               <Button type="submit" disabled={isLoading || !file} className="w-full">
                 {isLoading ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Analyzing Style...</>
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />جاري تحليل الأسلوب...</>
                 ) : (
-                  <><Sparkles className="mr-2 h-4 w-4" />Get Suggestions</>
+                  <><Sparkles className="mr-2 h-4 w-4" />احصل على اقتراحات</>
                 )}
               </Button>
             </form>
@@ -124,7 +124,7 @@ export default function StyleFinderPage() {
         </Card>
         
         <div>
-          <h2 className="font-headline text-3xl font-bold mb-4">Your Style Recommendations</h2>
+          <h2 className="font-headline text-3xl font-bold mb-4">توصيات أسلوبك</h2>
           {isLoading ? (
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[...Array(4)].map((_, i) => (
@@ -143,7 +143,7 @@ export default function StyleFinderPage() {
             </div>
           ) : (
              <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                <p className="text-muted-foreground">Your suggested products will appear here.</p>
+                <p className="text-muted-foreground">ستظهر منتجاتك المقترحة هنا.</p>
              </div>
           )}
         </div>

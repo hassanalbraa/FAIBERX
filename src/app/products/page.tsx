@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/breadcrumb"
 
 export const metadata = {
-  title: 'All Products | Threads of Couture',
-  description: 'Browse our full collection of high-end fashion.',
+  title: 'كل المنتجات | خيوط الأناقة',
+  description: 'تصفح مجموعتنا الكاملة من الأزياء الراقية.',
 };
 
 export default function ProductsPage({
@@ -25,14 +25,25 @@ export default function ProductsPage({
     ? products.filter(p => p.category === category)
     : products;
     
-  const title = category ? `${category} Collection` : 'All Products';
+  const getCategoryArabicName = (category: string | undefined) => {
+    switch (category) {
+      case 'Tops': return 'بلوزات';
+      case 'Bottoms': return 'بناطيل وتنانير';
+      case 'Dresses': return 'فساتين';
+      case 'Outerwear': return 'ملابس خارجية';
+      case 'Accessories': return 'إكسسوارات';
+      default: return 'كل المنتجات';
+    }
+  }
+
+  const title = category ? `مجموعة ${getCategoryArabicName(category)}` : 'كل المنتجات';
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <Breadcrumb className="mb-8">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            <BreadcrumbLink href="/">الرئيسية</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -45,8 +56,8 @@ export default function ProductsPage({
         <h1 className="font-headline text-4xl md:text-5xl font-bold">{title}</h1>
         <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
           {category 
-            ? `Explore our curated selection of ${category.toLowerCase()}.`
-            : 'Discover the artistry and elegance woven into every piece of our collection.'}
+            ? `استكشف مجموعتنا المختارة من ${getCategoryArabicName(category)?.toLowerCase()}.`
+            : 'اكتشف البراعة والأناقة المنسوجة في كل قطعة من مجموعتنا.'}
         </p>
       </div>
 
@@ -58,7 +69,7 @@ export default function ProductsPage({
         </div>
       ) : (
         <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">No products found in this category.</p>
+            <p className="text-muted-foreground text-lg">لم يتم العثور على منتجات في هذه الفئة.</p>
         </div>
       )}
     </div>
