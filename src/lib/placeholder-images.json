@@ -2,18 +2,18 @@
   "placeholderImages": [
     {
       "id": "hero",
-      "description": "A chic woman in a stylish outfit posing in a modern city street",
-      "imageUrl": "https://images.unsplash.com/photo-1611042553484-d61f84d22784?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxmYXNoaW9uJTIwbW9kZWx8ZW58MHx8fHwxNzY2OTU1MjQxfDA&ixlib=rb-4.1.0&q=80&w=1080"
+      "description": "A collection of custom designed t-shirts hanging on a rack",
+      "imageUrl": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     },
     {
       "id": "product-1",
       "description": "A classic silk blouse with ruffled collar",
-      "imageUrl": "https://images.unsplash.com/photo-1551883647-470f3460b4f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzaWxrJTIwYmxvdXNlfGVufDB8fHx8MTc2NzAwODkwMnww&ixlib=rb-4.1.0&q=80&w=1080"
+      "imageUrl": "https://images.unsplash.com/photo-1551883647-470f3460b4f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzaWxrJTIwYmxvdXNlfGVufDB8fHx8fDE3NjcwMDODkwMnww&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "product-2",
       "description": "High-waisted tailored trousers in navy blue",
-      "imageUrl": "https://images.unsplash.com/photo-1760616172899-0681b97a2de3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx0YWlsb3JlZCUyMHRyb3VzZXJzfGVufDB8fHx8MTc2NzAyOTQyN3ww&ixlib=rb-4.1.0&q=80&w=1080"
+      "imageUrl": "https://images.unsplash.com/photo-1760616172899-0681b97a2de3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx0YWlsb3JlZCUyMHRyb3VzZXJzfGVufDB8fHx8fDE3NjcwMjOTQyN3ww&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "product-3",
@@ -23,7 +23,7 @@
     {
       "id": "product-4",
       "description": "A timeless double-breasted trench coat in beige",
-      "imageUrl": "https://images.unsplash.com/photo-1633821879282-0c4e91f96232?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx0cmVuY2glMjBjb2F0fGVufDB8fHx8MTc2Njk2MjA4N3ww&ixlib=rb-4.1.0&q=80&w=1080"
+      "imageUrl": "https://images.unsplash.com/photo-1633821879282-0c4e91f96232?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx0cmVuY2glMjBjb2F0fGVufDB8fHx8fDE3NjY5NjIwODd8MA&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "product-5",
@@ -38,7 +38,7 @@
     {
       "id": "product-7",
       "description": "A structured leather tote bag",
-      "imageUrl": "https://images.unsplash.com/photo-1647540945262-7da3bd1a3d96?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxsZWF0aGVyJTIwYmFnfGVufDB8fHx8MTc2Njk3MjExMnww&ixlib=rb-4.1.0&q=80&w=1080"
+      "imageUrl": "https://images.unsplash.com/photo-1647540945262-7da3bd1a3d96?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxsZWF0aGVyJTIwYmFnfGVufDB8fHx8fDE3NjY5NzIxMTJ8MA&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "product-8",
@@ -63,7 +63,7 @@
     {
       "id": "instagram-4",
       "description": "Close up detail of fabric texture",
-      "imageUrl": "https://images.unsplash.com/photo-1528458909336-e7a0adfed0a5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxmYWJyaWMlMjB0ZXh0dXJlfGVufDB8fHx8MTc2NzAwODI1MXww&ixlib=rb-4.1.0&q=80&w=1080"
+      "imageUrl": "https://images.unsplash.com/photo-1528458909336-e7a0adfed0a5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxmYWJyaWMlMjB0ZXh0dXJlfGVufDB8fHx8fDE3NjcwMDgyNTF8MA&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "instagram-5",
@@ -73,7 +73,7 @@
     {
       "id": "instagram-6",
       "description": "A stylish coffee shop scene with our product",
-      "imageUrl": "https://images.unsplash.com/photo-1692229219211-138112240a54?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsaWZlc3R5bGUlMjBmYXNoaW9ufGVufDB8fHx8MTc2NzAyOTQyN3ww&ixlib=rb-4.1.0&q=80&w=1080"
+      "imageUrl": "https://images.unsplash.com/photo-1692229219211-138112240a54?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsaWZlc3R5bGUlMjBmYXNoaW9ufGVufDB8fHx8fDE3NjcwMjOTQyN3ww&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "style-finder-placeholder",
