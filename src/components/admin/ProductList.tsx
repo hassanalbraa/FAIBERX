@@ -12,7 +12,7 @@ import {
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Trash2, Pencil } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +44,13 @@ export function ProductList({ products }: ProductListProps) {
                 description: `تم حذف "${productName}" بنجاح.`
             });
         }
+    }
+
+    const handleEdit = () => {
+      toast({
+        title: "قيد التطوير",
+        description: "ميزة تعديل المنتج ستكون متاحة قريباً.",
+      })
     }
 
   if (products.length === 0) {
@@ -102,9 +109,12 @@ export function ProductList({ products }: ProductListProps) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
-                    <DropdownMenuItem>تعديل</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleEdit}>
+                        <Pencil className="h-4 w-4 ml-2" />
+                        تعديل
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(product.id, product.name)}>
+                    <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(product.id, product.name)}>
                         <Trash2 className="h-4 w-4 ml-2" />
                         حذف
                     </DropdownMenuItem>
