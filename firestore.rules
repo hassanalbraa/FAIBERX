@@ -1,0 +1,90 @@
+/**
+ * This ruleset enforces a Role-Based Access Control (RBAC) model.
+ *
+ * Core Philosophy:
+ * Access is primarily determined by a user's role. A user is considered an 'Admin'
+ * if a corresponding document exists for them in the `/roles_admin` collection.
+ * This approach centralizes role management and simplifies security logic.
+ *
+ * Data Structure:
+ * - /products/{productId}: A top-level collection containing all product data.
+ * - /roles_admin/{userId}: A collection where the existence of a document
+ *   with a user's UID as the ID grants them administrative privileges.
+ *
+ * Key Security Decisions:
+ * - Admin-Only Writes: All write operations (create, update, delete) on products
+ *   are strictly limited to authenticated users with the 'Admin' role.
+ * - Controlled Public Reads: Any user (authenticated or not) can read an
+ *   individual product document if they know its ID (`get`). However, listing the
+ *   entire collection of products (`list`) is restricted to Admins to prevent
+ *   data scraping.
+ * - Locked Admin Roles: The `/roles_admin` collection is not writeable from the
+ *   client. This is a critical security measure ensuring that admin roles can only
+ *   be assigned through the Firebase Console or a trusted server-side process.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for readable, maintainable rules.
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the requesting user has an admin role.
+     * This is determined by the existence of a document in the /roles_admin
+     * collection matching the user's UID. This function performs one read.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /**
+     * @description
+     *   Manages product data. Individual products can be read by anyone, but
+     *   only Admins can list, create, update, or delete them.
+     * @path /products/{productId}
+     * @allow (get) Any user, signed in or not, can fetch a single product document.
+     * @allow (list) An Admin user can list all documents in the collection.
+     * @allow (create) An Admin user can create a new product document.
+     * @deny (list) A regular signed-in user or anonymous user cannot list products.
+     * @deny (update) A regular user cannot update an existing product.
+     * @principle
+     *   Implements public read for individual documents while restricting writes
+     *   and collection queries to privileged roles (Admins).
+     */
+    match /products/{productId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description
+     *   Defines which users are administrators. The existence of a document
+     *   grants the role. This collection is read-only from the client.
+     * @path /roles_admin/{adminId}
+     * @allow (N/A) No client-side operations are permitted.
+     * @deny (create) A user cannot make themselves an admin.
+     * @deny (delete) An admin cannot revoke their own or another's admin status.
+     * @principle
+     *   Enforces a "locked down" security model for critical role-management
+     *   data, requiring changes to be made from a trusted environment like the
+     *   Firebase Console or a backend server.
+     */
+    match /roles_admin/{adminId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}
