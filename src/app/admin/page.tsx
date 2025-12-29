@@ -1,15 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, PlusCircle, LogOut, ShoppingCart, Users } from 'lucide-react';
+import { Loader2, PlusCircle, LogOut, ShoppingCart, Users, CheckCheck } from 'lucide-react';
 import AddProductForm from '@/components/admin/AddProductForm';
 import { ProductList } from '@/components/admin/ProductList';
 import { collection } from 'firebase/firestore';
 import type { Product } from '@/lib/products';
+import type { Order } from '@/lib/orders';
 import { getAuth, signOut } from 'firebase/auth';
 import Link from 'next/link';
 
@@ -36,6 +37,17 @@ export default function AdminDashboard() {
     [firestore]
   );
   const { data: users, isLoading: usersLoading } = useCollection<UserProfile>(usersQuery);
+
+  const ordersQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'orders') : null),
+    [firestore]
+  );
+  const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
+
+  const completedOrdersCount = useMemo(() => {
+    if (!orders) return 0;
+    return orders.filter(order => order.status === 'Delivered').length;
+  }, [orders]);
 
 
   const isAdmin = user?.email === 'admin@example.com';
@@ -102,13 +114,26 @@ export default function AdminDashboard() {
                         <ShoppingCart />
                         طلبات الزبائن
                     </CardTitle>
-                    <CardDescription>عرض وإدارة جميع طلبات العملاء.</CardDescription>
+                     <CardDescription>
+                        {ordersLoading ? "جاري تحميل الطلبات..." : `لديك ${orders?.length || 0} طلب إجمالاً.`}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button asChild className="w-full">
                         <Link href="/admin/orders">عرض الطلبات</Link>
                     </Button>
                 </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <CheckCheck />
+                        الطلبات المكتملة
+                    </CardTitle>
+                     <CardDescription>
+                        {ordersLoading ? "جاري الحساب..." : `تم توصيل ${completedOrdersCount} طلب بنجاح.`}
+                    </CardDescription>
+                </CardHeader>
             </Card>
             <Card>
                 <CardHeader>
