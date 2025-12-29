@@ -6,6 +6,7 @@ import type { Product } from '@/lib/products';
 import { Button } from './ui/button';
 import { useCart } from '@/context/CartContext';
 import { ShoppingCart } from 'lucide-react';
+import { Skeleton } from './ui/skeleton';
 
 interface ProductCardProps {
   product: Product;
@@ -53,4 +54,19 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
     </div>
   );
+}
+
+
+ProductCard.Skeleton = function ProductCardSkeleton() {
+  return (
+    <div className="space-y-2">
+      <Skeleton className="aspect-[3/4] rounded-lg" />
+      <Skeleton className="h-5 w-3/4" />
+      <Skeleton className="h-4 w-1/2" />
+      <div className="flex justify-between items-center pt-2">
+        <Skeleton className="h-6 w-1/4" />
+        <Skeleton className="h-8 w-8 rounded-full" />
+      </div>
+    </div>
+  )
 }

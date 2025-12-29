@@ -1,0 +1,94 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Loader2, PlusCircle, LogOut } from 'lucide-react';
+import AddProductForm from '@/components/admin/AddProductForm';
+import { ProductList } from '@/components/admin/ProductList';
+import { collection } from 'firebase/firestore';
+import type { Product } from '@/lib/products';
+import { getAuth, signOut } from 'firebase/auth';
+
+export default function AdminDashboard() {
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  const productsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'products') : null),
+    [firestore]
+  );
+  const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.replace('/admin/login');
+    }
+  }, [user, isUserLoading, router]);
+
+  const handleLogout = async () => {
+    const auth = getAuth();
+    await signOut(auth);
+    router.push('/admin/login');
+  };
+
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 md:py-12">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+            <h1 className="font-headline text-4xl font-bold">لوحة تحكم المشرف</h1>
+            <p className="text-muted-foreground">مرحبًا, {user.email}</p>
+        </div>
+        <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="ml-2 h-4 w-4" />
+            تسجيل الخروج
+        </Button>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-8 items-start">
+        <div className="md:col-span-1">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <PlusCircle />
+                        إضافة منتج جديد
+                    </CardTitle>
+                    <CardDescription>املأ النموذج لإضافة منتج إلى متجرك.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <AddProductForm />
+                </CardContent>
+            </Card>
+        </div>
+        <div className="md:col-span-2">
+          <Card>
+            <CardHeader>
+                <CardTitle>قائمة المنتجات</CardTitle>
+                <CardDescription>عرض وإدارة منتجاتك الحالية.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {productsLoading ? (
+                    <div className="flex justify-center items-center h-48">
+                        <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                ) : (
+                    <ProductList products={products || []} />
+                )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}

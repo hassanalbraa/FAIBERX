@@ -1,5 +1,8 @@
+'use client';
+
+import { useSearchParams } from 'next/navigation';
 import { ProductCard } from '@/components/ProductCard';
-import { products, type Product } from '@/lib/products';
+import type { Product } from '@/lib/products';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -7,25 +10,27 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+} from "@/components/ui/breadcrumb";
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
-export const metadata = {
-  title: 'كل المنتجات | خيوط الأناقة',
-  description: 'تصفح مجموعتنا الكاملة من الأزياء الراقية.',
-};
+export default function ProductsPage() {
+  const searchParams = useSearchParams();
+  const category = searchParams.get('category');
+  const firestore = useFirestore();
 
-export default function ProductsPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
-  const category = searchParams['category'] as string | undefined;
+  const productsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    const productsCollection = collection(firestore, 'products');
+    if (category) {
+      return query(productsCollection, where('category', '==', category));
+    }
+    return productsCollection;
+  }, [firestore, category]);
 
-  const filteredProducts = category
-    ? products.filter(p => p.category === category)
-    : products;
-    
-  const getCategoryArabicName = (category: string | undefined) => {
+  const { data: filteredProducts, isLoading } = useCollection<Product>(productsQuery);
+
+  const getCategoryArabicName = (category: string | null) => {
     switch (category) {
       case 'Tops': return 'بلوزات';
       case 'Bottoms': return 'بناطيل وتنانير';
@@ -36,7 +41,7 @@ export default function ProductsPage({
     }
   }
 
-  const title = category ? `مجموعة ${getCategoryArabicName(category)}` : 'كل المنتجات';
+  const title = getCategoryArabicName(category);
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -61,7 +66,13 @@ export default function ProductsPage({
         </p>
       </div>
 
-      {filteredProducts.length > 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          {[...Array(8)].map((_, i) => (
+            <ProductCard.Skeleton key={i} />
+          ))}
+        </div>
+      ) : filteredProducts && filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {filteredProducts.map((product: Product) => (
             <ProductCard key={product.id} product={product} />

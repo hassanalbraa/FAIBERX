@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { products, type Product } from '@/lib/products';
+import type { Product } from '@/lib/products';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { Plus, Minus } from 'lucide-react';
@@ -15,12 +15,24 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const firestore = useFirestore();
 
-  const product = products.find((p: Product) => p.id === params.id);
+  const productRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'products', params.id);
+  }, [firestore, params.id]);
+
+  const { data: product, isLoading } = useDoc<Product>(productRef);
+
+  if (isLoading) {
+    return <ProductDetailSkeleton />;
+  }
 
   if (!product) {
     notFound();
@@ -66,7 +78,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 50vw"
-            data-ai-hint={product.imageHint}
+            data-ai-hint={product.imageHint || 'fashion product'}
           />
         </div>
         <div>
@@ -88,6 +100,32 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <Button size="lg" onClick={handleAddToCart} className="flex-grow bg-primary text-primary-foreground hover:bg-primary/90">
               أضف إلى السلة
             </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function ProductDetailSkeleton() {
+  return (
+    <div className="container mx-auto px-4 py-8 md:py-12 animate-pulse">
+      <div className="h-6 bg-muted rounded w-1/3 mb-8"></div>
+      <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
+        <div className="aspect-[3/4] bg-muted rounded-lg"></div>
+        <div>
+          <div className="h-4 bg-muted rounded w-1/4 mb-4"></div>
+          <div className="h-10 bg-muted rounded w-3/4 mb-4"></div>
+          <div className="h-8 bg-muted rounded w-1/3 mb-6"></div>
+          <div className="space-y-2">
+            <div className="h-4 bg-muted rounded w-full"></div>
+            <div className="h-4 bg-muted rounded w-full"></div>
+            <div className="h-4 bg-muted rounded w-2/3"></div>
+          </div>
+          <div className="mt-8 flex items-center gap-4">
+            <div className="h-12 w-32 bg-muted rounded-md"></div>
+            <div className="h-12 flex-grow bg-muted rounded-md"></div>
           </div>
         </div>
       </div>

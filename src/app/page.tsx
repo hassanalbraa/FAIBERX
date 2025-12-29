@@ -1,14 +1,26 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { products } from '@/lib/products';
 import { ProductCard } from '@/components/ProductCard';
 import { InstagramFeed } from '@/components/InstagramFeed';
 import { ArrowLeft } from 'lucide-react';
 import { placeholderImages } from '@/lib/placeholder-images';
+import { useCollection } from '@/firebase';
+import { collection, limit, query } from 'firebase/firestore';
+import { useFirestore, useMemoFirebase } from '@/firebase/provider';
+import type { Product } from '@/lib/products';
 
 export default function Home() {
-  const featuredProducts = products.slice(0, 4);
+  const firestore = useFirestore();
+
+  const productsQuery = useMemoFirebase(() => 
+    firestore ? query(collection(firestore, 'products'), limit(4)) : null
+  , [firestore]);
+
+  const { data: featuredProducts, isLoading } = useCollection<Product>(productsQuery);
+
   const heroImage = placeholderImages.find(p => p.id === 'hero');
 
   return (
@@ -46,7 +58,8 @@ export default function Home() {
           <p className="text-muted-foreground mt-2">مختارة بعناية للخبراء العصريين</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {featuredProducts.map(product => (
+          {isLoading && [...Array(4)].map((_, i) => <ProductCard.Skeleton key={i} />)}
+          {featuredProducts?.map(product => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>

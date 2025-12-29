@@ -8,6 +8,7 @@ export type Product = {
   image: string;
   category: 'Tops' | 'Bottoms' | 'Dresses' | 'Outerwear' | 'Accessories';
   imageHint: string;
+  stock?: number;
 };
 
 const productPlaceholders = placeholderImages.filter(p => p.id.startsWith('product-'));
@@ -16,6 +17,8 @@ function getPlaceholder(id: string): ImagePlaceholder {
     return productPlaceholders.find(p => p.id === id) || { id: '', description: '', imageUrl: '', imageHint: '' };
 }
 
+// This data is now considered fallback data or for reference,
+// as the main source of truth will be Firestore.
 export const products: Product[] = [
   {
     id: '1',
