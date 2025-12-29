@@ -8,7 +8,7 @@ import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
-import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash, Loader2 } from "lucide-react";
+import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -132,7 +132,13 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
                              <DropdownMenuItem asChild>
                                 <a href={`mailto:${order.shippingAddress.email}`}>
                                     <Mail className="ml-2 h-4 w-4" />
-                                    تواصل مع الزبون
+                                    تواصل عبر البريد
+                                </a>
+                            </DropdownMenuItem>
+                             <DropdownMenuItem asChild>
+                                <a href={`https://wa.me/${order.shippingAddress.whatsappNumber.replace('+', '')}`} target="_blank" rel="noopener noreferrer">
+                                    <MessageSquare className="ml-2 h-4 w-4" />
+                                    تواصل عبر واتساب
                                 </a>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -221,10 +227,21 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
                                 <div className="text-sm text-muted-foreground">
                                     <p>{order.shippingAddress.name}</p>
                                     <p>{order.shippingAddress.address}</p>
-                                    <p>{order.shippingAddress.city}</p>
-                                    <p>{order.shippingAddress.country}</p>
-                                    <a href={`mailto:${order.shippingAddress.email}`} className="text-primary hover:underline block mt-1">{order.shippingAddress.email}</a>
-                                     <a href={`https://wa.me/${order.shippingAddress.whatsappNumber.replace('+', '')}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline block mt-1">{order.shippingAddress.whatsappNumber}</a>
+                                    <p>{order.shippingAddress.city}, {order.shippingAddress.country}</p>
+                                </div>
+                            </div>
+                            <Separator />
+                             <div>
+                                <h3 className="font-semibold mb-1">معلومات التواصل</h3>
+                                <div className="text-sm text-muted-foreground space-y-2">
+                                     <a href={`mailto:${order.shippingAddress.email}`} className="flex items-center gap-2 text-primary hover:underline">
+                                        <Mail className="h-4 w-4" />
+                                        {order.shippingAddress.email}
+                                     </a>
+                                     <a href={`https://wa.me/${order.shippingAddress.whatsappNumber.replace(/\s/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:underline">
+                                        <MessageSquare className="h-4 w-4" />
+                                        {order.shippingAddress.whatsappNumber}
+                                    </a>
                                 </div>
                             </div>
                             <Separator />

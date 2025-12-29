@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ShoppingCart, MoreHorizontal, CheckCircle, Truck, XCircle, PauseCircle } from 'lucide-react';
+import { Loader2, ShoppingCart, MoreHorizontal, CheckCircle, Truck, XCircle, PauseCircle, Mail, MessageSquare } from 'lucide-react';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import type { Order, OrderStatus } from '@/lib/orders';
 import {
@@ -142,7 +142,20 @@ export default function AdminOrdersPage() {
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>إجراءات</DropdownMenuLabel>
                                 <DropdownMenuItem asChild><Link href={`/orders/${order.id}`}>عرض التفاصيل</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><a href={`mailto:${order.shippingAddress.email}`}>تواصل مع الزبون</a></DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuLabel>تواصل مع الزبون</DropdownMenuLabel>
+                                <DropdownMenuItem asChild>
+                                  <a href={`mailto:${order.shippingAddress.email}`}>
+                                    <Mail className="ml-2 h-4 w-4"/>
+                                    عبر البريد الإلكتروني
+                                  </a>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <a href={`https://wa.me/${order.shippingAddress.whatsappNumber.replace('+', '')}`} target="_blank" rel="noopener noreferrer">
+                                    <MessageSquare className="ml-2 h-4 w-4" />
+                                    عبر واتساب
+                                  </a>
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                  <DropdownMenuSub>
                                     <DropdownMenuSubTrigger>تغيير الحالة</DropdownMenuSubTrigger>
