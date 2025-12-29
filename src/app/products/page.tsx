@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { Home } from 'lucide-react';
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
@@ -55,7 +58,15 @@ export default function ProductsPage() {
       </Breadcrumb>
     
       <div className="text-center mb-12">
-        <h1 className="font-headline text-4xl md:text-5xl font-bold">{title}</h1>
+        <div className="flex justify-center items-center gap-4 mb-2">
+            <h1 className="font-headline text-4xl md:text-5xl font-bold">{title}</h1>
+            <Button asChild variant="outline" size="icon">
+                <Link href="/">
+                    <Home className="h-5 w-5" />
+                    <span className="sr-only">الصفحة الرئيسية</span>
+                </Link>
+            </Button>
+        </div>
         <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
           {category 
             ? `استكشف مجموعتنا المختارة من ${getCategoryArabicName(category)?.toLowerCase()}.`
