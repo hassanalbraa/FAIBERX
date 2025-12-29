@@ -3,6 +3,8 @@ import { Shirt, Instagram, Twitter, Facebook } from 'lucide-react';
 import { Button } from './ui/button';
 
 export function Footer() {
+  const mockOrderId = "TOC12345"; // Example order ID
+
   return (
     <footer className="bg-secondary/50 border-t">
       <div className="container mx-auto px-4 py-8 md:py-12">
@@ -27,7 +29,7 @@ export function Footer() {
             <h3 className="font-semibold mb-4">خدمة العملاء</h3>
             <ul className="space-y-2">
               <li><Link href="/account" className="text-sm text-muted-foreground hover:text-foreground">حسابي</Link></li>
-              <li><Link href="/orders/track" className="text-sm text-muted-foreground hover:text-foreground">تتبع الطلب</Link></li>
+              <li><Link href={`/orders/${mockOrderId}`} className="text-sm text-muted-foreground hover:text-foreground">تتبع الطلب</Link></li>
               <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">اتصل بنا</Link></li>
               <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">الأسئلة الشائعة</Link></li>
             </ul>
