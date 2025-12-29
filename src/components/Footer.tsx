@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Shirt, Instagram, Twitter, Facebook } from 'lucide-react';
 import { Button } from './ui/button';
+import { ShareButton } from './ShareButton';
 
 export function Footer() {
   const mockOrderId = "TOC12345"; // Example order ID
@@ -20,6 +21,7 @@ export function Footer() {
             <h3 className="font-semibold mb-4">تسوق</h3>
             <ul className="space-y-2">
               <li><Link href="/products" className="text-sm text-muted-foreground hover:text-foreground">جميع المنتجات</Link></li>
+              <li><Link href="/style-finder" className="text-sm text-muted-foreground hover:text-foreground">خبير الأزياء الذكي</Link></li>
             </ul>
           </div>
           <div>
@@ -29,6 +31,7 @@ export function Footer() {
               <li><Link href={`/orders/${mockOrderId}`} className="text-sm text-muted-foreground hover:text-foreground">تتبع الطلب</Link></li>
               <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">اتصل بنا</Link></li>
               <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">الأسئلة الشائعة</Link></li>
+              <li><ShareButton variant="link" className="text-sm text-muted-foreground hover:text-foreground p-0 h-auto" /></li>
             </ul>
           </div>
           <div>

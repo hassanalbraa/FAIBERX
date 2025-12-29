@@ -1,7 +1,7 @@
 "use client";
 
 import { Share2 } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button, ButtonProps } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   Tooltip,
@@ -9,9 +9,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils";
 
 
-export function ShareButton() {
+export function ShareButton({ variant = "ghost", size = "icon", className, ...props }: ButtonProps) {
   const { toast } = useToast();
 
   const handleShare = async () => {
@@ -52,11 +53,19 @@ export function ShareButton() {
     }
   };
 
+  if (variant === 'link') {
+    return (
+       <button onClick={handleShare} className={cn("text-sm text-muted-foreground hover:text-foreground p-0 h-auto", className)}>
+            مشاركة الموقع
+        </button>
+    )
+  }
+
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" onClick={handleShare}>
+          <Button variant={variant} size={size} onClick={handleShare} className={className} {...props}>
             <Share2 className="h-5 w-5" />
             <span className="sr-only">مشاركة الموقع</span>
           </Button>
