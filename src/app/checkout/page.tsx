@@ -12,12 +12,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Input }s from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Banknote, Upload, FileText } from "lucide-react";
+import { useState, useRef } from "react";
 
 const formSchema = z.object({
   email: z.string().email("بريد إلكتروني غير صالح"),
@@ -26,17 +29,15 @@ const formSchema = z.object({
   address: z.string().min(1, "العنوان مطلوب"),
   city: z.string().min(1, "المدينة مطلوبة"),
   country: z.string().min(1, "الدولة مطلوبة"),
-  whatsappNumber: z.string().min(10, "رقم الواتساب غير صالح ويبدو قصيراً جداً").regex(/^\+\d+$/, "يجب أن يبدأ الرقم بـ + متبوعًا بمفتاح الدولة والرقم."),
-  cardName: z.string().min(1, "الاسم على البطاقة مطلوب"),
-  cardNumber: z.string().regex(/^\d{16}$/, "يجب أن يتكون رقم البطاقة من 16 رقمًا"),
-  expiryDate: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "يجب أن يكون تاريخ انتهاء الصلاحية بتنسيق MM/YY"),
-  cvc: z.string().regex(/^\d{3,4}$/, "يجب أن يتكون CVC من 3 أو 4 أرقام"),
+  whatsappNumber: z.string().min(10, "رقم الواتساب غير صالح ويبدو قصيراً جداً").regex(/^\+?\d{10,}$/, "يجب أن يبدأ الرقم بـ + متبوعًا بمفتاح الدولة أو أن يكون رقمًا محليًا صالحًا."),
 });
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const router = useRouter();
   const { toast } = useToast();
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,20 +47,39 @@ export default function CheckoutPage() {
       lastName: "",
       address: "",
       city: "",
-      country: "",
-      whatsappNumber: "",
-      cardName: "",
-      cardNumber: "",
-      expiryDate: "",
-      cvc: "",
+      country: "Sudan", // Default country
+      whatsappNumber: "+249", // Default country code
     },
   });
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setReceiptFile(file);
+      toast({
+        title: "تم اختيار الإشعار",
+        description: `تم اختيار الملف: ${file.name}`,
+      });
+    }
+  };
+
   function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!receiptFile) {
+        toast({
+            variant: "destructive",
+            title: "لم يتم إرفاق الإشعار",
+            description: "يرجى إرفاق إشعار التحويل البنكي للمتابعة.",
+        });
+        return;
+    }
+    
     console.log("Mock order placed:", values);
+    console.log("Receipt file:", receiptFile.name);
+    // In a real app, you would upload the receiptFile here.
+
     toast({
         title: "تم استلام الطلب!",
-        description: "شكرا لك على شرائك. طلبك قيد المعالجة."
+        description: "شكرا لك على شرائك. طلبك قيد المراجعة والتحقق من الدفع."
     });
     const mockOrderId = "TOC" + Math.floor(Math.random() * 90000) + 10000;
     clearCart();
@@ -132,11 +152,11 @@ export default function CheckoutPage() {
                     )}/>
                   </div>
                   <FormField control={form.control} name="address" render={({ field }) => (
-                    <FormItem><FormLabel>العنوان</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>العنوان</FormLabel><FormControl><Input placeholder="مثال: الخرطوم، شارع أفريقيا، مبنى رقم 5" {...field} /></FormControl><FormMessage /></FormItem>
                   )}/>
                   <div className="flex gap-4">
                      <FormField control={form.control} name="city" render={({ field }) => (
-                      <FormItem className="flex-1"><FormLabel>المدينة</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                      <FormItem className="flex-1"><FormLabel>المدينة</FormLabel><FormControl><Input placeholder="الخرطوم" {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
                      <FormField control={form.control} name="country" render={({ field }) => (
                       <FormItem className="flex-1"><FormLabel>الدولة</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -155,23 +175,51 @@ export default function CheckoutPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>تفاصيل الدفع</CardTitle>
-                   <CardDescription>هذا دفع وهمي. لا تستخدم تفاصيل بطاقة حقيقية.</CardDescription>
+                   <CardDescription>أكمل الدفع عبر التحويل البنكي ثم أرفق إشعار التحويل.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <FormField control={form.control} name="cardName" render={({ field }) => (
-                    <FormItem><FormLabel>الاسم على البطاقة</FormLabel><FormControl><Input placeholder="John M. Doe" {...field} /></FormControl><FormMessage /></FormItem>
-                  )}/>
-                  <FormField control={form.control} name="cardNumber" render={({ field }) => (
-                    <FormItem><FormLabel>رقم البطاقة</FormLabel><FormControl><Input placeholder="1111222233334444" {...field} /></FormControl><FormMessage /></FormItem>
-                  )}/>
-                   <div className="flex gap-4">
-                    <FormField control={form.control} name="expiryDate" render={({ field }) => (
-                      <FormItem className="flex-1"><FormLabel>انتهاء الصلاحية (MM/YY)</FormLabel><FormControl><Input placeholder="12/25" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="cvc" render={({ field }) => (
-                      <FormItem className="w-1/3"><FormLabel>CVC</FormLabel><FormControl><Input placeholder="123" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                  </div>
+                    <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="item-1">
+                            <AccordionTrigger className="font-semibold">
+                                <div className="flex items-center gap-2">
+                                    <Banknote className="h-5 w-5"/>
+                                    الدفع عن طريق التحويل البنكي
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="pt-4 space-y-2 bg-muted/50 p-4 rounded-md">
+                                <p className="text-sm">يرجى تحويل المبلغ الإجمالي إلى الحساب التالي:</p>
+                                <div className="font-mono bg-background p-3 rounded-md text-center">
+                                    <p><span className="font-semibold">اسم الحساب:</span> يوسف عصام</p>
+                                    <p><span className="font-semibold">رقم الحساب:</span> 8312783</p>
+                                    <p><span className="font-semibold">البنك:</span> بنكك</p>
+                                </div>
+                                <p className="text-xs text-muted-foreground pt-2">بعد التحويل، يرجى إرفاق صورة من إشعار الدفع أدناه لإكمال طلبك.</p>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                    
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        className="hidden"
+                        accept="image/*,application/pdf"
+                    />
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <Upload className="ml-2 h-4 w-4" />
+                        إرفاق إشعار التحويل
+                    </Button>
+                    {receiptFile && (
+                        <div className="flex items-center justify-center text-sm text-green-600 border border-green-200 bg-green-50 p-3 rounded-md">
+                            <FileText className="ml-2 h-4 w-4" />
+                            <span>تم اختيار الملف: {receiptFile.name}</span>
+                        </div>
+                    )}
                 </CardContent>
               </Card>
 
@@ -183,5 +231,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-    
