@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, ListOrdered, ShoppingBag } from 'lucide-react';
 import { mockOrders } from '@/lib/orders';
 import { cn } from '@/lib/utils';
+import type { OrderStatus } from '@/lib/orders';
 
 export default function OrderHistoryPage() {
   const { user, isUserLoading } = useUser();
@@ -30,13 +31,16 @@ export default function OrderHistoryPage() {
     );
   }
 
-  const getStatusVariant = (status: string) => {
+  const getStatusVariant = (status: OrderStatus) => {
     switch (status) {
       case 'Delivered':
         return 'default';
       case 'Shipped':
       case 'Out for Delivery':
         return 'secondary';
+      case 'Cancelled':
+      case 'Suspended':
+        return 'destructive';
       default:
         return 'outline';
     }
@@ -79,7 +83,7 @@ export default function OrderHistoryPage() {
                     <TableCell className="font-medium">#{order.id}</TableCell>
                     <TableCell>{new Date(order.date).toLocaleDateString('ar-EG')}</TableCell>
                     <TableCell>
-                      <Badge variant={getStatusVariant(order.status) as any}>{order.status}</Badge>
+                      <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                     </TableCell>
                     <TableCell className="text-right">{order.total.toFixed(2)} SDG</TableCell>
                     <TableCell className="text-right">

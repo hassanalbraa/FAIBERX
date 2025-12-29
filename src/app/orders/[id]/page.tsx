@@ -1,33 +1,121 @@
-import { notFound } from "next/navigation";
-import { mockOrders } from "@/lib/orders";
+'use client';
+
+import { notFound, useRouter } from "next/navigation";
+import { mockOrders as initialOrders, OrderStatus } from "@/lib/orders";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { OrderTracker } from "@/components/OrderTracker";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
+import { useUser } from "@/firebase";
+import { Button } from "@/components/ui/button";
+import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+} from "@/components/ui/dropdown-menu";
+
 
 export default function OrderTrackingPage({ params }: { params: { id: string } }) {
-    const order = mockOrders.find(o => o.id === params.id);
+    // We use state to make status changes reflect in the UI
+    const [orders, setOrders] = useState(initialOrders);
+    const { toast } = useToast();
+    const { user } = useUser();
+    const isAdmin = user?.email === 'admin@example.com';
+
+    const order = orders.find(o => o.id === params.id);
+    
+    const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
+        setOrders(prevOrders => prevOrders.map(o => o.id === orderId ? {...o, status: newStatus} : o));
+        toast({
+            title: "تم تحديث حالة الطلب",
+            description: `تم تغيير حالة الطلب #${orderId} إلى "${newStatus}".`,
+        });
+    }
 
     if (!order) {
         // In a real app, you might show a generic "Order not found" page
         // For this mock, we'll just show the first order if ID doesn't match
-        const fallbackOrder = mockOrders[0];
+        const fallbackOrder = orders[0];
         if (!fallbackOrder) notFound();
-        return <OrderDetails order={fallbackOrder} isFallback={true} requestedId={params.id} />;
+        return <OrderDetails order={fallbackOrder} isFallback={true} requestedId={params.id} isAdmin={isAdmin} onStatusChange={handleStatusChange} />;
     }
 
-    return <OrderDetails order={order} />;
+    return <OrderDetails order={order} isAdmin={isAdmin} onStatusChange={handleStatusChange} />;
 }
 
-function OrderDetails({ order, isFallback = false, requestedId }: { order: any; isFallback?: boolean; requestedId?: string }) {
+function OrderDetails({ order, isFallback = false, requestedId, isAdmin, onStatusChange }: { order: any; isFallback?: boolean; requestedId?: string; isAdmin: boolean; onStatusChange: (id: string, status: OrderStatus) => void }) {
     const displayId = isFallback ? requestedId : order.id;
 
     return (
         <div className="container mx-auto px-4 py-8 md:py-12">
-            <div className="mb-8">
-                <h1 className="font-headline text-4xl font-bold">تفاصيل الطلب</h1>
-                <p className="text-muted-foreground">تتبع الطلب #{displayId}</p>
-                {isFallback && <p className="text-sm text-destructive mt-2">تعذر العثور على الطلب #{displayId}. يتم عرض طلب نموذجي بدلاً من ذلك.</p>}
+            <div className="flex justify-between items-start mb-8">
+                <div>
+                    <h1 className="font-headline text-4xl font-bold">تفاصيل الطلب</h1>
+                    <p className="text-muted-foreground">تتبع الطلب #{displayId}</p>
+                    {isFallback && <p className="text-sm text-destructive mt-2">تعذر العثور على الطلب #{displayId}. يتم عرض طلب نموذجي بدلاً من ذلك.</p>}
+                </div>
+                 {isAdmin && (
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                                <span className="sr-only">إجراءات الأدمن</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>إجراءات الأدمن</DropdownMenuLabel>
+                             <DropdownMenuItem asChild>
+                                <a href={`mailto:${order.shippingAddress.email}`}>
+                                    <Mail className="ml-2 h-4 w-4" />
+                                    تواصل مع الزبون
+                                </a>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                             <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>تغيير الحالة</DropdownMenuSubTrigger>
+                                <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem onClick={() => onStatusChange(order.id, 'Processing')}>
+                                        <CheckCircle className="ml-2 h-4 w-4" />
+                                        قيد المعالجة
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onStatusChange(order.id, 'Shipped')}>
+                                        <Truck className="ml-2 h-4 w-4" />
+                                        تم الشحن
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onStatusChange(order.id, 'Out for Delivery')}>
+                                        <Truck className="ml-2 h-4 w-4" />
+                                        قيد التوصيل
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onStatusChange(order.id, 'Delivered')}>
+                                        <CheckCircle className="ml-2 h-4 w-4" />
+                                        تم التوصيل
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                                </DropdownMenuPortal>
+                            </DropdownMenuSub>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-amber-600 focus:text-amber-700" onClick={() => onStatusChange(order.id, 'Suspended')}>
+                                <PauseCircle className="ml-2 h-4 w-4" />
+                                تعليق الطلب
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onStatusChange(order.id, 'Cancelled')}>
+                                <XCircle className="ml-2 h-4 w-4" />
+                                رفض الطلب
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                 )}
             </div>
 
             <Card className="mb-8">
@@ -77,6 +165,7 @@ function OrderDetails({ order, isFallback = false, requestedId }: { order: any; 
                                     <p>{order.shippingAddress.address}</p>
                                     <p>{order.shippingAddress.city}, {order.shippingAddress.zip}</p>
                                     <p>{order.shippingAddress.country}</p>
+                                    <a href={`mailto:${order.shippingAddress.email}`} className="text-primary hover:underline block mt-1">{order.shippingAddress.email}</a>
                                 </div>
                             </div>
                             <Separator />

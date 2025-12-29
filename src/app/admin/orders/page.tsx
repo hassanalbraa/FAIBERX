@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
@@ -8,12 +8,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ShoppingCart } from 'lucide-react';
-import { mockOrders } from '@/lib/orders';
+import { Loader2, ShoppingCart, MoreHorizontal, CheckCircle, Truck, XCircle, PauseCircle } from 'lucide-react';
+import { mockOrders as initialOrders, Order, OrderStatus } from '@/lib/orders';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+} from "@/components/ui/dropdown-menu"
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminOrdersPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
+  const [orders, setOrders] = useState<Order[]>(initialOrders);
 
   const isAdmin = user?.email === 'admin@example.com';
 
@@ -26,6 +41,14 @@ export default function AdminOrdersPage() {
       }
     }
   }, [user, isUserLoading, isAdmin, router]);
+
+  const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
+    setOrders(prevOrders => prevOrders.map(o => o.id === orderId ? {...o, status: newStatus} : o));
+    toast({
+        title: "تم تحديث حالة الطلب",
+        description: `تم تغيير حالة الطلب #${orderId} إلى "${newStatus}".`,
+    });
+  }
 
   if (isUserLoading || !isAdmin) {
     return (
@@ -43,6 +66,9 @@ export default function AdminOrdersPage() {
       case 'Shipped':
       case 'Out for Delivery':
         return 'secondary';
+      case 'Cancelled':
+      case 'Suspended':
+        return 'destructive';
       default:
         return 'outline';
     }
@@ -62,13 +88,13 @@ export default function AdminOrdersPage() {
         <CardHeader>
             <CardTitle>جميع الطلبات</CardTitle>
             <CardDescription>
-                {mockOrders.length > 0
-                ? `لديك ${mockOrders.length} طلبات إجمالاً.`
+                {orders.length > 0
+                ? `لديك ${orders.length} طلبات إجمالاً.`
                 : 'لا توجد طلبات لعرضها حاليًا.'}
             </CardDescription>
         </CardHeader>
         <CardContent>
-          {mockOrders.length > 0 ? (
+          {orders.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -77,23 +103,64 @@ export default function AdminOrdersPage() {
                   <TableHead>التاريخ</TableHead>
                   <TableHead>الحالة</TableHead>
                   <TableHead className="text-right">الإجمالي</TableHead>
-                  <TableHead className="w-[100px]"></TableHead>
+                  <TableHead className="w-[100px] text-center">الإجراءات</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockOrders.map(order => (
+                {orders.map(order => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-medium">#{order.id}</TableCell>
+                    <TableCell className="font-medium">
+                        <Link href={`/orders/${order.id}`} className="hover:underline">#{order.id}</Link>
+                    </TableCell>
                     <TableCell>{order.shippingAddress.name}</TableCell>
                     <TableCell>{new Date(order.date).toLocaleDateString('ar-EG')}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(order.status) as any}>{order.status}</Badge>
                     </TableCell>
                     <TableCell className="text-right">{order.total.toFixed(2)} SDG</TableCell>
-                    <TableCell className="text-right">
-                        <Button asChild variant="outline" size="sm">
-                            <Link href={`/orders/${order.id}`}>عرض التفاصيل</Link>
-                        </Button>
+                    <TableCell className="text-center">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">قائمة الإجراءات</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>إجراءات</DropdownMenuLabel>
+                                <DropdownMenuItem asChild><Link href={`/orders/${order.id}`}>عرض التفاصيل</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><a href={`mailto:${order.shippingAddress.email}`}>تواصل مع الزبون</a></DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                 <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>تغيير الحالة</DropdownMenuSubTrigger>
+                                    <DropdownMenuPortal>
+                                    <DropdownMenuSubContent>
+                                        <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'Processing')}>
+                                            <CheckCircle className="ml-2 h-4 w-4" />
+                                            قيد المعالجة
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'Shipped')}>
+                                            <Truck className="ml-2 h-4 w-4" />
+                                            تم الشحن
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'Out for Delivery')}>
+                                            <Truck className="ml-2 h-4 w-4" />
+                                            قيد التوصيل
+                                        </DropdownMenuItem>
+                                    </DropdownMenuSubContent>
+                                    </DropdownMenuPortal>
+                                </DropdownMenuSub>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-amber-600 focus:text-amber-700" onClick={() => handleStatusChange(order.id, 'Suspended')}>
+                                    <PauseCircle className="ml-2 h-4 w-4" />
+                                    تعليق الطلب
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleStatusChange(order.id, 'Cancelled')}>
+                                    <XCircle className="ml-2 h-4 w-4" />
+                                    رفض الطلب
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}

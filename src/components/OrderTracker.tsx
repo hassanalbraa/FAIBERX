@@ -1,6 +1,6 @@
 import type { OrderStatus } from "@/lib/orders";
 import { cn } from "@/lib/utils";
-import { Check, Package, ShoppingCart, Truck, Home } from 'lucide-react';
+import { Check, Package, ShoppingCart, Truck, Home, X, Pause } from 'lucide-react';
 
 const statuses: { name: OrderStatus, icon: React.ElementType, label: string }[] = [
     { name: 'Order Placed', icon: ShoppingCart, label: 'تم الطلب' },
@@ -10,11 +10,29 @@ const statuses: { name: OrderStatus, icon: React.ElementType, label: string }[] 
     { name: 'Delivered', icon: Home, label: 'تم التوصيل' },
 ];
 
+const terminalStatuses: { name: OrderStatus, icon: React.ElementType, label: string, className: string }[] = [
+    { name: 'Cancelled', icon: X, label: 'ملغي', className: 'bg-destructive border-destructive text-destructive-foreground' },
+    { name: 'Suspended', icon: Pause, label: 'معلق', className: 'bg-amber-500 border-amber-500 text-white' }
+]
+
+
 interface OrderTrackerProps {
     currentStatus: OrderStatus;
 }
 
 export function OrderTracker({ currentStatus }: OrderTrackerProps) {
+    const terminalStatus = terminalStatuses.find(s => s.name === currentStatus);
+    if(terminalStatus) {
+        return (
+            <div className="flex flex-col items-center justify-center py-4">
+                <div className={cn("w-16 h-16 rounded-full flex items-center justify-center border-2 z-10", terminalStatus.className)}>
+                    <terminalStatus.icon className="w-8 h-8" />
+                </div>
+                <p className="text-xl mt-4 font-bold">{terminalStatus.label}</p>
+            </div>
+        )
+    }
+
     const currentIndex = statuses.findIndex(s => s.name === currentStatus);
 
     return (

@@ -6,7 +6,7 @@ export type OrderItem = {
     price: number;
 }
 
-export type OrderStatus = 'Order Placed' | 'Processing' | 'Shipped' | 'Out for Delivery' | 'Delivered';
+export type OrderStatus = 'Order Placed' | 'Processing' | 'Shipped' | 'Out for Delivery' | 'Delivered' | 'Cancelled' | 'Suspended';
 
 export interface Order {
     id: string;
@@ -20,6 +20,7 @@ export interface Order {
         city: string;
         zip: string;
         country: string;
+        email: string; // Added email for communication
     };
 }
 
@@ -38,7 +39,8 @@ export const mockOrders: Order[] = [
             address: "123 Couture Lane",
             city: "Styleville",
             zip: "90210",
-            country: "USA"
+            country: "USA",
+            email: "jane.doe@example.com"
         }
     },
     {
@@ -50,11 +52,12 @@ export const mockOrders: Order[] = [
             { product: products[3], quantity: 1, price: 450.00 },
         ],
         shippingAddress: {
-            name: "Jane Doe",
-            address: "123 Couture Lane",
-            city: "Styleville",
-            zip: "90210",
-            country: "USA"
+            name: "John Smith",
+            address: "456 Fashion Ave",
+            city: "Chicburg",
+            zip: "10001",
+            country: "USA",
+            email: "john.smith@example.com"
         }
     }
 ];
