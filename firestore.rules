@@ -14,10 +14,8 @@
  * Key Security Decisions:
  * - Admin-Only Writes: All write operations (create, update, delete) on products
  *   are strictly limited to authenticated users with the 'Admin' role.
- * - Controlled Public Reads: Any user (authenticated or not) can read an
- *   individual product document if they know its ID (`get`). However, listing the
- *   entire collection of products (`list`) is restricted to Admins to prevent
- *   data scraping.
+ * - Public Reads: Any user (authenticated or not) can read individual product
+ *   documents (`get`) and the entire collection of products (`list`).
  * - Locked Admin Roles: The `/roles_admin` collection is not writeable from the
  *   client. This is a critical security measure ensuring that admin roles can only
  *   be assigned through the Firebase Console or a trusted server-side process.
@@ -46,19 +44,18 @@ service cloud.firestore {
 
     /**
      * @description
-     *   Manages product data. Individual products can be read by anyone, but
-     *   only Admins can list, create, update, or delete them.
+     *   Manages product data. All users can read products, but only Admins
+     *   can create, update, or delete them.
      * @path /products/{productId}
-     * @allow (get) Any user, signed in or not, can fetch a single product document.
-     * @allow (list, create, update, delete) An Admin user can perform all CRUD operations.
-     * @deny (list, write) A regular signed-in user or anonymous user cannot list or write products.
+     * @allow (read) Any user, signed in or not, can fetch a single product or a list of products.
+     * @allow (write) An Admin user can perform all write operations.
+     * @deny (write) A regular signed-in user or anonymous user cannot write products.
      * @principle
-     *   Implements public read for individual documents while restricting writes
-     *   and collection queries to privileged roles (Admins).
+     *   Implements public read access while restricting writes to privileged roles (Admins).
      */
     match /products/{productId} {
-      allow get: true;
-      allow list, create, update, delete: if isAdmin();
+      allow read: true;
+      allow write: if isAdmin();
     }
 
     /**
