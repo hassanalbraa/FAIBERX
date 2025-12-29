@@ -56,7 +56,7 @@ service cloud.firestore {
      *   can create, update, or delete them.
      */
     match /products/{productId} {
-      allow read: true;
+      allow list, get: if true;
       allow write: if isAdmin();
     }
 
