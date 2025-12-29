@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, PlusCircle, LogOut } from 'lucide-react';
+import { Loader2, PlusCircle, LogOut, ShoppingCart } from 'lucide-react';
 import AddProductForm from '@/components/admin/AddProductForm';
 import { ProductList } from '@/components/admin/ProductList';
 import { collection } from 'firebase/firestore';
 import type { Product } from '@/lib/products';
 import { getAuth, signOut } from 'firebase/auth';
+import Link from 'next/link';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -68,7 +69,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-8 items-start">
-        <div className="md:col-span-1">
+        <div className="md:col-span-1 space-y-8">
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -79,6 +80,20 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                     <AddProductForm />
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <ShoppingCart />
+                        طلبات الزبائن
+                    </CardTitle>
+                    <CardDescription>عرض وإدارة جميع طلبات العملاء.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild className="w-full">
+                        <Link href="/admin/orders">عرض الطلبات</Link>
+                    </Button>
                 </CardContent>
             </Card>
         </div>
