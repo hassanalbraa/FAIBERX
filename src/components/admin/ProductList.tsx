@@ -74,7 +74,6 @@ export function ProductList({ products }: ProductListProps) {
           </TableHead>
           <TableHead>الاسم</TableHead>
           <TableHead>الفئة</TableHead>
-          <TableHead className="hidden md:table-cell">التكلفة</TableHead>
           <TableHead className="hidden md:table-cell">البيع</TableHead>
           <TableHead className="hidden md:table-cell">المخزون</TableHead>
           <TableHead>
@@ -98,7 +97,6 @@ export function ProductList({ products }: ProductListProps) {
             <TableCell>
               <Badge variant="outline">{getCategoryArabicName(product.category)}</Badge>
             </TableCell>
-            <TableCell className="hidden md:table-cell">{product.costPrice?.toFixed(2) || '0.00'} SDG</TableCell>
             <TableCell className="hidden md:table-cell">{product.price.toFixed(2)} SDG</TableCell>
             <TableCell className="hidden md:table-cell">{product.stock}</TableCell>
             <TableCell>

@@ -5,7 +5,6 @@ export type Product = {
   name: string;
   description: string;
   price: number;
-  costPrice?: number;
   image: string;
   category: 'T-shirts' | 'Hoodies';
   sizes?: ('L' | 'XL' | '2XL' | '3XL' | '4XL' | '5XL' | '6XL' | '7XL' | '8XL')[];
@@ -26,7 +25,6 @@ export const products: Product[] = [
     name: 'بلوزة حرير أثيرية',
     description: 'بلوزة حريرية كلاسيكية بلمسة عصرية، تتميز بياقة مكشكشة رقيقة وأزرار لؤلؤية. مثالية للعمل والسهرات.',
     price: 180.00,
-    costPrice: 120.00,
     image: getPlaceholder('product-1').imageUrl,
     category: 'T-shirts',
   },
@@ -35,7 +33,6 @@ export const products: Product[] = [
     name: 'بنطلون سافيل رو',
     description: 'بنطلون مصمم بخبرة بخصر عالٍ بلون كحلي غني. يوفر القص الواسع صورة ظلية جذابة تطيل الساقين.',
     price: 250.00,
-    costPrice: 180.00,
     image: getPlaceholder('product-2').imageUrl,
     category: 'Hoodies',
   },
@@ -44,7 +41,6 @@ export const products: Product[] = [
     name: 'تنورة ميدي حديقة مونيه',
     description: 'تنورة ميدي أنيقة على شكل حرف A مزينة بنقشة زهور نابضة بالحياة تذكرنا بلوحة انطباعية. تتميز بسحاب جانبي مخفي.',
     price: 220.00,
-    costPrice: 160.00,
     image: getPlaceholder('product-3').imageUrl,
     category: 'Hoodies',
   },
@@ -53,7 +49,6 @@ export const products: Product[] = [
     name: 'معطف ترنش ضباب لندن',
     description: 'معطف ترنش مزدوج الصدر لا يتأثر بمرور الزمن بلون بيج متعدد الاستخدامات. مصنوع من قطن الجبردين المقاوم للماء مع حزام قابل للفصل.',
     price: 450.00,
-    costPrice: 300.00,
     image: getPlaceholder('product-4').imageUrl,
     category: 'Hoodies',
   },
@@ -62,7 +57,6 @@ export const products: Product[] = [
     name: 'سترة كشمير هيمالايا',
     description: 'انغمس في نعومة لا مثيل لها مع سترة الكشمير الفاخرة هذه. المقاس المريح والرقبة الدائرية الكلاسيكية تجعلها قطعة أساسية في خزانة الملابس.',
     price: 320.00,
-    costPrice: 240.00,
     image: getPlaceholder('product-5').imageUrl,
     category: 'T-shirts',
   },
@@ -71,7 +65,6 @@ export const products: Product[] = [
     name: 'فستان حفل منتصف الليل',
     description: 'فستان سهرة يخطف الأنظار يتميز بتفاصيل ترتر معقدة على صورة ظلية ملائمة للجسم مع ذيل رشيق.',
     price: 750.00,
-    costPrice: 500.00,
     image: getPlaceholder('product-6').imageUrl,
     category: 'Hoodies',
   },
@@ -80,7 +73,6 @@ export const products: Product[] = [
     name: 'حقيبة يد جلدية ميلانو',
     description: 'حقيبة يد واسعة ومنظمة مصنوعة من جلد إيطالي فاخر. تتميز بأقسام متعددة للحفاظ على تنظيمك.',
     price: 400.00,
-    costPrice: 280.00,
     image: getPlaceholder('product-7').imageUrl,
     category: 'Hoodies',
   },
@@ -89,7 +81,6 @@ export const products: Product[] = [
     name: 'حذاء بكعب عالٍ فام فاتال',
     description: 'زوج من الأحذية ذات الكعب العالي المدبب المتطور من الجلد الأسود اللامع الكلاسيكي. اللمسة النهائية المثالية لأي زي أنيق.',
     price: 350.00,
-    costPrice: 250.00,
     image: getPlaceholder('product-8').imageUrl,
     category: 'Hoodies',
   },
