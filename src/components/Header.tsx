@@ -14,7 +14,6 @@ import { useState } from 'react';
 
 const navLinks = [
   { href: '/products', label: 'جميع المنتجات' },
-  { href: '/products?category=Outerwear', label: 'ملابس خارجية' },
   { href: '/style-finder', label: 'خبير الأزياء الذكي' },
 ];
 
