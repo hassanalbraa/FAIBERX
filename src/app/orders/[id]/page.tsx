@@ -55,9 +55,9 @@ function OrderDetails({ order, isFallback = false, requestedId }: { order: any; 
                                         <div>
                                             <p className="font-semibold">{item.product.name}</p>
                                             <p className="text-sm text-muted-foreground">الكمية: {item.quantity}</p>
-                                            <p className="text-sm text-muted-foreground">السعر: ${item.price.toFixed(2)}</p>
+                                            <p className="text-sm text-muted-foreground">السعر: {item.price.toFixed(2)} جنيه</p>
                                         </div>
-                                        <p className="mr-auto font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                                        <p className="mr-auto font-semibold">{(item.price * item.quantity).toFixed(2)} جنيه</p>
                                     </div>
                                 ))}
                             </div>
@@ -83,9 +83,9 @@ function OrderDetails({ order, isFallback = false, requestedId }: { order: any; 
                             <div>
                                 <h3 className="font-semibold mb-1">ملخص الطلب</h3>
                                 <div className="text-sm space-y-1">
-                                    <div className="flex justify-between"><span>المجموع الفرعي:</span> <span>${order.total.toFixed(2)}</span></div>
-                                    <div className="flex justify-between"><span>الشحن:</span> <span>$0.00</span></div>
-                                    <div className="flex justify-between font-bold"><span>الإجمالي:</span> <span>${order.total.toFixed(2)}</span></div>
+                                    <div className="flex justify-between"><span>المجموع الفرعي:</span> <span>{order.total.toFixed(2)} جنيه</span></div>
+                                    <div className="flex justify-between"><span>الشحن:</span> <span>0.00 جنيه</span></div>
+                                    <div className="flex justify-between font-bold"><span>الإجمالي:</span> <span>{order.total.toFixed(2)} جنيه</span></div>
                                 </div>
                             </div>
                         </CardContent>

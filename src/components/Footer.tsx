@@ -10,9 +10,9 @@ export function Footer() {
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <Shirt className="h-6 w-6 text-primary" />
-              <span className="font-headline text-xl font-semibold tracking-wider">خيوط الأناقة</span>
+              <span className="font-headline text-xl font-semibold tracking-wider">FiberX</span>
             </Link>
-            <p className="text-sm text-muted-foreground">أزياء راقية للفرد العصري.</p>
+            <p className="text-sm text-muted-foreground">مع فايبركس اطبع افكارك.</p>
           </div>
           <div>
             <h3 className="font-semibold mb-4">تسوق</h3>
@@ -54,7 +54,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} خيوط الأناقة. جميع الحقوق محفوظة.</p>
+          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} FiberX. جميع الحقوق محفوظة.</p>
           <div className="flex space-x-4 mt-4 md:mt-0">
             <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">شروط الخدمة</Link>
             <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">سياسة الخصوصية</Link>

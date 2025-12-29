@@ -7,8 +7,8 @@ import { CartProvider } from '@/context/CartContext';
 import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
-  title: 'خيوط الأناقة',
-  description: 'أزياء راقية للفرد العصري.',
+  title: 'FiberX',
+  description: 'مع فايبركس اطبع افكارك',
 };
 
 export default function RootLayout({

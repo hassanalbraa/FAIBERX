@@ -41,7 +41,7 @@ export function Header() {
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
             <Shirt className="h-6 w-6 text-primary" />
-            <span className="font-headline text-xl font-semibold tracking-wider">خيوط الأناقة</span>
+            <span className="font-headline text-xl font-semibold tracking-wider">FiberX</span>
           </Link>
           <nav className="hidden md:flex items-center gap-2">
             <NavLinkItems />
@@ -90,7 +90,7 @@ export function Header() {
                 <div className="p-6 flex flex-col h-full">
                   <Link href="/" className="flex items-center gap-2 mb-8" onClick={() => setIsSheetOpen(false)}>
                      <Shirt className="h-6 w-6 text-primary" />
-                     <span className="font-headline text-xl font-semibold tracking-wider">خيوط الأناقة</span>
+                     <span className="font-headline text-xl font-semibold tracking-wider">FiberX</span>
                   </Link>
                   <nav className="flex flex-col gap-4">
                     <NavLinkItems />

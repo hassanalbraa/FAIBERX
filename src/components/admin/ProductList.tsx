@@ -92,7 +92,7 @@ export function ProductList({ products }: ProductListProps) {
             <TableCell>
               <Badge variant="outline">{getCategoryArabicName(product.category)}</Badge>
             </TableCell>
-            <TableCell className="hidden md:table-cell">${product.price.toFixed(2)}</TableCell>
+            <TableCell className="hidden md:table-cell">{product.price.toFixed(2)} جنيه</TableCell>
             <TableCell className="hidden md:table-cell">{product.stock}</TableCell>
             <TableCell>
                <DropdownMenu>

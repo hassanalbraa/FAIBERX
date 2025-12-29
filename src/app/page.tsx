@@ -39,7 +39,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 p-4 max-w-3xl">
           <h1 className="font-headline text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
-            الأناقة بإطلالة جديدة
+            مع فايبركس اطبع افكارك
           </h1>
           <p className="mt-4 text-lg md:text-xl max-w-2xl mx-auto">
             اكتشف مجموعتنا الجديدة، حيث يلتقي الأسلوب الخالد مع التصميم المعاصر.
@@ -86,7 +86,7 @@ export default function Home() {
 
       <section className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="font-headline text-3xl md:text-4xl font-bold">#خيوط_الأناقة</h2>
+          <h2 className="font-headline text-3xl md:text-4xl font-bold">#فايبركس</h2>
           <p className="text-muted-foreground mt-2">تابع رحلتنا وشاركنا أسلوبك على إنستغرام</p>
         </div>
         <InstagramFeed />
