@@ -105,7 +105,7 @@ export default function StyleFinderPage() {
                 {preview ? (
                   <Image src={preview} alt="Preview" fill className="object-contain" />
                 ) : styleFinderPlaceholder && (
-                  <Image src={styleFinderPlaceholder.imageUrl} alt="Placeholder" fill className="object-cover opacity-30" data-ai-hint={styleFinderPlaceholder.imageHint} />
+                  <Image src={styleFinderPlaceholder.imageUrl} alt="Placeholder" fill className="object-cover opacity-30" />
                 )}
                 <div className="absolute z-10 text-center p-4">
                   {!preview && <Camera className="h-12 w-12 text-muted-foreground mx-auto" />}

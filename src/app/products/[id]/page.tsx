@@ -75,7 +75,6 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 50vw"
-            data-ai-hint={product.imageHint || 'fashion product'}
           />
         </div>
         <div>

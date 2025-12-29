@@ -40,7 +40,6 @@ export default function CartPage() {
                       fill
                       className="object-cover"
                       sizes="100px"
-                      data-ai-hint={item.product.imageHint}
                     />
                   </div>
                   <div className="flex-grow flex flex-col justify-between">

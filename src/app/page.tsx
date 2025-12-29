@@ -33,7 +33,6 @@ export default function Home() {
             fill
             className="object-cover object-center"
             priority
-            data-ai-hint={heroImage.imageHint}
           />
         )}
         <div className="absolute inset-0 bg-black/50" />

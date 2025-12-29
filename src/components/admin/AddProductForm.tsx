@@ -33,7 +33,6 @@ const formSchema = z.object({
   price: z.coerce.number().positive('يجب أن يكون السعر رقمًا موجبًا'),
   category: z.enum(['T-shirts', 'Hoodies']),
   image: z.string().url('يجب أن يكون عنوان URL صالحًا للصورة'),
-  imageHint: z.string().min(2, 'مطلوب تلميح صورة'),
   stock: z.coerce.number().int().nonnegative('يجب أن يكون المخزون رقمًا صحيحًا غير سالب'),
 });
 
@@ -50,7 +49,6 @@ export default function AddProductForm() {
       price: 0,
       category: 'T-shirts',
       image: '',
-      imageHint: '',
       stock: 0,
     },
   });
@@ -166,19 +164,6 @@ export default function AddProductForm() {
               <FormLabel>رابط الصورة</FormLabel>
               <FormControl>
                 <Input placeholder="https://..." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="imageHint"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>تلميح الصورة (لـ AI)</FormLabel>
-              <FormControl>
-                <Input placeholder="مثال: cotton t-shirt" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -33,7 +33,6 @@ export function ProductCard({ product }: ProductCardProps) {
             width={600}
             height={800}
             className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-            data-ai-hint={product.imageHint}
           />
         </div>
       </Link>

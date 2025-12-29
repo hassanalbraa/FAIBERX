@@ -3,98 +3,82 @@
     {
       "id": "hero",
       "description": "A chic woman in a stylish outfit posing in a modern city street",
-      "imageUrl": "https://images.unsplash.com/photo-1611042553484-d61f84d22784?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxmYXNoaW9uJTIwbW9kZWx8ZW58MHx8fHwxNzY2OTU1MjQxfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "fashion model"
+      "imageUrl": "https://images.unsplash.com/photo-1611042553484-d61f84d22784?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxmYXNoaW9uJTIwbW9kZWx8ZW58MHx8fHwxNzY2OTU1MjQxfDA&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "product-1",
       "description": "A classic silk blouse with ruffled collar",
-      "imageUrl": "https://images.unsplash.com/photo-1551883647-470f3460b4f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzaWxrJTIwYmxvdXNlfGVufDB8fHx8MTc2NzAwODkwMnww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "silk blouse"
+      "imageUrl": "https://images.unsplash.com/photo-1551883647-470f3460b4f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzaWxrJTIwYmxvdXNlfGVufDB8fHx8MTc2NzAwODkwMnww&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "product-2",
       "description": "High-waisted tailored trousers in navy blue",
-      "imageUrl": "https://images.unsplash.com/photo-1760616172899-0681b97a2de3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx0YWlsb3JlZCUyMHRyb3VzZXJzfGVufDB8fHx8MTc2NzAyOTQyN3ww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "tailored trousers"
+      "imageUrl": "https://images.unsplash.com/photo-1760616172899-0681b97a2de3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx0YWlsb3JlZCUyMHRyb3VzZXJzfGVufDB8fHx8MTc2NzAyOTQyN3ww&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "product-3",
       "description": "A-line midi skirt with a floral pattern",
-      "imageUrl": "https://images.unsplash.com/photo-1679654234265-9af3bf053227?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmbG9yYWwlMjBza2lydHxlbnwwfHx8fDE3NjY5Mzg5NTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "floral skirt"
+      "imageUrl": "https://images.unsplash.com/photo-1679654234265-9af3bf053227?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmbG9yYWwlMjBza2lydHxlbnwwfHx8fDE3NjY5Mzg5NTJ8MA&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "product-4",
       "description": "A timeless double-breasted trench coat in beige",
-      "imageUrl": "https://images.unsplash.com/photo-1633821879282-0c4e91f96232?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx0cmVuY2glMjBjb2F0fGVufDB8fHx8MTc2Njk2MjA4N3ww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "trench coat"
+      "imageUrl": "https://images.unsplash.com/photo-1633821879282-0c4e91f96232?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx0cmVuY2glMjBjb2F0fGVufDB8fHx8MTc2Njk2MjA4N3ww&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "product-5",
       "description": "Luxurious cashmere sweater in a soft gray",
-      "imageUrl": "https://images.unsplash.com/photo-1631541909061-71e349d1f203?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjYXNobWVyZSUyMHN3ZWF0ZXJ8ZW58MHx8fHwxNzY3MDI2MzcxfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "cashmere sweater"
+      "imageUrl": "https://images.unsplash.com/photo-1631541909061-71e349d1f203?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjYXNobWVyZSUyMHN3ZWF0ZXJ8ZW58MHx8fHwxNzY3MDI2MzcxfDA&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "product-6",
       "description": "An elegant evening gown with sequin details",
-      "imageUrl": "https://images.unsplash.com/photo-1765229284842-e0160d7e7ff6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxldmVuaW5nJTIwZ293bnxlbnwwfHx8fDE3NjY5Mzg5NTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "evening gown"
+      "imageUrl": "https://images.unsplash.com/photo-1765229284842-e0160d7e7ff6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxldmVuaW5nJTIwZ293bnxlbnwwfHx8fDE3NjY5Mzg5NTB8MA&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "product-7",
       "description": "A structured leather tote bag",
-      "imageUrl": "https://images.unsplash.com/photo-1647540945262-7da3bd1a3d96?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxsZWF0aGVyJTIwYmFnfGVufDB8fHx8MTc2Njk3MjExMnww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "leather bag"
+      "imageUrl": "https://images.unsplash.com/photo-1647540945262-7da3bd1a3d96?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxsZWF0aGVyJTIwYmFnfGVufDB8fHx8MTc2Njk3MjExMnww&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "product-8",
       "description": "A pair of sophisticated stiletto heels",
-      "imageUrl": "https://images.unsplash.com/photo-1627140850255-c9877c4ef5d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8c3RpbGV0dG8lMjBoZWVsc3xlbnwwfHx8fDE3NjcwMjk0Mjd8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "stiletto heels"
+      "imageUrl": "https://images.unsplash.com/photo-1627140850255-c9877c4ef5d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8c3RpbGV0dG8lMjBoZWVsc3xlbnwwfHx8fDE3NjcwMjk0Mjd8MA&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "instagram-1",
       "description": "User generated content showing off a new dress",
-      "imageUrl": "https://images.unsplash.com/photo-1549062572-544a64fb0c56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3b21hbiUyMGZhc2hpb258ZW58MHx8fHwxNzY3MDI4NzI1fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "woman fashion"
+      "imageUrl": "https://images.unsplash.com/photo-1549062572-544a64fb0c56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3b21hbiUyMGZhc2hpb258ZW58MHx8fHwxNzY3MDI4NzI1fDA&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "instagram-2",
       "description": "Flatlay of an outfit with accessories",
-      "imageUrl": "https://images.unsplash.com/photo-1508057198894-247b23fe5ade?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmYXNoaW9uJTIwZmxhdGxheXxlbnwwfHx8fDE3NjcwMjk0Mjd8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "fashion flatlay"
+      "imageUrl": "https://images.unsplash.com/photo-1508057198894-247b23fe5ade?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmYXNoaW9uJTIwZmxhdGxheXxlbnwwfHx8fDE3NjcwMjk0Mjd8MA&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "instagram-3",
       "description": "Behind the scenes at a fashion photoshoot",
-      "imageUrl": "https://images.unsplash.com/photo-1595882669314-919b3d51f2c7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxmYXNoaW9uJTIwcGhvdG9zaG9vdHxlbnwwfHx8fDE3NjY5MjE3OTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "fashion photoshoot"
+      "imageUrl": "https://images.unsplash.com/photo-1595882669314-919b3d51f2c7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxmYXNoaW9uJTIwcGhvdG9zaG9vdHxlbnwwfHx8fDE3NjY5MjE3OTh8MA&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "instagram-4",
       "description": "Close up detail of fabric texture",
-      "imageUrl": "https://images.unsplash.com/photo-1528458909336-e7a0adfed0a5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxmYWJyaWMlMjB0ZXh0dXJlfGVufDB8fHx8MTc2NzAwODI1MXww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "fabric texture"
+      "imageUrl": "https://images.unsplash.com/photo-1528458909336-e7a0adfed0a5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxmYWJyaWMlMjB0ZXh0dXJlfGVufDB8fHx8MTc2NzAwODI1MXww&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "instagram-5",
       "description": "A person walking down a stylish street",
-      "imageUrl": "https://images.unsplash.com/photo-1582164256364-b0eccb922bff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzdHJlZXQlMjBzdHlsZXxlbnwwfHx8fDE3NjY5ODk1Mjl8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "street style"
+      "imageUrl": "https://images.unsplash.com/photo-1582164256364-b0eccb922bff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzdHJlZXQlMjBzdHlsZXxlbnwwfHx8fDE3NjY5ODk1Mjl8MA&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "instagram-6",
       "description": "A stylish coffee shop scene with our product",
-      "imageUrl": "https://images.unsplash.com/photo-1692229219211-138112240a54?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsaWZlc3R5bGUlMjBmYXNoaW9ufGVufDB8fHx8MTc2NzAyOTQyN3ww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "lifestyle fashion"
+      "imageUrl": "https://images.unsplash.com/photo-1692229219211-138112240a54?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsaWZlc3R5bGUlMjBmYXNoaW9ufGVufDB8fHx8MTc2NzAyOTQyN3ww&ixlib=rb-4.1.0&q=80&w=1080"
     },
     {
       "id": "style-finder-placeholder",
       "description": "An abstract representation of style and fashion",
-      "imageUrl": "https://images.unsplash.com/photo-1723173536061-900832321477?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxmYXNoaW9uJTIwY29sbGFnZXxlbnwwfHx8fDE3NjcwMTY1MzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "fashion collage"
+      "imageUrl": "https://images.unsplash.com/photo-1723173536061-900832321477?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxmYXNoaW9uJTIwY29sbGFnZXxlbnwwfHx8fDE3NjcwMTY1MzN8MA&ixlib=rb-4.1.0&q=80&w=1080"
     }
   ]
 }
