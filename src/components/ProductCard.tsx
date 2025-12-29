@@ -25,7 +25,7 @@ export function ProductCard({ product }: ProductCardProps) {
   }
 
   return (
-    <div className="group relative overflow-hidden rounded-lg border shadow-sm transition-shadow duration-300 hover:shadow-lg">
+    <div className="group relative flex flex-col overflow-hidden rounded-lg border bg-card shadow-sm transition-shadow duration-300 hover:shadow-lg">
       <div className="relative aspect-[3/4] overflow-hidden">
         <Link href={`/products/${product.id}`}>
           <Image
@@ -36,25 +36,23 @@ export function ProductCard({ product }: ProductCardProps) {
             className="object-cover w-full h-full transition-transform duration-500 ease-in-out group-hover:scale-105"
           />
         </Link>
-        <div className="absolute bottom-0 left-0 right-0 p-2 transition-transform duration-300 ease-in-out translate-y-full group-hover:translate-y-0">
-          <Button 
-            className="w-full"
+      </div>
+      <div className="p-4 flex flex-col flex-grow">
+        <p className="text-sm text-muted-foreground">{getCategoryArabicName(product.category)}</p>
+        <h3 className="font-semibold text-base truncate mt-1 flex-grow">
+          <Link href={`/products/${product.id}`} className="hover:underline">
+            {product.name}
+          </Link>
+        </h3>
+        <p className="font-bold text-lg mt-2">{product.price.toFixed(2)} SDG</p>
+         <Button 
+            className="w-full mt-4"
             onClick={() => addToCart(product, 1)} 
             aria-label={`أضف ${product.name} إلى السلة`}
           >
             <ShoppingCart className="ml-2 h-4 w-4" />
             أضف إلى السلة
           </Button>
-        </div>
-      </div>
-      <div className="p-4 bg-card">
-        <p className="text-sm text-muted-foreground">{getCategoryArabicName(product.category)}</p>
-        <h3 className="font-semibold text-base truncate mt-1">
-          <Link href={`/products/${product.id}`} className="hover:underline">
-            {product.name}
-          </Link>
-        </h3>
-        <p className="font-bold text-lg mt-2">{product.price.toFixed(2)} SDG</p>
       </div>
     </div>
   );
