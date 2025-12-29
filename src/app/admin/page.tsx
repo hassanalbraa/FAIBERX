@@ -23,11 +23,18 @@ export default function AdminDashboard() {
   );
   const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
 
+  const isAdmin = user?.email === 'admin@example.com';
+
   useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.replace('/admin/login');
+    if (!isUserLoading) {
+      if (!user) {
+        router.replace('/admin/login');
+      } else if (!isAdmin) {
+        // If user is logged in but not an admin, redirect to account page
+        router.replace('/account');
+      }
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, isAdmin, router]);
 
   const handleLogout = async () => {
     const auth = getAuth();
@@ -35,10 +42,11 @@ export default function AdminDashboard() {
     router.push('/admin/login');
   };
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || !isAdmin) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-4">جاري التحقق من صلاحيات الأدمن...</p>
       </div>
     );
   }
