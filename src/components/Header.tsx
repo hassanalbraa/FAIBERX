@@ -1,9 +1,10 @@
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCart, User, Menu, Shirt } from 'lucide-react';
+import { ShoppingCart, User, Menu, Shirt, LogIn, UserPlus } from 'lucide-react';
 import { Button } from './ui/button';
 import { useCart } from '@/context/CartContext';
+import { useUser } from '@/firebase';
 import {
   Sheet,
   SheetContent,
@@ -21,6 +22,7 @@ const navLinks = [
 
 export function Header() {
   const { cartCount } = useCart();
+  const { user } = useUser();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const NavLinkItems = () => (
@@ -47,12 +49,23 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" size="icon">
-            <Link href="/account">
-              <User className="h-5 w-5" />
-              <span className="sr-only">الحساب</span>
-            </Link>
-          </Button>
+          {user ? (
+            <Button asChild variant="ghost" size="icon">
+              <Link href="/account">
+                <User className="h-5 w-5" />
+                <span className="sr-only">الحساب</span>
+              </Link>
+            </Button>
+          ) : (
+            <div className="hidden md:flex items-center gap-2">
+                <Button asChild variant="ghost">
+                    <Link href="/login"><LogIn className="ml-2 h-4 w-4" />تسجيل الدخول</Link>
+                </Button>
+                <Button asChild>
+                    <Link href="/signup"><UserPlus className="ml-2 h-4 w-4" />إنشاء حساب</Link>
+                </Button>
+            </div>
+          )}
           <Button asChild variant="ghost" size="icon" className="relative">
             <Link href="/cart">
               <ShoppingCart className="h-5 w-5" />
@@ -74,14 +87,26 @@ export function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right">
-                <div className="p-6">
+                <div className="p-6 flex flex-col h-full">
                   <Link href="/" className="flex items-center gap-2 mb-8" onClick={() => setIsSheetOpen(false)}>
                      <Shirt className="h-6 w-6 text-primary" />
-                     <span className="font-headline text-xl font-semibold tracking-wider">خيوط الأनाقة</span>
+                     <span className="font-headline text-xl font-semibold tracking-wider">خيوط الأناقة</span>
                   </Link>
                   <nav className="flex flex-col gap-4">
                     <NavLinkItems />
                   </nav>
+                   <div className="mt-auto pt-4 border-t">
+                    {!user && (
+                        <div className="flex flex-col gap-2">
+                            <Button asChild variant="default" className='w-full' onClick={() => setIsSheetOpen(false)}>
+                                <Link href="/login"><LogIn className="ml-2 h-4 w-4" />تسجيل الدخول</Link>
+                            </Button>
+                            <Button asChild variant="outline" className='w-full' onClick={() => setIsSheetOpen(false)}>
+                                <Link href="/signup"><UserPlus className="ml-2 h-4 w-4" />إنشاء حساب</Link>
+                            </Button>
+                        </div>
+                    )}
+                   </div>
                 </div>
               </SheetContent>
             </Sheet>

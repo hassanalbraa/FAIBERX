@@ -119,6 +119,45 @@
         "firstName",
         "lastName"
       ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a regular user of the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user (matches Firebase UID)."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address for the user.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "First name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Last name of the user."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email"
+      ]
     }
   },
   "auth": {
@@ -136,7 +175,7 @@
           "schema": {
             "$ref": "#/backend/entities/Product"
           },
-          "description": "Stores product information. Only admins can create, update, or delete products. Includes denormalized data for display. Regular users have read-only access.",
+          "description": "Stores product information. Only admins can create, update, or delete products. All users have read-only access.",
           "params": [
             {
               "name": "productId",
@@ -160,8 +199,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores public profile information for a user. Each user can only write to their own document.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase UID of the user."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "This Firestore data structure is designed to support the Threads of Couture application, focusing on product management by administrators. The key principle is Authorization Independence, achieved by avoiding `get()` calls in security rules through structural segregation and explicit role definitions. Products are stored in a top-level `/products` collection, and admin users are managed via the `/roles_admin/{uid}` collection. The existence of a document in `/roles_admin/{uid}` grants administrative privileges.\n\n**Authorization Independence:** Authorization is determined solely by checking the existence of a document in the `/roles_admin/{uid}` collection. This eliminates hierarchical authorization dependencies. To create a new product as an admin, the rule only verifies that the user's ID exists in `/roles_admin/{uid}`.\n\n**QAPs (Rules Are Not Filters):** List operations are secured by ensuring that only admins (users with a document in `/roles_admin/{uid}`) can read all products. A standard user is not able to list the products.\n\n**Segregation:** The `/products` collection stores product data, and the `/roles_admin/{uid}` collection manages admin user roles. This separation ensures that security rules for products are applied consistently across all documents in the collection. Access to create, update, or delete products is restricted to admin users only."
+    "reasoning": "This Firestore data structure is designed to support the Threads of Couture application, focusing on product management by administrators and user-specific data. The key principle is Authorization Independence, achieved by avoiding `get()` calls in security rules through structural segregation and explicit role definitions. Products are stored in a top-level `/products` collection, and admin users are managed via the `/roles_admin/{uid}` collection. Regular user data is stored in `/users/{uid}`. The existence of a document in `/roles_admin/{uid}` grants administrative privileges.\n\n**Authorization Independence:** Authorization is determined by checking document ownership (`request.auth.uid == userId`) for user data, or checking the existence of a document in the `/roles_admin/{uid}` collection for admin privileges. This eliminates hierarchical authorization dependencies.\n\n**QAPs (Rules Are Not Filters):** List operations on products are public. List operations on users are disallowed by the rules to prevent data leakage.\n\n**Segregation:** The `/products` collection stores product data, the `/roles_admin/{uid}` collection manages admin user roles, and `/users/{uid}` stores individual user data. This separation ensures that security rules are applied correctly and independently for each data type."
   }
 }

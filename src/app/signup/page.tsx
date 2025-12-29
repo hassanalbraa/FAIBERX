@@ -6,13 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth, useUser } from "@/firebase";
+import { useAuth, useUser, initiateEmailSignUp } from "@/firebase";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { Loader2 } from "lucide-react";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
@@ -27,22 +26,22 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-        await signInWithEmailAndPassword(auth, email, password);
+        await initiateEmailSignUp(auth, email, password);
         toast({
-            title: "تم تسجيل الدخول بنجاح",
-            description: "جاري توجيهك...",
+            title: "تم إنشاء الحساب بنجاح!",
+            description: "جاري تسجيل دخولك...",
         });
         // The onAuthStateChanged listener in FirebaseProvider will handle the redirect
     } catch (error: any) {
-        console.error("Login failed:", error);
+        console.error("Signup failed:", error);
         toast({
             variant: "destructive",
-            title: "فشل تسجيل الدخول",
-            description: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+            title: "فشل إنشاء الحساب",
+            description: error.message || "يرجى المحاولة مرة أخرى.",
         });
         setIsSubmitting(false);
     }
@@ -60,19 +59,19 @@ export default function LoginPage() {
     <div className="container mx-auto px-4 py-16 md:py-24 flex items-center justify-center min-h-[70vh]">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline">تسجيل الدخول</CardTitle>
+          <CardTitle className="text-2xl font-headline">إنشاء حساب جديد</CardTitle>
           <CardDescription>
-            أدخل بريدك الإلكتروني أدناه لتسجيل الدخول إلى حسابك.
+            أدخل بريدك الإلكتروني وكلمة المرور للتسجيل.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="grid gap-4">
+          <form onSubmit={handleSignUp} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">البريد الإلكتروني</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="you@example.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -80,12 +79,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">كلمة المرور</Label>
-                <Link href="#" className="mr-auto inline-block text-sm underline">
-                  هل نسيت كلمة المرور؟
-                </Link>
-              </div>
+              <Label htmlFor="password">كلمة المرور</Label>
               <Input 
                 id="password" 
                 type="password" 
@@ -96,13 +90,13 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "تسجيل الدخول"}
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "إنشاء حساب"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
-            ليس لديك حساب؟{" "}
-            <Link href="/signup" className="underline">
-              أنشئ حساباً
+            لديك حساب بالفعل؟{" "}
+            <Link href="/login" className="underline">
+              تسجيل الدخول
             </Link>
           </div>
         </CardContent>

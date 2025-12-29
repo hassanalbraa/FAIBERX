@@ -4,18 +4,21 @@
  * Core Philosophy:
  * Access is primarily determined by a user's role. A user is considered an 'Admin'
  * if a corresponding document exists for them in the `/roles_admin` collection.
+ * Regular users have rights to their own data in the `/users` collection.
  * This approach centralizes role management and simplifies security logic.
  *
  * Data Structure:
  * - /products/{productId}: A top-level collection containing all product data.
  * - /roles_admin/{userId}: A collection where the existence of a document
  *   with a user's UID as the ID grants them administrative privileges.
+ * - /users/{userId}: Stores profile information for individual users.
  *
  * Key Security Decisions:
- * - Admin-Only Writes: All write operations (create, update, delete) on products
+ * - Admin-Only Product Writes: All write operations (create, update, delete) on products
  *   are strictly limited to authenticated users with the 'Admin' role.
- * - Public Reads: Any user (authenticated or not) can read individual product
- *   documents (`get`) and the entire collection of products (`list`).
+ * - Public Product Reads: Any user (authenticated or not) can read the entire collection of products.
+ * - User-Owned Profiles: Users can create, read, and update their own document in the `/users` collection.
+ *   They cannot access anyone else's data.
  * - Locked Admin Roles: The `/roles_admin` collection is not writeable from the
  *   client. This is a critical security measure ensuring that admin roles can only
  *   be assigned through the Firebase Console or a trusted server-side process.
@@ -39,17 +42,18 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
+    
+    /**
+     * Checks if the requesting user is the owner of the document.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
 
     /**
      * @description
      *   Manages product data. All users can read products, but only Admins
      *   can create, update, or delete them.
-     * @path /products/{productId}
-     * @allow (read) Any user, signed in or not, can fetch a single product or a list of products.
-     * @allow (write) An Admin user can perform all write operations.
-     * @deny (write) A regular signed-in user or anonymous user cannot write products.
-     * @principle
-     *   Implements public read access while restricting writes to privileged roles (Admins).
      */
     match /products/{productId} {
       allow read: true;
@@ -58,16 +62,17 @@ service cloud.firestore {
 
     /**
      * @description
+     *   Manages user profile data. Users can only access and modify their own data.
+     */
+    match /users/{userId} {
+      allow read, update: if isOwner(userId);
+      allow create: if isSignedIn();
+    }
+
+    /**
+     * @description
      *   Defines which users are administrators. The existence of a document
      *   grants the role. This collection is read-only from the client.
-     * @path /roles_admin/{adminId}
-     * @allow (N/A) No client-side operations are permitted.
-     * @deny (create) A user cannot make themselves an admin.
-     * @deny (delete) An admin cannot revoke their own or another's admin status.
-     * @principle
-     *   Enforces a "locked down" security model for critical role-management
-     *   data, requiring changes to be made from a trusted environment like the
-     *   Firebase Console or a backend server.
      */
     match /roles_admin/{adminId} {
       allow read, write: if false;
