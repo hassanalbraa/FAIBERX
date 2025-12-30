@@ -29,6 +29,16 @@ export default function AdminDashboard() {
 
   const isAdmin = user?.email === 'admin@example.com';
 
+  useEffect(() => {
+    if (!isUserLoading) {
+      if (!user) {
+        router.replace('/admin/login');
+      } else if (!isAdmin) {
+        router.replace('/account');
+      }
+    }
+  }, [user, isUserLoading, isAdmin, router]);
+  
   // Firestore fetching for products - only if admin
   const productsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
@@ -57,16 +67,6 @@ export default function AdminDashboard() {
   }, [orders]);
 
 
-  useEffect(() => {
-    if (!isUserLoading) {
-      if (!user) {
-        router.replace('/admin/login');
-      } else if (!isAdmin) {
-        router.replace('/account');
-      }
-    }
-  }, [user, isUserLoading, isAdmin, router]);
-
   const handleLogout = async () => {
     try {
         const auth = getAuth();
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const isLoading = isUserLoading || !isAdmin;
+  const isLoading = isUserLoading || !user || !isAdmin;
 
   if (isLoading) {
     return (
