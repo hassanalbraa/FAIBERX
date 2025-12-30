@@ -32,18 +32,20 @@ export default function AdminDashboard() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
-  // Firestore fetching for products
+  const isAdmin = user?.email === 'admin@example.com';
+
+  // Firestore fetching for products - only if admin
   const productsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !isAdmin) return null;
     return query(collection(firestore, 'products'));
-  }, [firestore]);
+  }, [firestore, isAdmin]);
   const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
   
-  // Firestore fetching for orders to calculate stats
+  // Firestore fetching for orders to calculate stats - only if admin
   const ordersQuery = useMemoFirebase(() => {
-      if (!firestore) return null;
+      if (!firestore || !isAdmin) return null;
       return query(collection(firestore, 'orders'));
-  }, [firestore]);
+  }, [firestore, isAdmin]);
   const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
 
   // Using mock data for users section
@@ -55,8 +57,6 @@ export default function AdminDashboard() {
     return orders.filter(order => order.status === 'Delivered').length;
   }, [orders]);
 
-
-  const isAdmin = user?.email === 'admin@example.com';
 
   useEffect(() => {
     if (!isUserLoading) {
