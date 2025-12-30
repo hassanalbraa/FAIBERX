@@ -18,13 +18,12 @@ function OrdersContent({ user }: { user: NonNullable<ReturnType<typeof useUser>[
 
   const userOrdersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
+    // This query now strictly adheres to the security rule by always filtering on userId.
     return query(
       collection(firestore, 'orders'), 
       where('userId', '==', user.uid)
-      // Removed orderBy('createdAt', 'desc') to avoid composite index requirement.
-      // Sorting will be done on the client-side.
     );
-  }, [firestore, user]);
+  }, [firestore, user?.uid]);
 
   const { data: userOrders, isLoading: isOrdersLoading } = useCollection<Order>(userOrdersQuery);
 
