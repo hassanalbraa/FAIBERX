@@ -211,7 +211,7 @@ export default function CheckoutPage() {
         });
 
         clearCart();
-        router.push(`/account/orders/${docRef.id}`);
+        router.push(`/admin/orders/${docRef.id}`);
 
     } catch (error) {
         console.error("Error placing order:", error);
@@ -220,6 +220,7 @@ export default function CheckoutPage() {
             title: "حدث خطأ",
             description: "فشل في إرسال الطلب. يرجى المحاولة مرة أخرى.",
         });
+    } finally {
         setIsSubmitting(false);
     }
   }
@@ -396,3 +397,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    
