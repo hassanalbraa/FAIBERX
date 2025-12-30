@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useMemo } from 'react';
@@ -116,7 +117,7 @@ function AdminDashboardContent({ user }: { user: NonNullable<ReturnType<typeof u
                     <CardDescription>
                         {usersLoading ? "جاري تحميل عدد المستخدمين..." : `لديك ${users?.length || 0} مستخدم مسجل.`}
                     </CardDescription>
-                </Header>
+                </CardHeader>
                 <CardContent>
                     <Button asChild className="w-full">
                         <Link href="/admin/users">عرض المستخدمين</Link>
