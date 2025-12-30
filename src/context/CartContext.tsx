@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useMemo, useEffect, useCallback } from 'react';
-import type { Product } from '@/lib/products';
+import { products as mockProducts, type Product } from '@/lib/products';
 import { useToast } from "@/hooks/use-toast";
 import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -38,21 +38,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const firestore = useFirestore();
 
   const [localCart, setLocalCart] = useState<CartItem[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  
+  // Use mockProducts directly instead of fetching from Firestore.
+  const products = mockProducts; 
   const [isCartLoading, setIsCartLoading] = useState(true);
-
-  // Fetch all products once to populate cart items
-  useEffect(() => {
-    async function fetchProducts() {
-        if (!firestore) return;
-        const { getDocs, collection } = await import('firebase/firestore');
-        const productsCol = collection(firestore, 'products');
-        const productSnapshot = await getDocs(productsCol);
-        const productList = productSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-        setProducts(productList);
-    }
-    fetchProducts();
-  }, [firestore]);
 
   const userCartRef = useMemoFirebase(() => {
       if (!firestore || !user) return null;
@@ -149,7 +138,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const populatedCartItems: PopulatedCartItem[] = useMemo(() => {
-    if (products.length === 0) return [];
     return localCart.map(item => {
         const product = products.find(p => p.id === item.productId);
         if (!product) return null; // or a placeholder
@@ -180,7 +168,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         cartCount,
         cartTotal,
-        isCartLoading: isCartLoading || (user && isProfileLoading) || products.length === 0,
+        isCartLoading: isCartLoading || (user && isProfileLoading),
       }}
     >
       {children}
