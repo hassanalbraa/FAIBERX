@@ -12,13 +12,14 @@
  * - /roles_admin/{userId}: A collection where the existence of a document
  *   with a user's UID as the ID grants them administrative privileges. (DEPRECATED by email check)
  * - /users/{userId}: Stores profile information for individual users.
+ * - /users/{userId}/addresses/{addressId}: Stores a user's saved shipping addresses.
  * - /orders/{orderId}: Stores customer orders.
  *
  * Key Security Decisions:
  * - Admin-Only Product Writes: All write operations (create, update, delete) on products
  *   are strictly limited to authenticated users with the 'Admin' role.
  * - Public Product Reads: Any user (authenticated or not) can read the entire collection of products.
- * - User-Owned Profiles: Users can create, read, and update their own document in the `/users` collection.
+ * - User-Owned Profiles & Addresses: Users can create, read, update, and delete their own documents.
  *   They cannot access anyone else's data.
  * - Admin User Management: Admins can list, read, and update any user's profile (e.g., to ban them).
  * - Orders: Users can create their own orders and read them. Admins have full read/write access to all orders.
@@ -64,13 +65,25 @@ service cloud.firestore {
 
     /**
      * @description
-     *   Manages user profile data. Users can only access and modify their own data.
-     *   Admins can read all user data and update it (e.g. for banning).
+     *   Manages user-specific data, including profiles and saved addresses.
      */
     match /users/{userId} {
+      /**
+       * Manages user profile data. Users can only access and modify their own data.
+       * Admins can read all user data and update it (e.g. for banning).
+       */
       allow create: if isSignedIn();
       allow get, update: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
+      
+      /**
+       * @description
+       *   Manages a user's saved shipping addresses. A user can fully control their own
+       *   address book, but cannot access anyone else's.
+       */
+      match /addresses/{addressId} {
+        allow read, write: if isOwner(userId);
+      }
     }
     
     /**

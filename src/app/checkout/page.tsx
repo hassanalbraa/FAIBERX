@@ -12,6 +12,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useCart } from "@/context/CartContext";
@@ -19,8 +26,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Banknote, Loader2 } from "lucide-react";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { Banknote, Loader2, MapPin } from "lucide-react";
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, serverTimestamp, doc, addDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -34,11 +41,22 @@ const formSchema = z.object({
   country: z.string().min(1, "الدولة مطلوبة"),
   whatsappNumber: z.string().min(10, "رقم الواتساب غير صالح ويبدو قصيراً جداً").regex(/^\+?\d{10,}$/, "يجب أن يبدأ الرقم بـ + متبوعًا بمفتاح الدولة أو أن يكون رقمًا محليًا صالحًا."),
   transactionId: z.string().min(4, "رقم العملية مطلوب ويبدو قصيراً جداً"),
+  savedAddressId: z.string().optional(),
 });
 
 type UserProfile = {
   firstName?: string;
   lastName?: string;
+}
+
+type Address = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  address: string;
+  city: string;
+  country: string;
+  whatsappNumber: string;
 }
 
 export default function CheckoutPage() {
@@ -48,13 +66,19 @@ export default function CheckoutPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
 
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
-
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
+  const addressesCollectionRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'addresses');
+  }, [firestore, user]);
+  const { data: savedAddresses, isLoading: isAddressesLoading } = useCollection<Address>(addressesCollectionRef);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -71,13 +95,13 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    if (userProfile) {
-        form.reset({
-            ...form.getValues(),
-            firstName: userProfile.firstName || '',
-            lastName: userProfile.lastName || '',
-            email: user?.email || '',
-        });
+    if (userProfile && !form.getValues('firstName')) {
+      form.reset({
+        ...form.getValues(),
+        firstName: userProfile.firstName || '',
+        lastName: userProfile.lastName || '',
+        email: user?.email || '',
+      });
     }
   }, [userProfile, user, form]);
 
@@ -97,6 +121,43 @@ export default function CheckoutPage() {
       router.push('/cart');
     }
   }, [isUserLoading, cartItems.length, router]);
+  
+  useEffect(() => {
+    if (savedAddresses && savedAddresses.length > 0) {
+        setShowNewAddressForm(false);
+    } else {
+        setShowNewAddressForm(true);
+    }
+  }, [savedAddresses]);
+
+  const handleAddressSelection = (addressId: string) => {
+    form.setValue('savedAddressId', addressId);
+    if(addressId === 'new') {
+        setShowNewAddressForm(true);
+        form.reset({
+            ...form.getValues(),
+            firstName: userProfile?.firstName || "",
+            lastName: userProfile?.lastName || "",
+            address: "",
+            city: "الخرطوم",
+            whatsappNumber: "+249",
+        });
+        return;
+    }
+    setShowNewAddressForm(false);
+    const selectedAddress = savedAddresses?.find(addr => addr.id === addressId);
+    if (selectedAddress) {
+      form.reset({
+        ...form.getValues(), // keep email, transactionId etc.
+        firstName: selectedAddress.firstName,
+        lastName: selectedAddress.lastName,
+        address: selectedAddress.address,
+        city: selectedAddress.city,
+        country: selectedAddress.country,
+        whatsappNumber: selectedAddress.whatsappNumber,
+      });
+    }
+  };
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -136,8 +197,8 @@ export default function CheckoutPage() {
             transactionId: values.transactionId,
         },
         subTotal: cartTotal,
-        shippingCost: 0, // To be calculated later
-        total: cartTotal, // For now, total is same as subtotal
+        shippingCost: 0, 
+        total: cartTotal,
     };
 
     try {
@@ -163,7 +224,8 @@ export default function CheckoutPage() {
     }
   }
 
-  if (isUserLoading || !user || cartItems.length === 0) {
+  const isLoading = isUserLoading || !user || cartItems.length === 0 || (user && isAddressesLoading);
+  if (isLoading) {
       return (
           <div className="flex h-screen items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -216,42 +278,73 @@ export default function CheckoutPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>معلومات الشحن</CardTitle>
-                  <CardDescription>أدخل عنوان الشحن الخاص بك.</CardDescription>
+                  <CardDescription>اختر عنوانًا محفوظًا أو أدخل عنوانًا جديدًا.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex gap-4">
-                    <FormField control={form.control} name="firstName" render={({ field }) => (
-                      <FormItem className="flex-1"><FormLabel>الاسم الأول</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                    <FormField control={form.control} name="lastName" render={({ field }) => (
-                      <FormItem className="flex-1"><FormLabel>الاسم الأخير</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                  </div>
-                   <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>البريد الإلكتروني</FormLabel>
-                      <FormControl><Input placeholder="you@example.com" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}/>
-                  <FormField control={form.control} name="address" render={({ field }) => (
-                    <FormItem><FormLabel>العنوان</FormLabel><FormControl><Input placeholder="مثال: الخرطوم، شارع أفريقيا، مبنى رقم 5" {...field} /></FormControl><FormMessage /></FormItem>
-                  )}/>
-                  <div className="flex gap-4">
-                     <FormField control={form.control} name="city" render={({ field }) => (
-                      <FormItem className="flex-1"><FormLabel>المدينة</FormLabel><FormControl><Input placeholder="الخرطوم" {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                     <FormField control={form.control} name="country" render={({ field }) => (
-                      <FormItem className="flex-1"><FormLabel>الدولة</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                    )}/>
-                  </div>
-                   <FormField control={form.control} name="whatsappNumber" render={({ field }) => (
+                {savedAddresses && savedAddresses.length > 0 && (
+                  <FormField
+                    control={form.control}
+                    name="savedAddressId"
+                    render={({ field }) => (
                       <FormItem>
-                        <FormLabel>رقم واتساب (مع مفتاح الدولة)</FormLabel>
-                        <FormControl><Input placeholder="+249912345678" {...field} /></FormControl>
+                        <FormLabel>اختر عنوان</FormLabel>
+                        <Select onValueChange={handleAddressSelection} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="اختر من عناوينك المحفوظة..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {savedAddresses.map(addr => (
+                              <SelectItem key={addr.id} value={addr.id}>
+                                {addr.address}, {addr.city}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value="new">-- إضافة عنوان جديد --</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
-                    )}/>
+                    )}
+                  />
+                )}
+                  {showNewAddressForm && (
+                    <div className="space-y-4 pt-4 border-t border-dashed">
+                      <div className="flex gap-4">
+                        <FormField control={form.control} name="firstName" render={({ field }) => (
+                          <FormItem className="flex-1"><FormLabel>الاسم الأول</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <FormField control={form.control} name="lastName" render={({ field }) => (
+                          <FormItem className="flex-1"><FormLabel>الاسم الأخير</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                      </div>
+                       <FormField control={form.control} name="email" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>البريد الإلكتروني</FormLabel>
+                          <FormControl><Input placeholder="you@example.com" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}/>
+                      <FormField control={form.control} name="address" render={({ field }) => (
+                        <FormItem><FormLabel>العنوان</FormLabel><FormControl><Input placeholder="مثال: الخرطوم، شارع أفريقيا، مبنى رقم 5" {...field} /></FormControl><FormMessage /></FormItem>
+                      )}/>
+                      <div className="flex gap-4">
+                         <FormField control={form.control} name="city" render={({ field }) => (
+                          <FormItem className="flex-1"><FormLabel>المدينة</FormLabel><FormControl><Input placeholder="الخرطوم" {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                         <FormField control={form.control} name="country" render={({ field }) => (
+                          <FormItem className="flex-1"><FormLabel>الدولة</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                      </div>
+                       <FormField control={form.control} name="whatsappNumber" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>رقم واتساب (مع مفتاح الدولة)</FormLabel>
+                            <FormControl><Input placeholder="+249912345678" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}/>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

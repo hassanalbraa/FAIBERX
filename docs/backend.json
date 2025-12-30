@@ -165,6 +165,20 @@
         "accountNumber"
       ]
     },
+    "Address": {
+      "title": "Address",
+      "type": "object",
+      "description": "Represents a user's saved shipping address.",
+      "properties": {
+        "firstName": { "type": "string", "description": "Recipient's first name." },
+        "lastName": { "type": "string", "description": "Recipient's last name." },
+        "address": { "type": "string", "description": "Street address and number." },
+        "city": { "type": "string", "description": "City." },
+        "country": { "type": "string", "description": "Country." },
+        "whatsappNumber": { "type": "string", "description": "WhatsApp contact number." }
+      },
+      "required": ["firstName", "lastName", "address", "city", "country", "whatsappNumber"]
+    },
     "Order": {
       "title": "Order",
       "type": "object",
@@ -325,6 +339,20 @@
               "name": "userId",
               "description": "The Firebase UID of the user."
             }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/addresses/{addressId}",
+        "definition": {
+          "entityName": "Address",
+          "schema": {
+            "$ref": "#/backend/entities/Address"
+          },
+          "description": "Stores a user's saved shipping addresses. Users can only manage their own addresses.",
+          "params": [
+            { "name": "userId", "description": "The UID of the user." },
+            { "name": "addressId", "description": "The unique ID for the address." }
           ]
         }
       },

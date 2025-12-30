@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
-import { ListOrdered, User, LogOut, Loader2, Shield, Copy } from "lucide-react"
+import { ListOrdered, User, LogOut, Loader2, Shield, Copy, MapPin } from "lucide-react"
 import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -84,6 +84,9 @@ export default function AccountPage() {
                             )}
                             <Button variant="ghost" className="justify-start" asChild>
                                 <Link href="/account/orders"><ListOrdered className="ml-2 h-4 w-4" />سجل الطلبات</Link>
+                            </Button>
+                            <Button variant="ghost" className="justify-start" asChild>
+                                <Link href="/account/addresses"><MapPin className="ml-2 h-4 w-4" />العناوين المحفوظة</Link>
                             </Button>
                              <Separator className="my-2" />
                              <Button variant="ghost" className="justify-start text-destructive hover:text-destructive" onClick={handleLogout}>
