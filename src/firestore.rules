@@ -98,12 +98,12 @@ service cloud.firestore {
       // Admins can perform any write operation.
       allow write: if isAdmin();
 
-      // Users can create their own orders.
-      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+      // Users can create their own orders. The incoming document's userId must match the user's uid.
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
 
       // Admins can read any individual order.
-      // Users can only read an order they own.
-      allow get: if isAdmin() || (isSignedIn() && isOwner(resource.data.userId));
+      // Users can only read an order they own (the saved document's userId must match user's uid).
+      allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       
       // Rules are not filters: This rule allows a user to query the orders collection.
       // 1. Admins can list all orders without any constraints.

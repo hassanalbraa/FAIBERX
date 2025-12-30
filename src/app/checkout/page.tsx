@@ -211,7 +211,7 @@ export default function CheckoutPage() {
         });
 
         clearCart();
-        router.push(`/admin/orders/${docRef.id}`);
+        router.push(`/order-success?orderId=${docRef.id}`);
 
     } catch (error) {
         console.error("Error placing order:", error);
@@ -397,5 +397,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-    
