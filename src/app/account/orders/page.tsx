@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -13,29 +13,21 @@ import { collection, query, where, orderBy } from 'firebase/firestore';
 import type { Order } from '@/lib/orders';
 import { OrderStatus } from '@/lib/orders';
 
-
-export default function OrderHistoryPage() {
-  const { user, isUserLoading } = useUser();
-  const router = useRouter();
+// This component will only be rendered when the user is fully loaded and available.
+function OrdersContent({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']> }) {
   const firestore = useFirestore();
 
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isUserLoading, router]);
-
+  // Create the query, now guaranteed to have a user.uid.
   const userOrdersQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null; // CRITICAL: Do not create query without user.uid
     return query(
       collection(firestore, 'orders'),
       where('userId', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
-  }, [firestore, user?.uid]);
+  }, [firestore, user.uid]);
 
   const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(userOrdersQuery);
-  
+
   const getStatusVariant = (status: OrderStatus) => {
     switch (status) {
       case 'Delivered':
@@ -51,23 +43,12 @@ export default function OrderHistoryPage() {
     }
   };
 
-  const isLoading = isUserLoading || (user && isOrdersLoading);
-
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12">
-      <div className="mb-12">
-        <h1 className="font-headline text-4xl md:text-5xl font-bold flex items-center gap-4">
-          <ListOrdered className="h-10 w-10" />
-          سجل الطلبات
-        </h1>
-        <p className="text-muted-foreground mt-2">عرض جميع طلباتك السابقة والحالية.</p>
-      </div>
-
       <Card>
         <CardHeader>
             <CardTitle>طلباتك</CardTitle>
             <CardDescription>
-                {isLoading 
+                {isOrdersLoading 
                     ? "جاري تحميل طلباتك..."
                     : orders && orders.length > 0
                         ? `لديك ${orders.length} طلبات.`
@@ -76,7 +57,7 @@ export default function OrderHistoryPage() {
             </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isOrdersLoading ? (
              <div className="flex h-48 items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
              </div>
@@ -123,6 +104,47 @@ export default function OrderHistoryPage() {
           )}
         </CardContent>
       </Card>
+  )
+}
+
+
+export default function OrderHistoryPage() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    // This effect handles redirection if the user is not logged in after loading.
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
+
+  return (
+    <div className="container mx-auto px-4 py-8 md:py-12">
+      <div className="mb-12">
+        <h1 className="font-headline text-4xl md:text-5xl font-bold flex items-center gap-4">
+          <ListOrdered className="h-10 w-10" />
+          سجل الطلبات
+        </h1>
+        <p className="text-muted-foreground mt-2">عرض جميع طلباتك السابقة والحالية.</p>
+      </div>
+      
+      {/* 
+        The core of the fix:
+        - If we are still loading the user state, show a generic loader.
+        - Only if the user is fully loaded and exists, render the <OrdersContent> component.
+        - This prevents any attempt to query for orders until the user's ID is guaranteed to be available.
+      */}
+      {isUserLoading ? (
+        <div className="flex h-48 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ) : user ? (
+        <OrdersContent user={user} />
+      ) : (
+        // This case is unlikely to be seen because of the useEffect redirect, but it's good practice.
+        <p className="text-center text-muted-foreground">يرجى تسجيل الدخول لعرض سجل طلباتك.</p>
+      )}
     </div>
   );
 }
