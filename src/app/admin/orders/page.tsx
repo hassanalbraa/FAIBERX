@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ShoppingCart, MoreHorizontal, CheckCircle, Truck, XCircle, PauseCircle, Mail, MessageSquare } from 'lucide-react';
-import { doc, collection, query, orderBy } from 'firebase/firestore';
+import { doc, collection, query, orderBy, collectionGroup } from 'firebase/firestore';
 import type { Order, OrderStatus } from '@/lib/orders';
 import {
   DropdownMenu,
@@ -33,12 +33,13 @@ function AdminOrdersContent() {
 
   const allOrdersQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, 'orders'), orderBy('createdAt', 'desc'));
+    // Change: Use a collectionGroup query to get all orders from all users
+    return query(collectionGroup(firestore, 'orders'), orderBy('createdAt', 'desc'));
   }, [firestore, isAdmin]);
 
   const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(allOrdersQuery);
 
-  const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
+  const handleStatusChange = (order: Order, newStatus: OrderStatus) => {
     if (!firestore) {
         toast({ 
             title: "خطأ في قاعدة البيانات",
@@ -47,11 +48,12 @@ function AdminOrdersContent() {
         });
         return;
     };
-    const orderRef = doc(firestore, 'orders', orderId);
+    // Change: The reference must now point to the subcollection path
+    const orderRef = doc(firestore, 'users', order.userId, 'orders', order.id);
     updateDocumentNonBlocking(orderRef, { status: newStatus });
     toast({
         title: "تم تحديث حالة الطلب",
-        description: `تم تغيير حالة الطلب #${orderId.slice(0,7).toUpperCase()} إلى "${newStatus}".`,
+        description: `تم تغيير حالة الطلب #${order.id.slice(0,7).toUpperCase()} إلى "${newStatus}".`,
     });
   }
 
@@ -105,7 +107,8 @@ function AdminOrdersContent() {
                 {orders.map(order => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">
-                        <Link href={`/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
+                        {/* Change: Update link to include userId for subcollection path */}
+                        <Link href={`/orders/${order.id}?userId=${order.userId}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
                     </TableCell>
                     <TableCell>{order.shippingAddress.name}</TableCell>
                     <TableCell>{order.createdAt?.toDate().toLocaleDateString('ar-EG') || 'غير متوفر'}</TableCell>
@@ -123,7 +126,7 @@ function AdminOrdersContent() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>إجراءات</DropdownMenuLabel>
-                                <DropdownMenuItem asChild><Link href={`/orders/${order.id}`}>عرض التفاصيل</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href={`/orders/${order.id}?userId=${order.userId}`}>عرض التفاصيل</Link></DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuLabel>تواصل مع الزبون</DropdownMenuLabel>
                                 <DropdownMenuItem asChild>
@@ -143,19 +146,19 @@ function AdminOrdersContent() {
                                     <DropdownMenuSubTrigger>تغيير الحالة</DropdownMenuSubTrigger>
                                     <DropdownMenuPortal>
                                     <DropdownMenuSubContent>
-                                        <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'Processing')}>
+                                        <DropdownMenuItem onClick={() => handleStatusChange(order, 'Processing')}>
                                             <CheckCircle className="ml-2 h-4 w-4" />
                                             قيد المعالجة
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'Shipped')}>
+                                        <DropdownMenuItem onClick={() => handleStatusChange(order, 'Shipped')}>
                                             <Truck className="ml-2 h-4 w-4" />
                                             تم الشحن
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'Out for Delivery')}>
+                                        <DropdownMenuItem onClick={() => handleStatusChange(order, 'Out for Delivery')}>
                                             <Truck className="ml-2 h-4 w-4" />
                                             قيد التوصيل
                                         </DropdownMenuItem>
-                                         <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'Delivered')}>
+                                         <DropdownMenuItem onClick={() => handleStatusChange(order, 'Delivered')}>
                                             <CheckCircle className="ml-2 h-4 w-4" />
                                             تم التوصيل
                                         </DropdownMenuItem>
@@ -163,11 +166,11 @@ function AdminOrdersContent() {
                                     </DropdownMenuPortal>
                                 </DropdownMenuSub>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-amber-600 focus:text-amber-700" onClick={() => handleStatusChange(order.id, 'Suspended')}>
+                                <DropdownMenuItem className="text-amber-600 focus:text-amber-700" onClick={() => handleStatusChange(order, 'Suspended')}>
                                     <PauseCircle className="ml-2 h-4 w-4" />
                                     تعليق الطلب
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleStatusChange(order.id, 'Cancelled')}>
+                                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleStatusChange(order, 'Cancelled')}>
                                     <XCircle className="ml-2 h-4 w-4" />
                                     رفض الطلب
                                 </DropdownMenuItem>

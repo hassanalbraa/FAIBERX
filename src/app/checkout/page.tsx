@@ -202,8 +202,9 @@ export default function CheckoutPage() {
     };
 
     try {
-        const ordersCollection = collection(firestore, 'orders');
-        const docRef = await addDoc(ordersCollection, orderData);
+        // Change: Store orders in a subcollection under the user
+        const userOrdersCollection = collection(firestore, 'users', user.uid, 'orders');
+        const docRef = await addDoc(userOrdersCollection, orderData);
 
         toast({
             title: "تم استلام الطلب!",

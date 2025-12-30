@@ -1,7 +1,7 @@
 'use client';
 
-import { use } from 'react';
-import { useRouter } from "next/navigation";
+import { use, Suspense } from 'react';
+import { useRouter, useSearchParams } from "next/navigation";
 import { OrderStatus, type Order } from "@/lib/orders";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { OrderTracker } from "@/components/OrderTracker";
@@ -11,7 +11,7 @@ import { useUser, useFirestore, useMemoFirebase, updateDocumentNonBlocking, useD
 import { Button } from "@/components/ui/button";
 import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash, Loader2, MessageSquare, ShieldAlert, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Product } from '@/lib/products';
 import { EditProductDialog } from '@/components/admin/ProductList';
 
-function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmin: boolean; onStatusChange: (id: string, status: OrderStatus) => void }) {
+function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmin: boolean; onStatusChange: (order: Order, status: OrderStatus) => void }) {
 
     return (
         <div className="container mx-auto px-4 py-8 md:py-12">
@@ -66,19 +66,19 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
                                 <DropdownMenuSubTrigger>تغيير الحالة</DropdownMenuSubTrigger>
                                 <DropdownMenuPortal>
                                 <DropdownMenuSubContent>
-                                    <DropdownMenuItem onClick={() => onStatusChange(order.id, 'Processing')}>
+                                    <DropdownMenuItem onClick={() => onStatusChange(order, 'Processing')}>
                                         <CheckCircle className="ml-2 h-4 w-4" />
                                         قيد المعالجة
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => onStatusChange(order.id, 'Shipped')}>
+                                    <DropdownMenuItem onClick={() => onStatusChange(order, 'Shipped')}>
                                         <Truck className="ml-2 h-4 w-4" />
                                         تم الشحن
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => onStatusChange(order.id, 'Out for Delivery')}>
+                                    <DropdownMenuItem onClick={() => onStatusChange(order, 'Out for Delivery')}>
                                         <Truck className="ml-2 h-4 w-4" />
                                         قيد التوصيل
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => onStatusChange(order.id, 'Delivered')}>
+                                    <DropdownMenuItem onClick={() => onStatusChange(order, 'Delivered')}>
                                         <CheckCircle className="ml-2 h-4 w-4" />
                                         تم التوصيل
                                     </DropdownMenuItem>
@@ -86,11 +86,11 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
                                 </DropdownMenuPortal>
                             </DropdownMenuSub>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-amber-600 focus:text-amber-700" onClick={() => onStatusChange(order.id, 'Suspended')}>
+                            <DropdownMenuItem className="text-amber-600 focus:text-amber-700" onClick={() => onStatusChange(order, 'Suspended')}>
                                 <PauseCircle className="ml-2 h-4 w-4" />
                                 تعليق الطلب
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onStatusChange(order.id, 'Cancelled')}>
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onStatusChange(order, 'Cancelled')}>
                                 <XCircle className="ml-2 h-4 w-4" />
                                 رفض الطلب
                             </DropdownMenuItem>
@@ -117,15 +117,14 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
                         <CardContent>
                             <div className="space-y-4">
                                 {order.items.map((item: any, index: number) => {
-                                    // We need to construct a partial Product object to pass to EditProductDialog
                                     const product: Product = {
                                         id: item.productId,
                                         name: item.name,
-                                        description: '', // Not available in order item, dialog will fetch full product
+                                        description: '', 
                                         price: item.price,
                                         image: item.image,
-                                        category: 'T-shirts', // Placeholder, dialog should fetch real data
-                                        stock: 0, // Placeholder
+                                        category: 'T-shirts', 
+                                        stock: 0, 
                                     };
                                     return (
                                         <div key={`${item.productId || index}-${item.size || ''}`} className="flex items-center gap-4">
@@ -216,17 +215,21 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
     );
 }
 
-export default function OrderTrackingPage({ params: paramsProp }: { params: { id: string } }) {
-    const params = use(paramsProp);
+function OrderTrackingPageContent({ params }: { params: { id: string } }) {
     const { user, isUserLoading } = useUser();
     const router = useRouter();
     const firestore = useFirestore();
     const { toast } = useToast();
+    const searchParams = useSearchParams();
+    // The user who owns the order, passed as a query param. For admins, this could be anyone.
+    // For regular users, this should be their own UID.
+    const orderUserId = searchParams.get('userId');
 
     const orderRef = useMemoFirebase(() => {
-        if (!firestore || !params.id) return null;
-        return doc(firestore, 'orders', params.id);
-    }, [firestore, params.id]);
+        if (!firestore || !params.id || !orderUserId) return null;
+        // The path now points to the subcollection
+        return doc(firestore, 'users', orderUserId, 'orders', params.id);
+    }, [firestore, params.id, orderUserId]);
 
     const { data: order, isLoading: isOrderLoading } = useDoc<Order>(orderRef);
     
@@ -241,8 +244,8 @@ export default function OrderTrackingPage({ params: paramsProp }: { params: { id
         }
     }, [user, isUserLoading, router, params.id, toast]);
 
-    const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
-        if (!firestore) {
+    const handleStatusChange = (order: Order, newStatus: OrderStatus) => {
+        if (!firestore || !orderUserId) {
             toast({ 
                 title: "خطأ في قاعدة البيانات",
                 description: "لا يمكن تحديث الطلب حاليًا.",
@@ -250,11 +253,11 @@ export default function OrderTrackingPage({ params: paramsProp }: { params: { id
             });
             return;
         };
-        const orderDocRef = doc(firestore, 'orders', orderId);
+        const orderDocRef = doc(firestore, 'users', orderUserId, 'orders', order.id);
         updateDocumentNonBlocking(orderDocRef, { status: newStatus });
         toast({
             title: "تم تحديث حالة الطلب",
-            description: `تم تغيير حالة الطلب #${orderId.slice(0, 7).toUpperCase()} إلى "${newStatus}".`,
+            description: `تم تغيير حالة الطلب #${order.id.slice(0, 7).toUpperCase()} إلى "${newStatus}".`,
         });
     }
 
@@ -283,6 +286,7 @@ export default function OrderTrackingPage({ params: paramsProp }: { params: { id
         );
     }
     
+    // Security check: User must be the owner of the order OR an admin.
     const isOwner = user?.uid === order.userId;
     const isAdmin = user?.email === 'admin@example.com';
     
@@ -304,4 +308,11 @@ export default function OrderTrackingPage({ params: paramsProp }: { params: { id
     return <OrderDetails order={order} isAdmin={isAdmin} onStatusChange={handleStatusChange} />;
 }
 
-    
+
+export default function OrderTrackingPage({ params }: { params: { id: string } }) {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+        <OrderTrackingPageContent params={params} />
+    </Suspense>
+  )
+}

@@ -21,9 +21,10 @@ function OrderSuccessContent() {
     const firestore = useFirestore();
 
     const orderRef = useMemoFirebase(() => {
-        if (!firestore || !orderId) return null;
-        return doc(firestore, 'orders', orderId);
-    }, [firestore, orderId]);
+        // The order is now in a subcollection, so we need the user's ID to build the path
+        if (!firestore || !orderId || !user?.uid) return null;
+        return doc(firestore, 'users', user.uid, 'orders', orderId);
+    }, [firestore, orderId, user?.uid]);
 
     const { data: order, isLoading: isOrderLoading } = useDoc<Order>(orderRef);
 
@@ -51,7 +52,7 @@ function OrderSuccessContent() {
         )
     }
 
-    // Security check: ensure the logged-in user is the owner of the order
+    // Security check is now implicitly handled by the doc path, but we double-check.
     if (user?.uid !== order.userId) {
         return (
             <div className="text-center">

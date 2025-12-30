@@ -34,12 +34,13 @@ export default function TrackOrderPage() {
             title: 'يرجى تسجيل الدخول',
             description: 'يجب تسجيل الدخول لعرض تفاصيل الطلب.',
         });
-        router.push(`/login?redirect=/orders/${trimmedOrderId}`);
+        router.push(`/login?redirect=/track`);
         return;
     }
     
-    // Redirect to the correct user-facing order details page.
-    router.push(`/orders/${trimmedOrderId}`);
+    // Redirect to the order details page, passing the user's ID as a query param
+    // so the page knows where to look for the order document.
+    router.push(`/orders/${trimmedOrderId}?userId=${user.uid}`);
   };
 
   return (
@@ -67,11 +68,11 @@ export default function TrackOrderPage() {
           </form>
           {user ? (
             <p className="text-xs text-muted-foreground mt-4 text-center">
-             يمكنك أيضاً عرض جميع طلباتك في <Link href="/account" className="underline hover:text-primary">صفحة حسابك</Link>.
+             يمكنك أيضاً عرض جميع طلباتك في <Link href="/account/orders" className="underline hover:text-primary">صفحة طلباتك</Link>.
             </p>
           ) : (
              <p className="text-xs text-muted-foreground mt-4 text-center">
-              يمكنك العثور على رقم طلبك في رسالة تأكيد الطلب الإلكترونية.
+              يجب عليك تسجيل الدخول أولاً لتتبع طلبك.
              </p>
           )}
         </CardContent>

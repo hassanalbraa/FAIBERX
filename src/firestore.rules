@@ -1,39 +1,14 @@
-/**
- * This ruleset enforces a Role-Based Access Control (RBAC) model with high precision.
- *
- * Core Philosophy:
- * Access is strictly defined per collection path to avoid rule conflicts.
- * - Admin role is determined by email ('admin@example.com').
- * - Regular users have rights ONLY to their own documents and subcollections.
- *
- * Data Structure:
- * - /products/{productId}: Publicly readable product data.
- * - /users/{userId}: User-specific profile data.
- * - /users/{userId}/addresses/{addressId}: User's private shipping addresses.
- * - /orders/{orderId}: Customer orders.
- * - /roles_admin/{userId}: Locked collection for server-side role management.
- *
- * Key Security Decisions & Fixes:
- * - FINAL FIX for Address Listing: The previous issue was `allow list: if isAdmin()` on `/users/{userId}`,
- *   which incorrectly blocked users from listing their own `/addresses` subcollection. This has been
- *   corrected by separating the `list` rule for admins from the `get`/`update` rules for owners.
- *   Users can now `read` (get/list) their own addresses subcollection as intended.
- * - Admin User Listing: The `allow list: if isAdmin();` rule is now correctly scoped to the `/users`
- *   collection and will not interfere with subcollection access for regular users.
- * - User-Owned Data: `isOwner(userId)` is consistently used to ensure users can only
- *   access data under their own `/users/{userId}` path.
- * - Granular Permissions: `read` and `write` have been broken down into `get`, `list`, `create`, `update`,
- *   `delete` where necessary for maximum clarity and security.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Helper functions
     function isSignedIn() {
       return request.auth != null;
     }
 
     function isAdmin() {
+      // In a real app, this would check a custom claim, not email.
       return isSignedIn() && request.auth.token.email == 'admin@example.com';
     }
     
@@ -41,55 +16,40 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * Products: Publicly readable, admin-only writes.
-     */
+    // Products: Publicly readable, admin-only writes.
     match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    /**
-     * User data collection.
-     */
+    // User data collection
     match /users/{userId} {
-      // Create: Any signed-in user can create their own document upon signup.
+      // Create: Any signed-in user can create their own document.
       allow create: if isOwner(userId);
       
       // Get/Update: A user can get/update their own profile. An admin can get/update any profile.
       allow get, update: if isOwner(userId) || isAdmin();
       
-      // List: ONLY an admin can list the entire users collection. This does NOT affect subcollections.
+      // List: ONLY an admin can list the users collection.
       allow list: if isAdmin();
 
-      /**
-       * User Addresses: A user has full control over their own addresses.
-       * This now works because the parent `list` rule is correctly scoped.
-       */
+      // Addresses: A user has full control over their own addresses subcollection.
       match /addresses/{addressId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Orders: A user has full control over their own orders subcollection.
+      match /orders/{orderId} {
         allow read, write: if isOwner(userId);
       }
     }
     
-    /**
-     * Orders: Users can create/read their own. Admins have full access.
-     */
-    match /orders/{orderId} {
-      // Admins can read and write any order.
-      allow read, write: if isAdmin();
-
-      // Users can create their own orders, ensuring the userId in the document matches their auth uid.
-      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
-
-      // Users can read (get/list) their own orders.
-      // This is secure because the `list` operation is constrained by a query in the client code.
-      // And the `get` operation checks the `userId` field on the existing document.
-      allow read: if isSignedIn() && isOwner(resource.data.userId);
+    // Admins can read all orders via a collectionGroup query
+    match /{path=**}/orders/{orderId} {
+      allow read: if isAdmin();
     }
 
-    /**
-     * Admin Roles: Read-only from the client to prevent privilege escalation.
-     */
+    // roles_admin should not be client-writable to prevent privilege escalation.
     match /roles_admin/{adminId} {
       allow read, write: if false;
     }

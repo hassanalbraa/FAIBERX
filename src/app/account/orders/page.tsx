@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ShoppingCart, ListOrdered } from 'lucide-react';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import type { Order } from '@/lib/orders';
 
 function UserOrdersContent() {
@@ -19,9 +19,9 @@ function UserOrdersContent() {
 
   const userOrdersQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
+    // Change: Query the subcollection for the specific user
     return query(
-      collection(firestore, 'orders'),
-      where('userId', '==', user.uid),
+      collection(firestore, 'users', user.uid, 'orders'),
       orderBy('createdAt', 'desc')
     );
   }, [firestore, user?.uid]);
@@ -71,7 +71,8 @@ function UserOrdersContent() {
                 {orders.map(order => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">
-                        <Link href={`/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
+                        {/* Change: Update link to include userId for subcollection path */}
+                        <Link href={`/orders/${order.id}?userId=${order.userId}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
                     </TableCell>
                     <TableCell>{order.createdAt?.toDate().toLocaleDateString('ar-EG') || 'غير متوفر'}</TableCell>
                     <TableCell>
@@ -80,7 +81,8 @@ function UserOrdersContent() {
                     <TableCell className="text-right">{order.total.toFixed(2)} SDG</TableCell>
                     <TableCell className="text-center">
                        <Button asChild variant="outline" size="sm">
-                           <Link href={`/orders/${order.id}`}>عرض التفاصيل</Link>
+                           {/* Change: Update link to include userId for subcollection path */}
+                           <Link href={`/orders/${order.id}?userId=${order.userId}`}>عرض التفاصيل</Link>
                        </Button>
                     </TableCell>
                   </TableRow>

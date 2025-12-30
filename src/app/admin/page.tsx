@@ -14,7 +14,7 @@ import type { Order } from '@/lib/orders';
 import { getAuth, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { collection, query, collectionGroup } from 'firebase/firestore';
 
 type UserProfile = {
     id: string;
@@ -36,7 +36,8 @@ function AdminDashboardContent({ user, isAdmin }: { user: NonNullable<ReturnType
   
   const ordersQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, 'orders'));
+    // Change: Use a collectionGroup query to get all orders from all users
+    return query(collectionGroup(firestore, 'orders'));
   }, [firestore, isAdmin]);
   const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
 
