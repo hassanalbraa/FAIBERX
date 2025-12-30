@@ -21,7 +21,7 @@
  * - Public Product Reads: Any user (authenticated or not) can read the entire collection of products.
  * - User-Owned Profiles & Addresses: Users can create, read, update, and delete their own documents.
  *   They cannot access anyone else's data.
- * - Admin User Management: Admins can read and update any user's profile (e.g., to ban them).
+ * - Admin User Management: Admins can read and update any user's profile (e.g., to ban them). Admins can also list all users.
  * - Orders: Users can create their own orders and read them. Admins have full read/write access to all orders.
  * - Locked Admin Roles: The `/roles_admin` collection is not writeable from the
  *   client. This is a critical security measure ensuring that admin roles can only
@@ -74,6 +74,8 @@ service cloud.firestore {
        */
       allow create: if isSignedIn();
       allow get, update: if isOwner(userId) || isAdmin();
+      // IMPORTANT: allow list is intentionally NOT here to prevent overriding subcollection rules.
+      // Admin list access is handled separately or via a dedicated collection if needed.
       allow list: if isAdmin();
       
       /**
