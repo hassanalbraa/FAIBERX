@@ -15,7 +15,7 @@ import { mockOrders } from '@/lib/orders';
 // This component will only be rendered when the user is fully loaded and available.
 function OrdersContent({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']> }) {
   // Using mock data instead of Firestore query. We'll show the first 2 mock orders regardless of user ID.
-  const userOrders = useMemo(() => mockOrders.slice(0, 2), []);
+  const userOrders = useMemo(() => mockOrders, []);
   const isOrdersLoading = false; // Mock data is loaded instantly
 
   // Sort orders on the client-side after fetching
@@ -73,7 +73,7 @@ function OrdersContent({ user }: { user: NonNullable<ReturnType<typeof useUser>[
                     <TableCell className="font-medium">
                         <Link href={`/account/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
                     </TableCell>
-                    <TableCell>{new Date(order.date || 0).toLocaleDateString('ar-EG')}</TableCell>
+                    <TableCell>{new Date(order.date || Date.now()).toLocaleDateString('ar-EG')}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                     </TableCell>
@@ -136,3 +136,5 @@ export default function OrderHistoryPage() {
     </div>
   );
 }
+
+    
