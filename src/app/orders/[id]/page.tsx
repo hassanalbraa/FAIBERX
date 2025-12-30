@@ -96,7 +96,7 @@ export default function OrderTrackingPage({ params }: { params: { id: string } }
         }
     }, [user, isUserLoading, router]);
 
-    if (isUserLoading) {
+    if (isUserLoading || !user) {
         return (
              <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
@@ -151,7 +151,7 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
                                 </a>
                             </DropdownMenuItem>
                              <DropdownMenuItem asChild>
-                                <a href={`https://wa.me/${order.shippingAddress.whatsappNumber.replace(/\s/g, '').replace('+', '')}`} target="_blank" rel="noopener noreferrer">
+                                <a href={`https://wa.me/${order.shippingAddress.whatsappNumber.replace(/\s/g, '')}`} target="_blank" rel="noopener noreferrer">
                                     <MessageSquare className="ml-2 h-4 w-4" />
                                     تواصل عبر واتساب
                                 </a>
@@ -289,5 +289,7 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
     );
 }
 
+
+    
 
     
