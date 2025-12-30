@@ -83,7 +83,7 @@ service cloud.firestore {
        *   The `read` rule covers both `get` and `list` operations.
        */
       match /addresses/{addressId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if request.auth.uid == userId;
       }
     }
     
