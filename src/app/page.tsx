@@ -4,10 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/ProductCard';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import { placeholderImages } from '@/lib/placeholder-images';
 import type { Product } from '@/lib/products';
-import { useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, limit } from 'firebase/firestore';
 
@@ -78,7 +77,7 @@ export default function Home() {
             </p>
             <Button asChild size="lg" className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground font-bold group">
               <Link href="/style-finder">
-                جرّب خبير الأزياء الذكي <ArrowLeft className="mr-2 h-5 w-5 transition-transform group-hover:-translate-x-1" />
+                جرّب خبير الأزياء الذكي <Sparkles className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
               </Link>
             </Button>
         </div>

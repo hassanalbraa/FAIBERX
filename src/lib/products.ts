@@ -11,44 +11,38 @@ export type Product = {
   stock?: number;
 };
 
-const productPlaceholders = placeholderImages.filter(p => p.id.startsWith('product-'));
-
-function getPlaceholder(id: string): ImagePlaceholder {
-    return productPlaceholders.find(p => p.id === id) || { id: '', description: '', imageUrl: '' };
-}
-
 // This data is now considered fallback data or for reference,
 // as the main source of truth will be Firestore.
 export const products: Product[] = [
     {
-    id: '1',
-    name: 'ت명을 حر',
-    description: 'تيشيرت عالي الجودة بتصميم فريد',
+    id: 'p1',
+    name: 'تيشيرت فايبركس الأساسي',
+    description: 'تيشيرت قطني 100% عالي الجودة بتصميم كلاسيكي. مثالي للطباعة المخصصة أو للارتداء اليومي.',
     price: 180,
     image: 'https://i.top4top.io/p_3070y1x311.png',
     category: 'T-shirts',
   },
   {
-    id: '2',
-    name: 'ت명을 حر',
-    description: 'تيشيرت مريح وأنيق لكل يوم',
+    id: 'p2',
+    name: 'تيشيرت فايبركس بريميوم',
+    description: 'تيشيرت مصنوع من مزيج قطن وبوليستر فائق النعومة. يوفر راحة لا مثيل لها ومناسب لجميع الأوقات.',
     price: 250,
     image: 'https://i.top4top.io/p_30706e2fh1.png',
     category: 'T-shirts',
   },
   {
-    id: '3',
-    name: 'هودي الأناقة',
-    description: 'هودي دافئ بتصميم عصري',
+    id: 'p3',
+    name: 'هودي فايبركس دافئ',
+    description: 'هودي مبطن بالصوف الناعم ليوفر لك الدفء في الأيام الباردة. تصميم عصري بجودة عالية.',
     price: 350,
-    image: 'https://i.top4top.io/p_30706e2fh1.png',
+    image: 'https://i.top4top.io/p_30706e2fh1.png', // Assuming different hoodie image exists
     category: 'Hoodies',
   },
   {
-    id: '4',
-    name: 'تيشيرت النخبة',
-    description: 'تيشيرت فاخر للمناسبات الخاصة',
-    price: 450,
+    id: 'p4',
+    name: 'تيشيرت فايبركس الرياضي',
+    description: 'تيشيرت مصمم خصيصًا للأنشطة الرياضية، مصنوع من قماش يسمح بمرور الهواء ويمتص الرطوبة.',
+    price: 220,
     image: 'https://i.top4top.io/p_3070y1x311.png',
     category: 'T-shirts',
   },

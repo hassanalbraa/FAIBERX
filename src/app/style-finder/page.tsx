@@ -1,23 +1,39 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { getOutfitSuggestions } from './actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Camera, Loader2, Sparkles } from 'lucide-react';
+import { Camera, Loader2, Sparkles, Wand2 } from 'lucide-react';
 import { placeholderImages } from '@/lib/placeholder-images';
-import { products, type Product } from '@/lib/products';
+import type { Product } from '@/lib/products';
 import { ProductCard } from '@/components/ProductCard';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where, or } from 'firebase/firestore';
 
 export default function StyleFinderPage() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
+  const [suggestionKeywords, setSuggestionKeywords] = useState<string[]>([]);
   const { toast } = useToast();
+  const firestore = useFirestore();
+
+  const suggestedProductsQuery = useMemoFirebase(() => {
+    if (!firestore || suggestionKeywords.length === 0) return null;
+
+    // Create a list of 'where' filters. Firestore 'or' filter requires at least one condition.
+    const keywordFilters = suggestionKeywords.map(keyword => 
+        where('name', 'array-contains', keyword.toLowerCase())
+    );
+
+    return query(collection(firestore, 'products'), or(...keywordFilters));
+  }, [firestore, suggestionKeywords]);
+
+  const { data: suggestedProducts, isLoading: productsLoading } = useCollection<Product>(suggestedProductsQuery);
   
   const styleFinderPlaceholder = placeholderImages.find(p => p.id === 'style-finder-placeholder');
 
@@ -25,6 +41,7 @@ export default function StyleFinderPage() {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
+      setSuggestionKeywords([]); // Clear previous suggestions on new file selection
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
@@ -45,7 +62,7 @@ export default function StyleFinderPage() {
     }
 
     setIsLoading(true);
-    setSuggestedProducts([]);
+    setSuggestionKeywords([]);
     try {
       const result = await getOutfitSuggestions(preview);
       if (result.suggestions && result.suggestions.length > 0) {
@@ -53,20 +70,7 @@ export default function StyleFinderPage() {
           title: 'الاقتراحات جاهزة!',
           description: "إليك بعض القطع التي نعتقد أنك ستحبها.",
         });
-
-        // Match suggestions with products
-        const matchedProducts: Product[] = [];
-        result.suggestions.forEach(suggestion => {
-            products.forEach(product => {
-                if (product.name.toLowerCase().includes(suggestion.toLowerCase()) || product.description.toLowerCase().includes(suggestion.toLowerCase())) {
-                    if (!matchedProducts.find(p => p.id === product.id)) {
-                        matchedProducts.push(product);
-                    }
-                }
-            });
-        });
-        setSuggestedProducts(matchedProducts);
-
+        setSuggestionKeywords(result.suggestions);
       } else {
         toast({
           title: 'لم يتم العثور على اقتراحات',
@@ -84,6 +88,8 @@ export default function StyleFinderPage() {
       setIsLoading(false);
     }
   };
+  
+  const isFindingProducts = isLoading || productsLoading;
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -96,7 +102,7 @@ export default function StyleFinderPage() {
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
         <Card>
           <CardHeader>
-            <CardTitle>تحميل صورتك</CardTitle>
+            <CardTitle>1. تحميل صورتك</CardTitle>
             <CardDescription>للحصول على أفضل النتائج، استخدم صورة واضحة لكامل الجسم.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -124,28 +130,36 @@ export default function StyleFinderPage() {
         </Card>
         
         <div>
-          <h2 className="font-headline text-3xl font-bold mb-4">توصيات أسلوبك</h2>
-          {isLoading ? (
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[...Array(4)].map((_, i) => (
-                    <div key={i} className="space-y-2">
-                        <div className="aspect-[3/4] bg-muted animate-pulse rounded-lg"></div>
-                        <div className="h-4 bg-muted animate-pulse rounded w-3/4"></div>
-                        <div className="h-4 bg-muted animate-pulse rounded w-1/2"></div>
-                    </div>
-                ))}
-             </div>
-          ) : suggestedProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {suggestedProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-             <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                <p className="text-muted-foreground">ستظهر منتجاتك المقترحة هنا.</p>
-             </div>
-          )}
+           <Card>
+             <CardHeader>
+                <CardTitle>2. توصيات أسلوبك</CardTitle>
+                <CardDescription>بناءً على صورتك، نعتقد أن هذه القطع ستعجبك.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isFindingProducts ? (
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[...Array(2)].map((_, i) => (
+                        <div key={i} className="space-y-2">
+                            <div className="aspect-[3/4] bg-muted animate-pulse rounded-lg"></div>
+                            <div className="h-4 bg-muted animate-pulse rounded w-3/4"></div>
+                            <div className="h-4 bg-muted animate-pulse rounded w-1/2"></div>
+                        </div>
+                    ))}
+                 </div>
+              ) : suggestedProducts && suggestedProducts.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {suggestedProducts.map(product => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              ) : (
+                 <div className="text-center py-16 border-2 border-dashed rounded-lg flex flex-col items-center justify-center">
+                    <Wand2 className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">ستظهر منتجاتك المقترحة هنا.</p>
+                 </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
