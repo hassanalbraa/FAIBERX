@@ -22,11 +22,6 @@ type UserProfile = {
     isBanned?: boolean;
 }
 
-const mockUsers: UserProfile[] = [
-    { id: '1', email: 'user1@example.com', createdAt: new Date(), accountNumber: '123456', isBanned: false },
-    { id: '2', email: 'user2@example.com', createdAt: new Date(), accountNumber: '789012', isBanned: true },
-];
-
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
@@ -48,9 +43,13 @@ export default function AdminDashboard() {
   }, [firestore, isAdmin]);
   const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
 
-  // Using mock data for users section
-  const usersLoading = false;
-  const users = mockUsers;
+  // Firestore fetching for users to get count - only if admin
+  const usersQuery = useMemoFirebase(() => {
+      if (!firestore || !isAdmin) return null;
+      return query(collection(firestore, 'users'));
+  }, [firestore, isAdmin]);
+  const { data: users, isLoading: usersLoading } = useCollection<UserProfile>(usersQuery);
+
 
   const completedOrdersCount = useMemo(() => {
     if (!orders) return 0;
@@ -78,7 +77,9 @@ export default function AdminDashboard() {
     }
   };
 
-  if (isUserLoading || !isAdmin) {
+  const isLoading = isUserLoading || !isAdmin;
+
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />

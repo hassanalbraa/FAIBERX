@@ -50,7 +50,7 @@ export default function AdminUsersPage() {
 
   const handleToggleBan = (userId: string, currentStatus: boolean) => {
     if (!firestore) {
-        toast({ title: "لا يمكن تحديث المستخدم (بيانات تجريبية)" });
+        toast({ title: "لا يمكن تحديث المستخدم (قاعدة بيانات غير متاحة)" });
         return;
     }
     const userRef = doc(firestore, 'users', userId);
@@ -73,7 +73,9 @@ export default function AdminUsersPage() {
     );
   }, [users, searchTerm]);
 
-  if (isUserLoading || !isAdmin) {
+  const isLoading = isUserLoading || !isAdmin;
+
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
