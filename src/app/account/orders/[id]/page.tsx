@@ -1,28 +1,33 @@
 'use client';
 
 import { useRouter } from "next/navigation";
-import { OrderStatus, type Order, mockOrders } from "@/lib/orders";
+import { OrderStatus, type Order } from "@/lib/orders";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderTracker } from "@/components/OrderTracker";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
-import { useUser } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Mail, SearchX, Hash, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useRef, useMemo, use } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { doc } from "firebase/firestore";
 
 export default function UserOrderTrackingPage({ params: paramsProp }: { params: { id: string } }) {
     const params = use(paramsProp);
     const { user, isUserLoading } = useUser();
     const { toast } = useToast();
     const router = useRouter();
+    const firestore = useFirestore();
 
-    // Using mock data instead of Firestore
-    const isLoading = false;
-    const order = useMemo(() => mockOrders.find(o => o.id === params.id), [params.id]);
+    const orderRef = useMemoFirebase(() => {
+        if (!firestore || !params.id) return null;
+        return doc(firestore, 'orders', params.id);
+    }, [firestore, params.id]);
+
+    const { data: order, isLoading } = useDoc<Order>(orderRef);
 
     const prevStatusRef = useRef<OrderStatus | undefined>();
 
@@ -66,9 +71,6 @@ export default function UserOrderTrackingPage({ params: paramsProp }: { params: 
         );
     }
     
-    // The authorization check below is removed to allow viewing mock orders by any logged-in user.
-    // In a production environment with real data, this check would be necessary.
-    /*
     if (user?.uid !== order.userId) {
          return (
             <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
@@ -83,7 +85,6 @@ export default function UserOrderTrackingPage({ params: paramsProp }: { params: 
             </div>
         );
     }
-    */
 
     return <OrderDetails order={order} />;
 }
@@ -117,12 +118,12 @@ function OrderDetails({ order }: { order: Order }) {
                         <CardContent>
                             <div className="space-y-4">
                                 {order.items.map((item: any, index: number) => (
-                                    <div key={`${item.product?.id || index}-${item.size || ''}`} className="flex items-center gap-4">
+                                    <div key={`${item.productId || index}-${item.size || ''}`} className="flex items-center gap-4">
                                         <div className="relative w-20 h-24 rounded-md overflow-hidden">
-                                            <Image src={item.product.image} alt={item.product.name} fill className="object-cover" sizes="80px"/>
+                                            <Image src={item.image} alt={item.name} fill className="object-cover" sizes="80px"/>
                                         </div>
                                         <div>
-                                            <p className="font-semibold">{item.product.name}</p>
+                                            <p className="font-semibold">{item.name}</p>
                                             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                                                 <span>الكمية: {item.quantity}</span>
                                                 {item.size && <Badge variant="secondary">مقاس: {item.size}</Badge>}

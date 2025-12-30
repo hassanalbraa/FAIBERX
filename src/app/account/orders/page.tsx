@@ -3,25 +3,32 @@
 import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ListOrdered, ShoppingBag } from 'lucide-react';
 import type { Order, OrderStatus } from '@/lib/orders';
-import { mockOrders } from '@/lib/orders';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 
 // This component will only be rendered when the user is fully loaded and available.
 function OrdersContent({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']> }) {
-  // Using mock data instead of Firestore query. We'll show the first 2 mock orders regardless of user ID.
-  const userOrders = useMemo(() => mockOrders, []);
-  const isOrdersLoading = false; // Mock data is loaded instantly
+  const firestore = useFirestore();
 
-  // Sort orders on the client-side after fetching
-  const sortedOrders = useMemo(() => {
-    return [...userOrders].sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
-  }, [userOrders]);
+  const userOrdersQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(
+      collection(firestore, 'orders'), 
+      where('userId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
+  }, [firestore, user]);
+
+  const { data: userOrders, isLoading: isOrdersLoading } = useCollection<Order>(userOrdersQuery);
+
+  // Sorting is now handled by the Firestore query with orderBy
+  const sortedOrders = userOrders;
 
   const getStatusVariant = (status: OrderStatus) => {
     switch (status) {
@@ -73,7 +80,7 @@ function OrdersContent({ user }: { user: NonNullable<ReturnType<typeof useUser>[
                     <TableCell className="font-medium">
                         <Link href={`/account/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
                     </TableCell>
-                    <TableCell>{new Date(order.date || Date.now()).toLocaleDateString('ar-EG')}</TableCell>
+                    <TableCell>{order.createdAt?.toDate().toLocaleDateString('ar-EG') || 'غير متوفر'}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                     </TableCell>
@@ -136,5 +143,3 @@ export default function OrderHistoryPage() {
     </div>
   );
 }
-
-    

@@ -1,17 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, updateDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ShoppingCart, MoreHorizontal, CheckCircle, Truck, XCircle, PauseCircle, Mail, MessageSquare } from 'lucide-react';
-import { doc } from 'firebase/firestore';
+import { doc, collection, query, orderBy } from 'firebase/firestore';
 import type { Order, OrderStatus } from '@/lib/orders';
-import { mockOrders } from '@/lib/orders';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,10 +33,12 @@ export default function AdminOrdersPage() {
 
   const isAdmin = user?.email === 'admin@example.com';
   
-  // Using mock data instead of Firestore
-  const orders = mockOrders;
-  const isOrdersLoading = false;
+  const allOrdersQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'orders'), orderBy('createdAt', 'desc'));
+  }, [firestore]);
 
+  const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(allOrdersQuery);
 
   useEffect(() => {
     if (!isUserLoading) {
@@ -51,7 +52,11 @@ export default function AdminOrdersPage() {
 
   const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
     if (!firestore) {
-        toast({ title: "لا يمكن تحديث الطلب (بيانات تجريبية)" });
+        toast({ 
+            title: "خطأ في قاعدة البيانات",
+            description: "لا يمكن تحديث الطلب حاليًا.",
+            variant: "destructive"
+        });
         return;
     };
     const orderRef = doc(firestore, 'orders', orderId);
@@ -103,7 +108,7 @@ export default function AdminOrdersPage() {
             <CardTitle>جميع الطلبات</CardTitle>
             <CardDescription>
                 {orders && orders.length > 0
-                ? `لديك ${orders.length} طلبات إجمالاً.`
+                ? `لديك ${orders.length} طلب إجمالاً.`
                 : 'لا توجد طلبات لعرضها حاليًا.'}
             </CardDescription>
         </CardHeader>
@@ -127,7 +132,7 @@ export default function AdminOrdersPage() {
                         <Link href={`/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
                     </TableCell>
                     <TableCell>{order.shippingAddress.name}</TableCell>
-                    <TableCell>{new Date(order.date).toLocaleDateString('ar-EG')}</TableCell>
+                    <TableCell>{order.createdAt?.toDate().toLocaleDateString('ar-EG') || 'غير متوفر'}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(order.status) as any}>{order.status}</Badge>
                     </TableCell>

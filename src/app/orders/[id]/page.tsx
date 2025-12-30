@@ -1,12 +1,12 @@
 'use client';
 
 import { useRouter } from "next/navigation";
-import { OrderStatus, type Order, mockOrders } from "@/lib/orders";
+import { OrderStatus, type Order } from "@/lib/orders";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { OrderTracker } from "@/components/OrderTracker";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
-import { useUser, useFirestore, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
+import { useUser, useFirestore, useMemoFirebase, updateDocumentNonBlocking, useDoc } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -31,21 +31,21 @@ import { Badge } from "@/components/ui/badge";
 export default function OrderTrackingPage({ params: paramsProp }: { params: { id: string } }) {
     const params = use(paramsProp);
     const firestore = useFirestore();
-    const { user } = useUser();
+    const { user, isUserLoading } = useUser();
     const isAdmin = user?.email === 'admin@example.com';
     const { toast } = useToast();
     
-    // Using mock data instead of Firestore
-    const isLoading = false;
-    const order = useMemo(() => mockOrders.find(o => o.id === params.id), [params.id]);
+    const orderRef = useMemoFirebase(() => {
+        if (!firestore || !params.id) return null;
+        return doc(firestore, 'orders', params.id);
+    }, [firestore, params.id]);
 
+    const { data: order, isLoading } = useDoc<Order>(orderRef);
     
-    // Store the previous status to detect changes
     const prevStatusRef = useRef<OrderStatus | undefined>();
 
     useEffect(() => {
         if (order && prevStatusRef.current && order.status !== prevStatusRef.current) {
-            // Don't show notification for initial load or for the user who made the change (admin)
             if (!isAdmin) {
                 toast({
                     title: "تحديث حالة الطلب",
@@ -53,14 +53,17 @@ export default function OrderTrackingPage({ params: paramsProp }: { params: { id
                 });
             }
         }
-        // Update previous status ref
         prevStatusRef.current = order?.status;
     }, [order, isAdmin, toast]);
 
 
     const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
         if (!firestore) {
-            toast({ title: "لا يمكن تحديث الطلب (بيانات تجريبية)"});
+            toast({ 
+                title: "خطأ في قاعدة البيانات",
+                description: "لا يمكن تحديث الطلب حاليًا.",
+                variant: "destructive"
+            });
             return;
         };
         const orderDocRef = doc(firestore, 'orders', orderId);
@@ -71,7 +74,7 @@ export default function OrderTrackingPage({ params: paramsProp }: { params: { id
         });
     }
 
-    if (isLoading) {
+    if (isLoading || isUserLoading) {
         return (
              <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
@@ -98,18 +101,16 @@ export default function OrderTrackingPage({ params: paramsProp }: { params: { id
         );
     }
     
-    // Authorization check
-    /*
-    if (!isAdmin && user?.uid !== order.userId) {
+    // Authorization check: only admin can view this generic page.
+    if (!isAdmin) {
          return (
             <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
                  <SearchX className="h-24 w-24 text-muted-foreground mb-4" />
                 <h1 className="font-headline text-4xl font-bold">غير مصرح به</h1>
-                <p className="text-muted-foreground mt-2">أنت غير مصرح لك بعرض هذا الطلب.</p>
+                <p className="text-muted-foreground mt-2">هذه الصفحة مخصصة للمشرفين فقط.</p>
             </div>
         );
     }
-    */
 
     return <OrderDetails order={order} isAdmin={isAdmin} onStatusChange={handleStatusChange} />;
 }
@@ -140,7 +141,7 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
                                 </a>
                             </DropdownMenuItem>
                              <DropdownMenuItem asChild>
-                                <a href={`https://wa.me/${order.shippingAddress.whatsappNumber.replace('+', '')}`} target="_blank" rel="noopener noreferrer">
+                                <a href={`https://wa.me/${order.shippingAddress.whatsappNumber.replace(/\s/g, '').replace('+', '')}`} target="_blank" rel="noopener noreferrer">
                                     <MessageSquare className="ml-2 h-4 w-4" />
                                     تواصل عبر واتساب
                                 </a>
