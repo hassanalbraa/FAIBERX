@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useMemo } from 'react';
@@ -48,7 +49,7 @@ function AdminOrdersContent() {
         });
         return;
     };
-    // Change: The reference must now point to the subcollection path
+    // The reference must now point to the subcollection path
     const orderRef = doc(firestore, 'users', order.userId, 'orders', order.id);
     updateDocumentNonBlocking(orderRef, { status: newStatus });
     toast({
@@ -107,7 +108,6 @@ function AdminOrdersContent() {
                 {orders.map(order => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">
-                        {/* Change: Update link to include userId for subcollection path */}
                         <Link href={`/orders/${order.id}?userId=${order.userId}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
                     </TableCell>
                     <TableCell>{order.shippingAddress.name}</TableCell>
