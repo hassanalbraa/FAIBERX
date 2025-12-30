@@ -54,7 +54,7 @@ service cloud.firestore {
      */
     match /users/{userId} {
       // Create: Any signed-in user can create their own document upon signup.
-      allow create: if isSignedIn();
+      allow create: if isOwner(userId);
       
       // Get/Update: A user can get/update their own profile. An admin can get/update any profile.
       allow get, update: if isOwner(userId) || isAdmin();
@@ -64,7 +64,7 @@ service cloud.firestore {
 
       /**
        * User Addresses: A user has full control over their own addresses.
-       * This now works because the restrictive `list` rule on the parent is gone.
+       * This now works because the parent `list` rule is correctly scoped.
        */
       match /addresses/{addressId} {
         allow read, write: if isOwner(userId);
@@ -75,17 +75,16 @@ service cloud.firestore {
      * Orders: Users can create/read their own. Admins have full access.
      */
     match /orders/{orderId} {
-      // Admins can perform any write operation.
-      allow write: if isAdmin();
+      // Admins can read and write any order.
+      allow read, write: if isAdmin();
 
-      // Users can create their own orders.
+      // Users can create their own orders, ensuring the userId in the document matches their auth uid.
       allow create: if isSignedIn() && isOwner(request.resource.data.userId);
 
-      // Admins can read any individual order. Users can only read an order they own.
-      allow get: if isAdmin() || (isSignedIn() && isOwner(resource.data.userId));
-      
-      // List: Admins can list all orders. Users can list only their own orders via a query.
-      allow list: if isAdmin() || (isSignedIn() && request.query.where[0][1] == 'userId' && request.query.where[0][2] == request.auth.uid);
+      // Users can read (get/list) their own orders.
+      // This is secure because the `list` operation is constrained by a query in the client code.
+      // And the `get` operation checks the `userId` field on the existing document.
+      allow read: if isSignedIn() && isOwner(resource.data.userId);
     }
 
     /**
