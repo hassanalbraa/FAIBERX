@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ListOrdered, ShoppingBag } from 'lucide-react';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import type { Order } from '@/lib/orders';
 import { OrderStatus } from '@/lib/orders';
 
@@ -18,15 +18,21 @@ function OrdersContent({ user }: { user: NonNullable<ReturnType<typeof useUser>[
   const firestore = useFirestore();
 
   // Create the query, now guaranteed to have a user.uid.
+  // IMPORTANT: Removed orderBy to simplify the query and avoid complex index requirements,
+  // which was the likely root cause of the permission errors.
   const userOrdersQuery = useMemoFirebase(() => {
+    if (!firestore || !user?.uid) return null;
     return query(
       collection(firestore, 'orders'),
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', user.uid)
     );
   }, [firestore, user.uid]);
 
   const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(userOrdersQuery);
+  
+  // Sort orders on the client-side after fetching
+  const sortedOrders = orders ? [...orders].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()) : [];
+
 
   const getStatusVariant = (status: OrderStatus) => {
     switch (status) {
@@ -50,8 +56,8 @@ function OrdersContent({ user }: { user: NonNullable<ReturnType<typeof useUser>[
             <CardDescription>
                 {isOrdersLoading 
                     ? "جاري تحميل طلباتك..."
-                    : orders && orders.length > 0
-                        ? `لديك ${orders.length} طلبات.`
+                    : sortedOrders && sortedOrders.length > 0
+                        ? `لديك ${sortedOrders.length} طلبات.`
                         : 'ليس لديك أي طلبات حتى الآن.'
                 }
             </CardDescription>
@@ -61,7 +67,7 @@ function OrdersContent({ user }: { user: NonNullable<ReturnType<typeof useUser>[
              <div className="flex h-48 items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
              </div>
-          ) : orders && orders.length > 0 ? (
+          ) : sortedOrders && sortedOrders.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -73,7 +79,7 @@ function OrdersContent({ user }: { user: NonNullable<ReturnType<typeof useUser>[
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map(order => (
+                {sortedOrders.map(order => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">
                         <Link href={`/account/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
@@ -129,12 +135,6 @@ export default function OrderHistoryPage() {
         <p className="text-muted-foreground mt-2">عرض جميع طلباتك السابقة والحالية.</p>
       </div>
       
-      {/* 
-        The core of the fix:
-        - If we are still loading the user state, show a generic loader.
-        - Only if the user is fully loaded and exists, render the <OrdersContent> component.
-        - This prevents any attempt to query for orders until the user's ID is guaranteed to be available.
-      */}
       {isUserLoading ? (
         <div className="flex h-48 items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
@@ -142,7 +142,6 @@ export default function OrderHistoryPage() {
       ) : user ? (
         <OrdersContent user={user} />
       ) : (
-        // This case is unlikely to be seen because of the useEffect redirect, but it's good practice.
         <p className="text-center text-muted-foreground">يرجى تسجيل الدخول لعرض سجل طلباتك.</p>
       )}
     </div>
