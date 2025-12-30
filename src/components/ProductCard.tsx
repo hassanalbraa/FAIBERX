@@ -48,7 +48,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <p className="font-bold text-lg mt-2">{product.price.toFixed(2)} SDG</p>
          <Button 
             className="w-full mt-4"
-            onClick={() => addToCart(product, 1, 'L')} 
+            onClick={() => addToCart(product, 1, 'افتراضي')} 
             aria-label={`أضف ${product.name} إلى السلة`}
           >
             <ShoppingCart className="ml-2 h-4 w-4" />

@@ -182,7 +182,7 @@ export default function CheckoutPage() {
             image: item.product.image,
             quantity: item.quantity,
             price: item.product.price,
-            size: item.size || "",
+            size: item.size || "افتراضي",
         })),
         shippingAddress: {
             name: `${values.firstName} ${values.lastName}`,

@@ -15,7 +15,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -52,7 +51,7 @@ export default function ProductDetailPage({ params: paramsProp }: { params: { id
   
   const handleAddToCart = () => {
     // Use selected size or default to "L" if none is selected
-    const sizeToAdd = selectedSize || 'L';
+    const sizeToAdd = selectedSize || 'افتراضي';
     addToCart(product, quantity, sizeToAdd);
   };
 
@@ -101,26 +100,24 @@ export default function ProductDetailPage({ params: paramsProp }: { params: { id
           
           <div className='mt-8'>
             <Label className='text-base font-semibold'>اختر المقاس (اختياري)</Label>
-             <RadioGroup
-                value={selectedSize || ''}
-                onValueChange={setSelectedSize}
-                className="flex flex-wrap gap-2 mt-4"
-                aria-label='Product sizes'
-            >
-                {availableSizes.map(size => (
-                    <Label
+            <div className="flex flex-wrap gap-2 mt-4" role="radiogroup" aria-label="Product sizes">
+                 {availableSizes.map(size => (
+                    <Button
                         key={size}
-                        htmlFor={`size-${size}`}
-                        className={cn(
-                          "flex items-center justify-center rounded-md border-2 w-14 h-14 cursor-pointer transition-colors text-base font-bold",
-                          selectedSize === size ? "border-primary text-primary-foreground bg-primary" : "hover:bg-accent"
-                        )}
+                        variant={selectedSize === size ? "default" : "outline"}
+                        onClick={() => setSelectedSize(size)}
+                        className="w-14 h-14 text-base font-bold"
                     >
-                        <RadioGroupItem value={size} id={`size-${size}`} className="sr-only" />
                         {size}
-                    </Label>
+                    </Button>
                 ))}
-            </RadioGroup>
+                 <Button
+                    variant={selectedSize === null ? "default" : "outline"}
+                    onClick={() => setSelectedSize(null)}
+                >
+                    مقاس افتراضي
+                </Button>
+            </div>
           </div>
 
           <div className="mt-8 flex items-center gap-4">
