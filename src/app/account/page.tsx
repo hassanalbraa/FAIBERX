@@ -48,6 +48,7 @@ function EditProfileDialog({ user, userProfile, onProfileUpdate }: { user: NonNu
     const firestore = useFirestore();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
@@ -65,6 +66,7 @@ function EditProfileDialog({ user, userProfile, onProfileUpdate }: { user: NonNu
             await updateDocumentNonBlocking(userDocRef, values);
             toast({ title: "تم تحديث الملف الشخصي بنجاح" });
             onProfileUpdate();
+            setIsOpen(false);
         } catch (error) {
             console.error("Failed to update profile:", error);
             toast({ title: "فشل تحديث الملف الشخصي", variant: "destructive" });
@@ -74,7 +76,7 @@ function EditProfileDialog({ user, userProfile, onProfileUpdate }: { user: NonNu
     };
     
     return (
-        <Dialog>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button>
                     <Edit className="ml-2 h-4 w-4" />
@@ -135,7 +137,6 @@ export default function AccountPage() {
   const router = useRouter();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -166,7 +167,7 @@ export default function AccountPage() {
   };
   
   const onProfileUpdate = () => {
-    setDialogOpen(false);
+    refetch();
   }
 
   if (isUserLoading || !user || !userProfile || isProfileLoading) {
@@ -191,6 +192,9 @@ export default function AccountPage() {
                         <nav className="flex flex-col space-y-1">
                             <Button variant="ghost" className="justify-start bg-secondary" asChild>
                                 <Link href="/account"><User className="ml-2 h-4 w-4" />الملف الشخصي</Link>
+                            </Button>
+                            <Button variant="ghost" className="justify-start" asChild>
+                                <Link href="/account/orders"><ListOrdered className="ml-2 h-4 w-4" />طلباتي</Link>
                             </Button>
                              {isAdmin && (
                                 <Button variant="ghost" className="justify-start" asChild>
@@ -258,3 +262,5 @@ export default function AccountPage() {
     </div>
   )
 }
+
+    
