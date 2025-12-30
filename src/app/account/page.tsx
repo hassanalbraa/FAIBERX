@@ -134,7 +134,7 @@ export default function AccountPage() {
                             <p className="text-muted-foreground">{userProfile?.createdAt?.toDate().toLocaleDateString('ar-EG') || 'غير متوفر'}</p>
                           </div>
                           <Separator />
-                           <Button>تعديل الملف الشخصي</Button>
+                           <Button disabled>الزر بلا وظيفة</Button>
                         </div>
                     </CardContent>
                 </Card>
