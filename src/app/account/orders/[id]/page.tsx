@@ -13,6 +13,7 @@ import { Mail, SearchX, Hash, Loader2, MessageSquare, ShieldAlert } from "lucide
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { doc } from "firebase/firestore";
+import { useEffect } from "react";
 
 // This component handles the logic and rendering of the order details.
 function OrderDetailsContent({ order }: { order: Order }) {
@@ -127,19 +128,21 @@ export default function UserOrderTrackingPage({ params }: { params: { id: string
     const firestore = useFirestore();
 
     const orderRef = useMemoFirebase(() => {
-        if (!firestore || !params.id) return null;
+        // Fetch only if user is loaded and logged in
+        if (!firestore || !user || !params.id) return null;
         return doc(firestore, 'orders', params.id);
-    }, [firestore, params.id]);
+    }, [firestore, user, params.id]);
 
-    const { data: order, isLoading: isOrderLoading, error } = useDoc<Order>(orderRef);
+    const { data: order, isLoading: isOrderLoading } = useDoc<Order>(orderRef);
 
-    // Redirect if not logged in
     useEffect(() => {
+        // Redirect if user is not logged in after checking
         if (!isUserLoading && !user) {
             router.push('/login');
         }
     }, [user, isUserLoading, router]);
     
+    // Combined loading state
     const isLoading = isUserLoading || (user && isOrderLoading);
 
     if (isLoading) {
@@ -150,14 +153,17 @@ export default function UserOrderTrackingPage({ params }: { params: { id: string
         );
     }
     
-    // Once loading is complete, check for authorization and data existence
-    if (!order) {
-        return (
+    // After loading, proceed with checks.
+    
+    // Security check: ensure the logged-in user is the owner of the order.
+    // This is a client-side check that complements the Firestore security rules.
+    if (order && user?.uid !== order.userId) {
+         return (
             <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
-                 <SearchX className="h-24 w-24 text-muted-foreground mb-4" />
-                <h1 className="font-headline text-4xl font-bold">لم يتم العثور على الطلب</h1>
-                <p className="text-muted-foreground mt-2">عذرًا، لم نتمكن من العثور على الطلب رقم #{params.id}. ربما تم حذفه أو أنك لا تملك الصلاحية لعرضه.</p>
-                <div className="flex gap-4 mt-6">
+                 <ShieldAlert className="h-24 w-24 text-destructive mb-4" />
+                <h1 className="font-headline text-4xl font-bold">غير مصرح به</h1>
+                <p className="text-muted-foreground mt-2">أنت غير مصرح لك بعرض هذا الطلب.</p>
+                 <div className="flex gap-4 mt-6">
                     <Button asChild>
                         <Link href="/account/orders">العودة إلى سجل الطلبات</Link>
                     </Button>
@@ -166,15 +172,14 @@ export default function UserOrderTrackingPage({ params }: { params: { id: string
         );
     }
     
-    // Security check: ensure the logged-in user is the owner of the order.
-    // This is a client-side check that complements the Firestore security rules.
-    if (user?.uid !== order.userId) {
-         return (
+    // Check if the order exists after all other checks.
+    if (!order) {
+        return (
             <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
-                 <ShieldAlert className="h-24 w-24 text-destructive mb-4" />
-                <h1 className="font-headline text-4xl font-bold">غير مصرح به</h1>
-                <p className="text-muted-foreground mt-2">أنت غير مصرح لك بعرض هذا الطلب.</p>
-                 <div className="flex gap-4 mt-6">
+                 <SearchX className="h-24 w-24 text-muted-foreground mb-4" />
+                <h1 className="font-headline text-4xl font-bold">لم يتم العثور على الطلب</h1>
+                <p className="text-muted-foreground mt-2">عذرًا، لم نتمكن من العثور على الطلب رقم #{params.id}. ربما تم حذفه أو أنك لا تملك الصلاحية لعرضه.</p>
+                <div className="flex gap-4 mt-6">
                     <Button asChild>
                         <Link href="/account/orders">العودة إلى سجل الطلبات</Link>
                     </Button>
