@@ -43,16 +43,16 @@ service cloud.firestore {
     
     // Orders: Users can create/read their own. Admins have full access.
     match /orders/{orderId} {
-      // WRITE rules: Who can change data?
-      allow write: if isAdmin(); // Admins can do any write (update, delete).
-      allow create: if isSignedIn() && isOwner(request.resource.data.userId); // Users can create their own.
+      // Admins have full read/write access.
+      allow read, write: if isAdmin();
 
-      // READ rules: Who can see data?
-      // Get: Admins can get any order. Users can only get their own.
-      allow get: if isAdmin() || isOwner(resource.data.userId);
+      // Users can create their own orders.
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
 
-      // List: Admins can list all orders. Users can only list their own orders via a query.
-      allow list: if isAdmin() || (isSignedIn() && request.query.where[0][0] == 'userId' && request.query.where[0][2] == request.auth.uid);
+      // Users can read (get/list) their own orders.
+      // This works for `get` by checking the existing document's data.
+      // This works for `list` when the query has a `where('userId', '==', request.auth.uid)` clause.
+      allow read: if isSignedIn() && isOwner(resource.data.userId);
     }
 
     // roles_admin should not be client-writable to prevent privilege escalation.
