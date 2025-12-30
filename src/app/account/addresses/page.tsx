@@ -100,22 +100,22 @@ export default function AddressesPage() {
   const addressesQuery = useMemoFirebase(() => {
       if (!firestore || !user) return null;
       return query(collection(firestore, 'users', user.uid, 'addresses'));
-  }, [firestore, user]);
+  }, [firestore, user?.uid]);
 
   const { data: addresses, isLoading: isAddressesLoading, error } = useCollection<Address>(addressesQuery);
 
   const handleAddAddress = (values: z.infer<typeof addressSchema>) => {
     if (!firestore || !user) return;
-    const addressesCollectionRef = collection(firestore, 'users', user.uid, 'addresses');
+    
     setIsSubmitting(true);
-
+    const addressesCollectionRef = collection(firestore, 'users', user.uid, 'addresses');
+    
     addDocumentNonBlocking(addressesCollectionRef, values)
       .then(() => {
         toast({ title: "تم إضافة العنوان بنجاح" });
       })
       .catch((error) => {
-        // This catch is for other potential network errors, etc.
-        // The permission error is already handled globally.
+        // Errors are handled by the global error emitter, but we can log other types here.
         console.error("Failed to add address:", error);
       })
       .finally(() => {
