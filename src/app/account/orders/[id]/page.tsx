@@ -193,5 +193,3 @@ function OrderDetails({ order }: { order: Order }) {
         </div>
     );
 }
-
-    
