@@ -2,11 +2,11 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, updateDocumentNonBlocking } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, Users, Search } from 'lucide-react';
-import { collection, doc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { UserList } from '@/components/admin/UserList';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,11 @@ type UserProfile = {
     isBanned?: boolean;
 }
 
+const mockUsers: UserProfile[] = [
+    { id: 'user1', email: 'jane.doe@example.com', createdAt: new Date(), accountNumber: '987654', isBanned: false },
+    { id: 'user2', email: 'john.smith@example.com', createdAt: new Date(), accountNumber: '123456', isBanned: true },
+];
+
 export default function AdminUsersPage() {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
@@ -28,11 +33,9 @@ export default function AdminUsersPage() {
 
   const isAdmin = user?.email === 'admin@example.com';
 
-  const usersQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'users') : null),
-    [firestore]
-  );
-  const { data: users, isLoading: usersLoading } = useCollection<UserProfile>(usersQuery);
+  // Using mock data instead of Firestore
+  const users = mockUsers;
+  const usersLoading = false;
 
   useEffect(() => {
     if (!isUserLoading) {
@@ -45,7 +48,10 @@ export default function AdminUsersPage() {
   }, [user, isUserLoading, isAdmin, router]);
 
   const handleToggleBan = (userId: string, currentStatus: boolean) => {
-    if (!firestore) return;
+    if (!firestore) {
+        toast({ title: "لا يمكن تحديث المستخدم (بيانات تجريبية)" });
+        return;
+    }
     const userRef = doc(firestore, 'users', userId);
     const newStatus = !currentStatus;
     updateDocumentNonBlocking(userRef, { isBanned: newStatus });

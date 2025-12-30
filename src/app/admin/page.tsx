@@ -2,47 +2,42 @@
 
 import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, PlusCircle, LogOut, ShoppingCart, Users, CheckCheck } from 'lucide-react';
 import AddProductForm from '@/components/admin/AddProductForm';
 import { ProductList } from '@/components/admin/ProductList';
-import { collection } from 'firebase/firestore';
 import type { Product } from '@/lib/products';
+import { products } from '@/lib/products';
 import type { Order } from '@/lib/orders';
+import { mockOrders } from '@/lib/orders';
 import { getAuth, signOut } from 'firebase/auth';
 import Link from 'next/link';
 
 type UserProfile = {
+    id: string;
     email: string;
     createdAt: any;
     accountNumber?: string;
     isBanned?: boolean;
 }
 
+const mockUsers: UserProfile[] = [
+    { id: '1', email: 'user1@example.com', createdAt: new Date(), accountNumber: '123456', isBanned: false },
+    { id: '2', email: 'user2@example.com', createdAt: new Date(), accountNumber: '789012', isBanned: true },
+];
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
 
-  const productsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'products') : null),
-    [firestore]
-  );
-  const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
-
-  const usersQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'users') : null),
-    [firestore]
-  );
-  const { data: users, isLoading: usersLoading } = useCollection<UserProfile>(usersQuery);
-
-  const ordersQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'orders') : null),
-    [firestore]
-  );
-  const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
+  // Using mock data instead of Firestore
+  const productsLoading = false;
+  const usersLoading = false;
+  const ordersLoading = false;
+  const orders = mockOrders;
+  const users = mockUsers;
 
   const completedOrdersCount = useMemo(() => {
     if (!orders) return 0;

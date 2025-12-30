@@ -15,7 +15,8 @@ export type OrderStatus = 'Order Placed' | 'Processing' | 'Shipped' | 'Out for D
 export interface Order {
     id: string; // Document ID from Firestore
     userId: string;
-    createdAt: Timestamp;
+    createdAt?: Timestamp; // Make optional for mock data
+    date?: string; // Add for mock data
     status: OrderStatus;
     items: OrderItem[];
     shippingAddress: {
@@ -37,17 +38,18 @@ export interface Order {
 
 // This mock data is now for reference and can be removed later.
 // The app will fetch real orders from Firestore.
-export const mockOrders: any[] = [
+export const mockOrders: Order[] = [
     {
         id: "TOC12345",
+        userId: "rL8IAtCoyMQ4ThgSe9m8LGsyksy1", // Example user ID
         date: "2024-05-20T14:30:00Z",
         subTotal: 430.00,
         shippingCost: 20.00,
         total: 450.00,
         status: "Out for Delivery",
         items: [
-            { product: products[0], quantity: 1, price: 180.00 },
-            { product: products[1], quantity: 1, price: 250.00 },
+            { productId: products[0].id, name: products[0].name, image: products[0].image, quantity: 1, price: 180.00, size: 'L' },
+            { productId: products[1].id, name: products[1].name, image: products[1].image, quantity: 1, price: 250.00, size: 'XL' },
         ],
         shippingAddress: {
             name: "Jane Doe",
@@ -64,13 +66,14 @@ export const mockOrders: any[] = [
     },
     {
         id: "TOC67890",
+        userId: "ANOTHER_USER_ID", // Example user ID
         date: "2024-04-15T10:00:00Z",
         subTotal: 450.00,
         shippingCost: 0.00,
         total: 450.00,
         status: "Delivered",
         items: [
-            { product: products[3], quantity: 1, price: 450.00 },
+            { productId: products[3].id, name: products[3].name, image: products[3].image, quantity: 1, price: 450.00, size: 'M' },
         ],
         shippingAddress: {
             name: "John Smith",

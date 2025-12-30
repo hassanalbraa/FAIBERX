@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { ProductCard } from '@/components/ProductCard';
-import type { Product } from '@/lib/products';
+import { products, type Product } from '@/lib/products';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,27 +11,21 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { Home } from 'lucide-react';
+import { useMemo } from 'react';
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
   const category = searchParams.get('category');
-  const firestore = useFirestore();
-
-  const productsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    const productsCollection = collection(firestore, 'products');
+  
+  // Using mock data instead of Firestore
+  const isLoading = false;
+  const filteredProducts = useMemo(() => {
     if (category) {
-      return query(productsCollection, where('category', '==', category));
+      return products.filter(p => p.category === category);
     }
-    return productsCollection;
-  }, [firestore, category]);
+    return products;
+  }, [category]);
 
-  const { data: filteredProducts, isLoading } = useCollection<Product>(productsQuery);
 
   const getCategoryArabicName = (category: string | null) => {
     switch (category) {

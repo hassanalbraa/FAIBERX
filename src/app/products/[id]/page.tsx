@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import type { Product } from '@/lib/products';
+import { products, type Product } from '@/lib/products';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { Plus, Minus } from 'lucide-react';
@@ -18,10 +18,9 @@ import {
 } from "@/components/ui/breadcrumb"
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useMemo } from 'react';
 
 const SIZES: Product['sizes'] = ["L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL", "7XL", "8XL"];
 
@@ -29,15 +28,12 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const firestore = useFirestore();
   const { toast } = useToast();
 
-  const productRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return doc(firestore, 'products', params.id);
-  }, [firestore, params.id]);
+  // Using mock data instead of Firestore
+  const isLoading = false;
+  const product = useMemo(() => products.find(p => p.id === params.id), [params.id]);
 
-  const { data: product, isLoading } = useDoc<Product>(productRef);
 
   if (isLoading) {
     return <ProductDetailSkeleton />;

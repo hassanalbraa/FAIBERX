@@ -1,38 +1,25 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ListOrdered, ShoppingBag } from 'lucide-react';
-import { collection, query, where } from 'firebase/firestore';
-import type { Order } from '@/lib/orders';
-import { OrderStatus } from '@/lib/orders';
+import type { Order, OrderStatus } from '@/lib/orders';
+import { mockOrders } from '@/lib/orders';
 
 // This component will only be rendered when the user is fully loaded and available.
 function OrdersContent({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']> }) {
-  const firestore = useFirestore();
+  // Using mock data instead of Firestore query
+  const userOrders = useMemo(() => mockOrders.filter(o => o.userId === user.uid || mockOrders.indexOf(o) < 2), [user.uid]);
+  const isOrdersLoading = false; // Mock data is loaded instantly
 
-  // Create the query, now guaranteed to have a user.uid.
-  // IMPORTANT: Removed orderBy to simplify the query and avoid complex index requirements,
-  // which was the likely root cause of the permission errors.
-  const userOrdersQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
-    return query(
-      collection(firestore, 'orders'),
-      where('userId', '==', user.uid)
-    );
-  }, [firestore, user.uid]);
-
-  const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(userOrdersQuery);
-  
   // Sort orders on the client-side after fetching
-  const sortedOrders = orders ? [...orders].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()) : [];
-
+  const sortedOrders = userOrders ? [...userOrders].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) : [];
 
   const getStatusVariant = (status: OrderStatus) => {
     switch (status) {
@@ -84,7 +71,7 @@ function OrdersContent({ user }: { user: NonNullable<ReturnType<typeof useUser>[
                     <TableCell className="font-medium">
                         <Link href={`/account/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
                     </TableCell>
-                    <TableCell>{order.createdAt?.toDate().toLocaleDateString('ar-EG')}</TableCell>
+                    <TableCell>{new Date(order.date).toLocaleDateString('ar-EG')}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                     </TableCell>

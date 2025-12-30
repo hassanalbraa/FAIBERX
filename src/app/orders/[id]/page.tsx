@@ -1,16 +1,16 @@
 'use client';
 
 import { useRouter } from "next/navigation";
-import { OrderStatus, type Order } from "@/lib/orders";
+import { OrderStatus, type Order, mockOrders } from "@/lib/orders";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { OrderTracker } from "@/components/OrderTracker";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
-import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
+import { useUser, useFirestore, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -34,12 +34,10 @@ export default function OrderTrackingPage({ params }: { params: { id: string } }
     const isAdmin = user?.email === 'admin@example.com';
     const { toast } = useToast();
     
-    const orderRef = useMemoFirebase(() => {
-        if (!firestore || !params.id) return null;
-        return doc(firestore, 'orders', params.id);
-    }, [firestore, params.id]);
+    // Using mock data instead of Firestore
+    const isLoading = false;
+    const order = useMemo(() => mockOrders.find(o => o.id === params.id), [params.id]);
 
-    const { data: order, isLoading } = useDoc<Order>(orderRef);
     
     // Store the previous status to detect changes
     const prevStatusRef = useRef<OrderStatus | undefined>();
@@ -60,7 +58,10 @@ export default function OrderTrackingPage({ params }: { params: { id: string } }
 
 
     const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
-        if (!firestore) return;
+        if (!firestore) {
+            toast({ title: "لا يمكن تحديث الطلب (بيانات تجريبية)"});
+            return;
+        };
         const orderDocRef = doc(firestore, 'orders', orderId);
         updateDocumentNonBlocking(orderDocRef, { status: newStatus });
         toast({

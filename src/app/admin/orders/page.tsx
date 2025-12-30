@@ -3,14 +3,15 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, updateDocumentNonBlocking } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ShoppingCart, MoreHorizontal, CheckCircle, Truck, XCircle, PauseCircle, Mail, MessageSquare } from 'lucide-react';
-import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import type { Order, OrderStatus } from '@/lib/orders';
+import { mockOrders } from '@/lib/orders';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,12 +34,9 @@ export default function AdminOrdersPage() {
 
   const isAdmin = user?.email === 'admin@example.com';
   
-  const allOrdersQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, 'orders'), orderBy('createdAt', 'desc'));
-  }, [firestore, isAdmin]);
-
-  const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(allOrdersQuery);
+  // Using mock data instead of Firestore
+  const orders = mockOrders;
+  const isOrdersLoading = false;
 
 
   useEffect(() => {
@@ -52,7 +50,10 @@ export default function AdminOrdersPage() {
   }, [user, isUserLoading, isAdmin, router]);
 
   const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
-    if (!firestore) return;
+    if (!firestore) {
+        toast({ title: "لا يمكن تحديث الطلب (بيانات تجريبية)" });
+        return;
+    };
     const orderRef = doc(firestore, 'orders', orderId);
     updateDocumentNonBlocking(orderRef, { status: newStatus });
     toast({
@@ -126,7 +127,7 @@ export default function AdminOrdersPage() {
                         <Link href={`/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
                     </TableCell>
                     <TableCell>{order.shippingAddress.name}</TableCell>
-                    <TableCell>{order.createdAt?.toDate().toLocaleDateString('ar-EG')}</TableCell>
+                    <TableCell>{new Date(order.date).toLocaleDateString('ar-EG')}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(order.status) as any}>{order.status}</Badge>
                     </TableCell>
