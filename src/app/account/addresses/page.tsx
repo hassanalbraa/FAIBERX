@@ -142,19 +142,24 @@ export default function AddressesPage() {
   }, [firestore, user, isUserLoading]);
 
 
-  const handleAddAddress = async (values: z.infer<typeof addressSchema>) => {
+  const handleAddAddress = (values: z.infer<typeof addressSchema>) => {
     if (!firestore || !user) return;
     const addressesCollectionRef = collection(firestore, 'users', user.uid, 'addresses');
     setIsSubmitting(true);
-    try {
-      await addDocumentNonBlocking(addressesCollectionRef, values);
-      toast({ title: "تم إضافة العنوان بنجاح" });
-    } catch (error) {
-      console.error("Failed to add address:", error);
-      toast({ title: "فشل إضافة العنوان", variant: "destructive" });
-    } finally {
-      setIsSubmitting(false);
-    }
+
+    addDocumentNonBlocking(addressesCollectionRef, values)
+      .then(() => {
+        toast({ title: "تم إضافة العنوان بنجاح" });
+      })
+      .catch((error) => {
+        // The permission error is already handled by addDocumentNonBlocking.
+        // This catch is for other potential network errors, etc.
+        console.error("Failed to add address:", error);
+        toast({ title: "فشل إضافة العنوان", variant: "destructive" });
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   const handleDeleteAddress = async (addressId: string) => {
