@@ -20,8 +20,8 @@ import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Banknote, Loader2 } from "lucide-react";
-import { useUser, useFirestore, addDocumentNonBlocking, useDoc, useMemoFirebase } from "@/firebase";
-import { collection, serverTimestamp, doc } from "firebase/firestore";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { collection, serverTimestamp, doc, addDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 
@@ -82,7 +82,6 @@ export default function CheckoutPage() {
   }, [userProfile, user, form]);
 
   useEffect(() => {
-    // This effect handles redirection for unauthenticated users after the component has mounted.
     if (!isUserLoading && !user) {
       toast({
         title: "يرجى تسجيل الدخول",
@@ -94,7 +93,6 @@ export default function CheckoutPage() {
   }, [isUserLoading, user, router, toast]);
 
   useEffect(() => {
-    // This effect handles redirection for users with an empty cart.
     if (!isUserLoading && cartItems.length === 0) {
       router.push('/cart');
     }
@@ -144,7 +142,7 @@ export default function CheckoutPage() {
 
     try {
         const ordersCollection = collection(firestore, 'orders');
-        const docRef = await addDocumentNonBlocking(ordersCollection, orderData);
+        const docRef = await addDoc(ordersCollection, orderData);
 
         toast({
             title: "تم استلام الطلب!",
@@ -165,7 +163,6 @@ export default function CheckoutPage() {
     }
   }
 
-  // Show a loading spinner while user state is being determined or if the user is being redirected.
   if (isUserLoading || !user || cartItems.length === 0) {
       return (
           <div className="flex h-screen items-center justify-center">
