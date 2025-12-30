@@ -20,6 +20,7 @@ export default function OrderHistoryPage() {
   const firestore = useFirestore();
 
   const userOrdersQuery = useMemoFirebase(() => {
+    // IMPORTANT: Only create the query if the user is loaded and exists.
     if (!firestore || !user) return null;
     return query(
       collection(firestore, 'orders'), 
@@ -36,7 +37,8 @@ export default function OrderHistoryPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const isLoading = isUserLoading || isOrdersLoading;
+  // Combine loading states: user loading OR orders loading (if query is active)
+  const isLoading = isUserLoading || (user && isOrdersLoading);
 
   if (isLoading || !user) {
     return (
