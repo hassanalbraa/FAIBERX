@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useUser, useFirestore, addDocumentNonBlocking, deleteDocumentNonBlocking, FirestorePermissionError, errorEmitter } from '@/firebase';
-import { collection, doc, onSnapshot, query, Unsubscribe, FirestoreError } from 'firebase/firestore';
+import { useUser, useFirestore, addDocumentNonBlocking, deleteDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc, query } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Loader2, MapPin, PlusCircle, Trash2 } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -91,56 +91,18 @@ export default function AddressesPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [isAddressesLoading, setIsAddressesLoading] = useState(true);
-  const [error, setError] = useState<FirestoreError | Error | null>(null);
-
-
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/login?redirect=/account/addresses');
     }
   }, [user, isUserLoading, router]);
 
-  useEffect(() => {
-    let unsubscribe: Unsubscribe | undefined;
+  const addressesQuery = useMemoFirebase(() => {
+      if (!firestore || !user) return null;
+      return query(collection(firestore, 'users', user.uid, 'addresses'));
+  }, [firestore, user]);
 
-    if (firestore && user) {
-      setIsAddressesLoading(true);
-      const addressesQuery = query(collection(firestore, 'users', user.uid, 'addresses'));
-      
-      unsubscribe = onSnapshot(
-        addressesQuery,
-        (snapshot) => {
-          const fetchedAddresses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Address));
-          setAddresses(fetchedAddresses);
-          setIsAddressesLoading(false);
-          setError(null);
-        },
-        (err) => {
-          const contextualError = new FirestorePermissionError({
-            operation: 'list',
-            path: `users/${user.uid}/addresses`,
-          });
-          setError(contextualError);
-          errorEmitter.emit('permission-error', contextualError);
-          setIsAddressesLoading(false);
-        }
-      );
-    } else if (!isUserLoading) {
-        // If there's no user and we're not loading, there are no addresses to fetch.
-        setIsAddressesLoading(false);
-        setAddresses([]);
-    }
-
-    // Cleanup subscription on unmount
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, [firestore, user, isUserLoading]);
-
+  const { data: addresses, isLoading: isAddressesLoading, error } = useCollection<Address>(addressesQuery);
 
   const handleAddAddress = (values: z.infer<typeof addressSchema>) => {
     if (!firestore || !user) return;
@@ -152,29 +114,24 @@ export default function AddressesPage() {
         toast({ title: "تم إضافة العنوان بنجاح" });
       })
       .catch((error) => {
-        // The permission error is already handled by addDocumentNonBlocking.
         // This catch is for other potential network errors, etc.
+        // The permission error is already handled globally.
         console.error("Failed to add address:", error);
-        toast({ title: "فشل إضافة العنوان", variant: "destructive" });
       })
       .finally(() => {
         setIsSubmitting(false);
       });
   };
 
-  const handleDeleteAddress = async (addressId: string) => {
+  const handleDeleteAddress = (addressId: string) => {
     if (!firestore || !user) return;
     const addressRef = doc(firestore, 'users', user.uid, 'addresses', addressId);
-    try {
-      await deleteDocumentNonBlocking(addressRef);
-      toast({ title: "تم حذف العنوان بنجاح", variant: "destructive" });
-    } catch (error) {
-      console.error("Failed to delete address:", error);
-      toast({ title: "فشل حذف العنوان", variant: "destructive" });
-    }
+    
+    deleteDocumentNonBlocking(addressRef);
+    toast({ title: "تم حذف العنوان بنجاح", variant: "destructive" });
   };
   
-  const isLoading = isUserLoading || isAddressesLoading;
+  const isLoading = isUserLoading || (user && isAddressesLoading);
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
