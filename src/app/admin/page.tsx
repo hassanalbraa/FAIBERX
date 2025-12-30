@@ -9,7 +9,7 @@ import { Loader2, PlusCircle, LogOut, ShoppingCart, Users, CheckCheck } from 'lu
 import AddProductForm from '@/components/admin/AddProductForm';
 import { ProductList } from '@/components/admin/ProductList';
 import type { Product } from '@/lib/products';
-import { mockOrders } from '@/lib/orders';
+import type { Order } from '@/lib/orders';
 import { getAuth, signOut } from 'firebase/auth';
 import Link from 'next/link';
 import { collection, query } from 'firebase/firestore';
@@ -32,17 +32,22 @@ export default function AdminDashboard() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
-  // Re-enabled Firestore fetching for products
+  // Firestore fetching for products
   const productsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'products'));
   }, [firestore]);
   const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
+  
+  // Firestore fetching for orders to calculate stats
+  const ordersQuery = useMemoFirebase(() => {
+      if (!firestore) return null;
+      return query(collection(firestore, 'orders'));
+  }, [firestore]);
+  const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
 
-  // Using mock data for other sections
+  // Using mock data for users section
   const usersLoading = false;
-  const ordersLoading = false;
-  const orders = mockOrders;
   const users = mockUsers;
 
   const completedOrdersCount = useMemo(() => {
