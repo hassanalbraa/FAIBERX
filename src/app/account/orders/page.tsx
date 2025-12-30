@@ -15,11 +15,11 @@ import { OrderStatus } from '@/lib/orders';
 
 
 function OrdersContent() {
-  const { user } = useUser();
+  const { user } = useUser(); // user is guaranteed to be non-null here
   const firestore = useFirestore();
 
   const userOrdersQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
+    if (!firestore || !user?.uid) return null; // Defensive check, though user.uid should exist
     return query(
       collection(firestore, 'orders'),
       where('userId', '==', user.uid),
