@@ -84,7 +84,12 @@ service cloud.firestore {
       allow read, write: if isAdmin();
       allow create: if isSignedIn() && isOwner(request.resource.data.userId);
       allow get: if isSignedIn() && isOwner(resource.data.userId);
-      allow list: if (isSignedIn() && request.query.where.userId == request.auth.uid) || isAdmin();
+      
+      // Rules are not filters: This rule allows a user to query the orders collection
+      // ONLY if the query includes a `where('userId', '==', request.auth.uid)` clause.
+      allow list: if isSignedIn() && request.query.where.userId == request.auth.uid;
+      // Admins are allowed to list all orders without constraints.
+      allow list: if isAdmin();
     }
 
     /**
