@@ -1,16 +1,35 @@
+
 "use client";
 
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Minus, Plus, Trash2, ShoppingBag, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, cartTotal, cartCount, isCartLoading } = useCart();
+  const { user } = useUser();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleCheckout = () => {
+    if (user) {
+      router.push('/checkout');
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'يرجى تسجيل الدخول',
+        description: 'يجب عليك تسجيل الدخول للمتابعة إلى الدفع.',
+      });
+      router.push('/login?redirect=/checkout');
+    }
+  };
 
   if (isCartLoading) {
     return (
@@ -100,8 +119,8 @@ export default function CartPage() {
                         <span>الإجمالي (مبدئي)</span>
                         <span>{cartTotal.toFixed(2)} SDG</span>
                     </div>
-                    <Button asChild size="lg" className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
-                        <Link href="/checkout">الانتقال إلى الدفع</Link>
+                    <Button onClick={handleCheckout} size="lg" className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90">
+                        الانتقال إلى الدفع
                     </Button>
                 </CardContent>
              </Card>
