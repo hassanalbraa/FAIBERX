@@ -98,7 +98,7 @@ export default function OrderHistoryPage() {
                 {orders.map(order => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">
-                        <Link href={`/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
+                        <Link href={`/account/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
                     </TableCell>
                     <TableCell>{order.createdAt?.toDate().toLocaleDateString('ar-EG')}</TableCell>
                     <TableCell>
@@ -107,7 +107,7 @@ export default function OrderHistoryPage() {
                     <TableCell className="text-right">{order.total.toFixed(2)} SDG</TableCell>
                     <TableCell className="text-right">
                         <Button asChild variant="outline" size="sm">
-                            <Link href={`/orders/${order.id}`}>عرض التفاصيل</Link>
+                            <Link href={`/account/orders/${order.id}`}>عرض التفاصيل</Link>
                         </Button>
                     </TableCell>
                   </TableRow>

@@ -151,7 +151,7 @@ export default function AdminOrdersPage() {
                                   </a>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                  <a href={`https://wa.me/${order.shippingAddress.whatsappNumber.replace('+', '')}`} target="_blank" rel="noopener noreferrer">
+                                  <a href={`https://wa.me/${order.shippingAddress.whatsappNumber.replace(/\s/g, '').replace('+', '')}`} target="_blank" rel="noopener noreferrer">
                                     <MessageSquare className="ml-2 h-4 w-4" />
                                     عبر واتساب
                                   </a>
