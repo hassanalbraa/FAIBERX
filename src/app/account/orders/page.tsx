@@ -14,12 +14,10 @@ import type { Order } from '@/lib/orders';
 import { OrderStatus } from '@/lib/orders';
 
 
-export default function OrderHistoryPage() {
-  const { user, isUserLoading } = useUser();
-  const router = useRouter();
+function OrdersContent() {
+  const { user } = useUser();
   const firestore = useFirestore();
 
-  // IMPORTANT: This query will only be created when `firestore` and `user.uid` are available.
   const userOrdersQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
     return query(
@@ -30,24 +28,6 @@ export default function OrderHistoryPage() {
   }, [firestore, user?.uid]);
 
   const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(userOrdersQuery);
-
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isUserLoading, router]);
-
-  // Combined loading state: user is loading OR (user exists and orders are loading)
-  const isLoading = isUserLoading || (!!user && isOrdersLoading);
-
-  // This check is crucial. It shows a loader until the user object is fully available.
-  if (isUserLoading || !user) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
   const getStatusVariant = (status: OrderStatus) => {
     switch (status) {
@@ -65,6 +45,80 @@ export default function OrderHistoryPage() {
   };
 
   return (
+    <Card>
+      <CardHeader>
+          <CardTitle>طلباتك</CardTitle>
+          <CardDescription>
+              {isOrdersLoading 
+                  ? "جاري تحميل طلباتك..."
+                  : orders && orders.length > 0
+                      ? `لديك ${orders.length} طلبات.`
+                      : 'ليس لديك أي طلبات حتى الآن.'
+              }
+          </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isOrdersLoading ? (
+           <div className="flex h-48 items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin" />
+           </div>
+        ) : orders && orders.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>رقم الطلب</TableHead>
+                <TableHead>التاريخ</TableHead>
+                <TableHead>الحالة</TableHead>
+                <TableHead className="text-right">الإجمالي</TableHead>
+                <TableHead className="w-[100px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {orders.map(order => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-medium">
+                      <Link href={`/account/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
+                  </TableCell>
+                  <TableCell>{order.createdAt?.toDate().toLocaleDateString('ar-EG')}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">{order.total.toFixed(2)} SDG</TableCell>
+                  <TableCell className="text-right">
+                      <Button asChild variant="outline" size="sm">
+                          <Link href={`/account/orders/${order.id}`}>عرض التفاصيل</Link>
+                      </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-16 border-2 border-dashed rounded-lg">
+              <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
+              <h2 className="mt-6 text-xl font-semibold">لا توجد طلبات</h2>
+              <p className="mt-2 text-muted-foreground">يبدو أنك لم تقم بأي طلبات بعد.</p>
+              <Button asChild className="mt-6">
+              <Link href="/products">ابدأ التسوق</Link>
+              </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function OrderHistoryPage() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
+
+  return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <div className="mb-12">
         <h1 className="font-headline text-4xl md:text-5xl font-bold flex items-center gap-4">
@@ -74,66 +128,13 @@ export default function OrderHistoryPage() {
         <p className="text-muted-foreground mt-2">عرض جميع طلباتك السابقة والحالية.</p>
       </div>
 
-      <Card>
-        <CardHeader>
-            <CardTitle>طلباتك</CardTitle>
-            <CardDescription>
-                {isLoading 
-                    ? "جاري تحميل طلباتك..."
-                    : orders && orders.length > 0
-                        ? `لديك ${orders.length} طلبات.`
-                        : 'ليس لديك أي طلبات حتى الآن.'
-                }
-            </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-             <div className="flex h-48 items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-             </div>
-          ) : orders && orders.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>رقم الطلب</TableHead>
-                  <TableHead>التاريخ</TableHead>
-                  <TableHead>الحالة</TableHead>
-                  <TableHead className="text-right">الإجمالي</TableHead>
-                  <TableHead className="w-[100px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.map(order => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">
-                        <Link href={`/account/orders/${order.id}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
-                    </TableCell>
-                    <TableCell>{order.createdAt?.toDate().toLocaleDateString('ar-EG')}</TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">{order.total.toFixed(2)} SDG</TableCell>
-                    <TableCell className="text-right">
-                        <Button asChild variant="outline" size="sm">
-                            <Link href={`/account/orders/${order.id}`}>عرض التفاصيل</Link>
-                        </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground" />
-                <h2 className="mt-6 text-xl font-semibold">لا توجد طلبات</h2>
-                <p className="mt-2 text-muted-foreground">يبدو أنك لم تقم بأي طلبات بعد.</p>
-                <Button asChild className="mt-6">
-                <Link href="/products">ابدأ التسوق</Link>
-                </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {isUserLoading ? (
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ) : user ? (
+        <OrdersContent />
+      ) : null}
     </div>
   );
 }
