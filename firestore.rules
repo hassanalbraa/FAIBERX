@@ -50,8 +50,8 @@ service cloud.firestore {
       allow create: if isSignedIn() && isOwner(request.resource.data.userId);
 
       // Users can read an order if they are the owner.
-      // We add this to the admin 'read' rule.
-      allow get: if isSignedIn() && get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid;
+      // This is a separate rule from the admin read rule.
+      allow get: if isSignedIn() && isOwner(resource.data.userId);
 
       // Users can list their own orders, which is required for some client-side queries.
       // This rule is scoped narrowly and requires a query with a 'where' clause.
