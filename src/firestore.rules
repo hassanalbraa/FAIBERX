@@ -84,7 +84,7 @@ service cloud.firestore {
       allow read, write: if isAdmin();
       allow create: if isSignedIn() && isOwner(request.resource.data.userId);
       allow get: if isSignedIn() && isOwner(resource.data.userId);
-      allow list: if isSignedIn() && request.query.where.userId == request.auth.uid;
+      allow list: if (isSignedIn() && request.query.where.userId == request.auth.uid) || isAdmin();
     }
 
     /**
