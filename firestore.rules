@@ -80,7 +80,7 @@ service cloud.firestore {
     match /orders/{orderId} {
       allow create: if isSignedIn() && isOwner(request.resource.data.userId);
       allow get: if isOwner(resource.data.userId) || isAdmin();
-      allow list: if isAdmin(); // Only admins can list all orders. Users list their own via queries.
+      allow list: if isAdmin() || (isSignedIn() && request.query.where.userId == request.auth.uid);
       allow update: if isAdmin();
     }
 
