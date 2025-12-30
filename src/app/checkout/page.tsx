@@ -22,7 +22,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Banknote, Loader2 } from "lucide-react";
 import { useUser, useFirestore, addDocumentNonBlocking } from "@/firebase";
 import { collection, serverTimestamp } from "firebase/firestore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
@@ -57,6 +57,26 @@ export default function CheckoutPage() {
       transactionId: "",
     },
   });
+
+  useEffect(() => {
+    // This effect handles redirection for unauthenticated users after the component has mounted.
+    if (!isUserLoading && !user) {
+      toast({
+        title: "يرجى تسجيل الدخول",
+        description: "يجب عليك تسجيل الدخول للمتابعة إلى الدفع.",
+        variant: 'destructive'
+      });
+      router.push('/login?redirect=/checkout');
+    }
+  }, [isUserLoading, user, router, toast]);
+
+  useEffect(() => {
+    // This effect handles redirection for users with an empty cart.
+    if (!isUserLoading && cartItems.length === 0) {
+      router.push('/cart');
+    }
+  }, [isUserLoading, cartItems.length, router]);
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user || !firestore) {
@@ -109,7 +129,7 @@ export default function CheckoutPage() {
         });
 
         clearCart();
-        router.push(`/orders/${docRef.id}`);
+        router.push(`/account/orders/${docRef.id}`);
 
     } catch (error) {
         console.error("Error placing order:", error);
@@ -122,27 +142,13 @@ export default function CheckoutPage() {
     }
   }
 
-  if (isUserLoading) {
+  // Show a loading spinner while user state is being determined or if the user is being redirected.
+  if (isUserLoading || !user || cartItems.length === 0) {
       return (
           <div className="flex h-screen items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />
           </div>
       )
-  }
-
-  if (!user) {
-      toast({
-          title: "يرجى تسجيل الدخول",
-          description: "يجب عليك تسجيل الدخول للمتابعة إلى الدفع.",
-          variant: 'destructive'
-      });
-      router.push('/login?redirect=/checkout');
-      return null;
-  }
-
-  if (cartItems.length === 0 && typeof window !== 'undefined') {
-    router.push('/cart');
-    return null;
   }
 
   return (
@@ -277,3 +283,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    
