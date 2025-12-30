@@ -1,12 +1,13 @@
+
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useCollection, updateDocumentNonBlocking, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, Users, Search } from 'lucide-react';
-import { doc } from 'firebase/firestore';
+import { doc, collection, query } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { UserList } from '@/components/admin/UserList';
 import { useToast } from '@/hooks/use-toast';
@@ -17,12 +18,9 @@ type UserProfile = {
     createdAt: any;
     accountNumber?: string;
     isBanned?: boolean;
+    firstName?: string;
+    lastName?: string;
 }
-
-const mockUsers: UserProfile[] = [
-    { id: 'user1', email: 'jane.doe@example.com', createdAt: new Date(), accountNumber: '987654', isBanned: false },
-    { id: 'user2', email: 'john.smith@example.com', createdAt: new Date(), accountNumber: '123456', isBanned: true },
-];
 
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -33,9 +31,12 @@ export default function AdminUsersPage() {
 
   const isAdmin = user?.email === 'admin@example.com';
 
-  // Using mock data instead of Firestore
-  const users = mockUsers;
-  const usersLoading = false;
+  const usersQuery = useMemoFirebase(() => {
+    if (!firestore || !isAdmin) return null;
+    return query(collection(firestore, 'users'));
+  }, [firestore, isAdmin]);
+
+  const { data: users, isLoading: usersLoading } = useCollection<UserProfile>(usersQuery);
 
   useEffect(() => {
     if (!isUserLoading) {
@@ -65,8 +66,10 @@ export default function AdminUsersPage() {
   const filteredUsers = useMemo(() => {
     if (!users) return [];
     return users.filter(u => 
-        u.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        u.accountNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+        (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase())) || 
+        (u.accountNumber && u.accountNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (u.firstName && u.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (u.lastName && u.lastName.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [users, searchTerm]);
 
@@ -101,7 +104,7 @@ export default function AdminUsersPage() {
                 <div className="relative w-full sm:max-w-xs">
                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input 
-                        placeholder="ابحث بالبريد أو رقم الحساب..."
+                        placeholder="ابحث بالاسم، البريد، أو رقم الحساب..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pr-10"

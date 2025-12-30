@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -26,6 +27,8 @@ type UserProfile = {
   createdAt: any;
   accountNumber?: string;
   isBanned?: boolean;
+  firstName?: string;
+  lastName?: string;
 }
 
 interface UserListProps {
@@ -57,10 +60,13 @@ export function UserList({ users, onToggleBan }: UserListProps) {
             <TableCell>
                 <div className="flex items-center gap-3">
                     <Avatar>
-                        <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`} />
-                        <AvatarFallback>{user.email?.[0]?.toUpperCase()}</AvatarFallback>
+                        <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${user.firstName} ${user.lastName}`} />
+                        <AvatarFallback>{user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <div className="font-medium">{user.email}</div>
+                    <div>
+                        <div className="font-medium">{user.firstName} {user.lastName}</div>
+                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                    </div>
                 </div>
             </TableCell>
             <TableCell>
@@ -106,3 +112,4 @@ export function UserList({ users, onToggleBan }: UserListProps) {
     </Table>
   );
 }
+
