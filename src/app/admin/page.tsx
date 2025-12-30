@@ -25,16 +25,22 @@ type UserProfile = {
 }
 
 // This component fetches and displays the data. It will only be rendered if the user is an admin.
-function AdminDashboardContent({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']> }) {
+function AdminDashboardContent({ user, isAdmin }: { user: NonNullable<ReturnType<typeof useUser>['user']>, isAdmin: boolean }) {
   const firestore = useFirestore();
 
   const productsQuery = useMemoFirebase(() => query(collection(firestore, 'products')), [firestore]);
   const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
   
-  const ordersQuery = useMemoFirebase(() => query(collection(firestore, 'orders')), [firestore]);
+  const ordersQuery = useMemoFirebase(() => {
+    if (!firestore || !isAdmin) return null;
+    return query(collection(firestore, 'orders'));
+  }, [firestore, isAdmin]);
   const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
 
-  const usersQuery = useMemoFirebase(() => query(collection(firestore, 'users')), [firestore]);
+  const usersQuery = useMemoFirebase(() => {
+    if (!firestore || !isAdmin) return null;
+    return query(collection(firestore, 'users'));
+  }, [firestore, isAdmin]);
   const { data: users, isLoading: usersLoading } = useCollection<UserProfile>(usersQuery);
 
   const completedOrdersCount = useMemo(() => {
@@ -169,7 +175,7 @@ export default function AdminDashboard() {
 
   // While loading or if user is not yet confirmed as admin, show a loader.
   // This prevents the content component from ever rendering for non-admins.
-  if (isUserLoading || !isAdmin) {
+  if (isUserLoading || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -177,7 +183,18 @@ export default function AdminDashboard() {
       </div>
     );
   }
+
+  if (!isAdmin) {
+    // This is an additional safeguard. The useEffect should already have redirected.
+    // It prevents a flicker of the AdminDashboardContent.
+     return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-4">إعادة توجيه...</p>
+      </div>
+    );
+  }
   
   // Only render the dashboard content if the user is a confirmed admin
-  return <AdminDashboardContent user={user} />;
+  return <AdminDashboardContent user={user} isAdmin={isAdmin} />;
 }
