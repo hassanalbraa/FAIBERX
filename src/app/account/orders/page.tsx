@@ -20,15 +20,23 @@ function OrdersContent({ user }: { user: NonNullable<ReturnType<typeof useUser>[
     if (!firestore || !user) return null;
     return query(
       collection(firestore, 'orders'), 
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', user.uid)
+      // Removed orderBy('createdAt', 'desc') to avoid composite index requirement.
+      // Sorting will be done on the client-side.
     );
   }, [firestore, user]);
 
   const { data: userOrders, isLoading: isOrdersLoading } = useCollection<Order>(userOrdersQuery);
 
-  // Sorting is now handled by the Firestore query with orderBy
-  const sortedOrders = userOrders;
+  // Sort orders on the client-side after they are fetched.
+  const sortedOrders = useMemo(() => {
+    if (!userOrders) return [];
+    return [...userOrders].sort((a, b) => {
+        const dateA = a.createdAt?.toDate() || new Date(0);
+        const dateB = b.createdAt?.toDate() || new Date(0);
+        return dateB.getTime() - dateA.getTime();
+    });
+  }, [userOrders]);
 
   const getStatusVariant = (status: OrderStatus) => {
     switch (status) {
