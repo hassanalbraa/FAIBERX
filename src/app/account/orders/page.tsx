@@ -18,13 +18,13 @@ function UserOrdersContent() {
   const firestore = useFirestore();
 
   const userOrdersQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore || !user?.uid) return null;
     return query(
       collection(firestore, 'orders'),
       where('userId', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
-  }, [firestore, user]);
+  }, [firestore, user?.uid]);
 
   const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(userOrdersQuery);
 
