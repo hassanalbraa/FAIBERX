@@ -52,15 +52,14 @@ service cloud.firestore {
       // Users can read an order if they are the owner.
       // We add this to the admin 'read' rule.
       allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      // Users can list their own orders, which is required for some client-side queries.
+      // This rule is scoped narrowly and requires a query with a 'where' clause.
+      allow list: if isSignedIn() && request.query.where.size() > 0 && request.query.where.userId == request.auth.uid;
     }
 
     // roles_admin should not be client-writable to prevent privilege escalation.
     match /roles_admin/{adminId} {
-      allow read, write: if false;
-    }
-    
-    // Default deny all other access.
-    match /{document=**} {
       allow read, write: if false;
     }
   }
