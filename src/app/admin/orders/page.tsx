@@ -25,31 +25,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useToast } from '@/hooks/use-toast';
 
-export default function AdminOrdersPage() {
-  const { user, isUserLoading } = useUser();
-  const router = useRouter();
+function AdminOrdersContent() {
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  const isAdmin = user?.email === 'admin@example.com';
-  
   const allOrdersQuery = useMemoFirebase(() => {
-    // Only create the query if the user is an admin
-    if (!firestore || !isAdmin) return null;
+    if (!firestore) return null;
     return query(collection(firestore, 'orders'), orderBy('createdAt', 'desc'));
-  }, [firestore, isAdmin]);
+  }, [firestore]);
 
   const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(allOrdersQuery);
-
-  useEffect(() => {
-    if (!isUserLoading) {
-      if (!user) {
-        router.replace('/admin/login');
-      } else if (!isAdmin) {
-        router.replace('/account');
-      }
-    }
-  }, [user, isUserLoading, isAdmin, router]);
 
   const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
     if (!firestore) {
@@ -68,17 +53,6 @@ export default function AdminOrdersPage() {
     });
   }
 
-  const isLoading = isUserLoading || isOrdersLoading;
-
-  if (isLoading || !isAdmin) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <p className="ml-4">جاري التحقق من صلاحيات الأدمن...</p>
-      </div>
-    );
-  }
-
   const getStatusVariant = (status: string) => {
     switch (status) {
       case 'Delivered':
@@ -93,18 +67,17 @@ export default function AdminOrdersPage() {
         return 'outline';
     }
   };
+  
+  if (isOrdersLoading) {
+      return (
+          <div className="flex h-64 items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+      )
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12">
-      <div className="mb-12">
-        <h1 className="font-headline text-4xl md:text-5xl font-bold flex items-center gap-4">
-          <ShoppingCart className="h-10 w-10" />
-          طلبات الزبائن
-        </h1>
-        <p className="text-muted-foreground mt-2">عرض وإدارة جميع الطلبات الواردة.</p>
-      </div>
-
-      <Card>
+    <Card>
         <CardHeader>
             <CardTitle>جميع الطلبات</CardTitle>
             <CardDescription>
@@ -212,6 +185,45 @@ export default function AdminOrdersPage() {
           )}
         </CardContent>
       </Card>
+  );
+}
+
+
+export default function AdminOrdersPage() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+  const isAdmin = user?.email === 'admin@example.com';
+  
+  useEffect(() => {
+    if (!isUserLoading) {
+      if (!user) {
+        router.replace('/admin/login');
+      } else if (!isAdmin) {
+        router.replace('/account');
+      }
+    }
+  }, [user, isUserLoading, isAdmin, router]);
+
+
+  if (isUserLoading || !isAdmin) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-4">جاري التحقق من صلاحيات الأدمن...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 md:py-12">
+      <div className="mb-12">
+        <h1 className="font-headline text-4xl md:text-5xl font-bold flex items-center gap-4">
+          <ShoppingCart className="h-10 w-10" />
+          طلبات الزبائن
+        </h1>
+        <p className="text-muted-foreground mt-2">عرض وإدارة جميع الطلبات الواردة.</p>
+      </div>
+      <AdminOrdersContent />
     </div>
   );
 }
