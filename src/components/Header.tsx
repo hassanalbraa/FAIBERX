@@ -1,7 +1,8 @@
+
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCart, User, Menu, Shirt, LogIn, UserPlus, ListOrdered } from 'lucide-react';
+import { ShoppingCart, User, Menu, Shirt, LogIn, UserPlus, ListOrdered, Truck } from 'lucide-react';
 import { Button } from './ui/button';
 import { useCart } from '@/context/CartContext';
 import { useUser } from '@/firebase';
@@ -20,6 +21,7 @@ import { Separator } from './ui/separator';
 const navLinks = [
   { href: '/products', label: 'جميع المنتجات' },
   { href: '/style-finder', label: 'خبير الأزياء الذكي' },
+  { href: '/track', label: 'تتبع الطلب' },
 ];
 
 export function Header() {
