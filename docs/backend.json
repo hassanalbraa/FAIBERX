@@ -138,6 +138,25 @@
           "type": "string",
           "description": "Timestamp indicating when the user account was last updated.",
           "format": "date-time"
+        },
+        "cart": {
+          "type": "array",
+          "description": "The user's shopping cart items.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "number"
+              },
+              "size": {
+                "type": "string"
+              }
+            },
+            "required": ["productId", "quantity", "size"]
+          }
         }
       },
       "required": [

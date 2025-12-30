@@ -5,12 +5,20 @@ import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export default function CartPage() {
-  const { cartItems, updateQuantity, removeFromCart, cartTotal, cartCount } = useCart();
+  const { cartItems, updateQuantity, removeFromCart, cartTotal, cartCount, isCartLoading } = useCart();
+
+  if (isCartLoading) {
+    return (
+        <div className="flex h-[60vh] items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
