@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRouter } from "next/navigation";
@@ -10,7 +11,7 @@ import { useUser, useFirestore, useMemoFirebase, updateDocumentNonBlocking, useD
 import { Button } from "@/components/ui/button";
 import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect, useRef, useMemo, use } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -28,34 +29,26 @@ import { doc } from "firebase/firestore";
 import { Badge } from "@/components/ui/badge";
 
 
-export default function OrderTrackingPage({ params: paramsProp }: { params: { id: string } }) {
-    const params = use(paramsProp);
+export default function OrderTrackingPage({ params }: { params: { id: string } }) {
     const firestore = useFirestore();
     const { user, isUserLoading } = useUser();
     const isAdmin = user?.email === 'admin@example.com';
-    const { toast } = useToast();
-    
-    const orderRef = useMemoFirebase(() => {
-        if (!firestore || !params.id) return null;
-        return doc(firestore, 'orders', params.id);
-    }, [firestore, params.id]);
-
-    const { data: order, isLoading } = useDoc<Order>(orderRef);
-    
-    const prevStatusRef = useRef<OrderStatus | undefined>();
+    const router = useRouter();
 
     useEffect(() => {
-        if (order && prevStatusRef.current && order.status !== prevStatusRef.current) {
-            if (!isAdmin) {
-                toast({
-                    title: "تحديث حالة الطلب",
-                    description: `تم تحديث حالة طلبك #${order.id.slice(0, 7).toUpperCase()} إلى: ${order.status}`
-                });
-            }
+        if (!isUserLoading && !user) {
+            router.push('/login');
         }
-        prevStatusRef.current = order?.status;
-    }, [order, isAdmin, toast]);
+    }, [user, isUserLoading, router]);
 
+    // Only attempt to fetch if the user is a loaded admin
+    const orderRef = useMemoFirebase(() => {
+        if (!firestore || !params.id || !isAdmin) return null;
+        return doc(firestore, 'orders', params.id);
+    }, [firestore, params.id, isAdmin]);
+
+    const { data: order, isLoading: isOrderLoading } = useDoc<Order>(orderRef);
+    const { toast } = useToast();
 
     const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
         if (!firestore) {
@@ -74,7 +67,9 @@ export default function OrderTrackingPage({ params: paramsProp }: { params: { id
         });
     }
 
-    if (isLoading || isUserLoading) {
+    const isLoading = isUserLoading || (isAdmin && isOrderLoading);
+
+    if (isLoading) {
         return (
              <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
@@ -82,32 +77,28 @@ export default function OrderTrackingPage({ params: paramsProp }: { params: { id
         )
     }
 
-    if (!order) {
-        return (
-            <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
-                 <SearchX className="h-24 w-24 text-muted-foreground mb-4" />
-                <h1 className="font-headline text-4xl font-bold">لم يتم العثور على الطلب</h1>
-                <p className="text-muted-foreground mt-2">عذرًا، لم نتمكن من العثور على الطلب رقم #{params.id}.</p>
-                <p className="text-muted-foreground">قد يكون الرقم غير صحيح أو تم حذف الطلب.</p>
-                <div className="flex gap-4 mt-6">
-                    <Button asChild>
-                        <Link href="/account/orders">العودة إلى سجل الطلبات</Link>
-                    </Button>
-                    <Button asChild variant="outline">
-                        <Link href="/">العودة إلى الصفحة الرئيسية</Link>
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-    
-    // Authorization check: only admin can view this generic page.
+    // Authorization check after loading.
     if (!isAdmin) {
          return (
             <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
                  <SearchX className="h-24 w-24 text-muted-foreground mb-4" />
                 <h1 className="font-headline text-4xl font-bold">غير مصرح به</h1>
                 <p className="text-muted-foreground mt-2">هذه الصفحة مخصصة للمشرفين فقط.</p>
+            </div>
+        );
+    }
+    
+    if (!order) {
+        return (
+            <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
+                 <SearchX className="h-24 w-24 text-muted-foreground mb-4" />
+                <h1 className="font-headline text-4xl font-bold">لم يتم العثور على الطلب</h1>
+                <p className="text-muted-foreground mt-2">عذرًا، لم نتمكن من العثور على الطلب رقم #{params.id}.</p>
+                <div className="flex gap-4 mt-6">
+                    <Button asChild>
+                        <Link href="/admin/orders">العودة إلى قائمة الطلبات</Link>
+                    </Button>
+                </div>
             </div>
         );
     }
@@ -201,8 +192,8 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                {order.items.map((item: any) => (
-                                    <div key={item.productId + (item.size || '')} className="flex items-center gap-4">
+                                {order.items.map((item: any, index: number) => (
+                                    <div key={`${item.productId || index}-${item.size || ''}`} className="flex items-center gap-4">
                                         <div className="relative w-20 h-24 rounded-md overflow-hidden">
                                             <Image src={item.image} alt={item.name} fill className="object-cover" sizes="80px"/>
                                         </div>
@@ -278,3 +269,4 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
         </div>
     );
 }
+
