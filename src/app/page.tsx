@@ -6,13 +6,21 @@ import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/ProductCard';
 import { ArrowLeft } from 'lucide-react';
 import { placeholderImages } from '@/lib/placeholder-images';
-import { products as featuredProducts, type Product } from '@/lib/products';
+import type { Product } from '@/lib/products';
 import { useMemo } from 'react';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, limit } from 'firebase/firestore';
 
 export default function Home() {
-  // Using mock data instead of Firestore
-  const isLoading = false;
-  const productsToShow = useMemo(() => featuredProducts.slice(0, 4), []);
+  const firestore = useFirestore();
+
+  // Fetch the 4 most recent products from Firestore
+  const productsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'products'), limit(4));
+  }, [firestore]);
+
+  const { data: products, isLoading } = useCollection<Product>(productsQuery);
 
   const heroImage = placeholderImages.find(p => p.id === 'hero');
 
@@ -51,7 +59,7 @@ export default function Home() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {isLoading && [...Array(4)].map((_, i) => <ProductCard.Skeleton key={i} />)}
-          {productsToShow?.map(product => (
+          {products?.map(product => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>

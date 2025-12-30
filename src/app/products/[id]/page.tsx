@@ -1,13 +1,12 @@
-
 "use client";
 
 import { useState, use } from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { products, type Product } from '@/lib/products';
+import type { Product } from '@/lib/products';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Loader2 } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,6 +20,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 const SIZES: Product['sizes'] = ["L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL", "7XL", "8XL"];
 
@@ -30,10 +31,15 @@ export default function ProductDetailPage({ params: paramsProp }: { params: { id
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const { toast } = useToast();
+  const firestore = useFirestore();
 
-  // Using mock data instead of Firestore
-  const isLoading = false;
-  const product = useMemo(() => products.find(p => p.id === params.id), [params.id]);
+  // Fetch the specific product from Firestore
+  const productRef = useMemoFirebase(() => {
+    if (!firestore || !params.id) return null;
+    return doc(firestore, 'products', params.id);
+  }, [firestore, params.id]);
+
+  const { data: product, isLoading } = useDoc<Product>(productRef);
 
 
   if (isLoading) {
