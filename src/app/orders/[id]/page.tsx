@@ -10,7 +10,7 @@ import { useUser, useFirestore, useMemoFirebase, updateDocumentNonBlocking } fro
 import { Button } from "@/components/ui/button";
 import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, use } from "react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -28,7 +28,8 @@ import { doc } from "firebase/firestore";
 import { Badge } from "@/components/ui/badge";
 
 
-export default function OrderTrackingPage({ params }: { params: { id: string } }) {
+export default function OrderTrackingPage({ params: paramsProp }: { params: { id: string } }) {
+    const params = use(paramsProp);
     const firestore = useFirestore();
     const { user } = useUser();
     const isAdmin = user?.email === 'admin@example.com';

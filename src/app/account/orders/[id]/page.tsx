@@ -10,11 +10,12 @@ import { useUser } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Mail, SearchX, Hash, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, use } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
-export default function UserOrderTrackingPage({ params }: { params: { id: string } }) {
+export default function UserOrderTrackingPage({ params: paramsProp }: { params: { id: string } }) {
+    const params = use(paramsProp);
     const { user, isUserLoading } = useUser();
     const { toast } = useToast();
     const router = useRouter();

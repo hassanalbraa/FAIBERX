@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { products, type Product } from '@/lib/products';
@@ -24,7 +24,8 @@ import { useMemo } from 'react';
 
 const SIZES: Product['sizes'] = ["L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL", "7XL", "8XL"];
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default function ProductDetailPage({ params: paramsProp }: { params: { id: string } }) {
+  const params = use(paramsProp);
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
