@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useUser, useFirestore, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, addDocumentNonBlocking, deleteDocumentNonBlocking, FirestorePermissionError, errorEmitter } from '@/firebase';
 import { collection, doc, onSnapshot, query, Unsubscribe, FirestoreError } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Loader2, MapPin, PlusCircle, Trash2 } from 'lucide-react';
@@ -93,7 +93,7 @@ export default function AddressesPage() {
   
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [isAddressesLoading, setIsAddressesLoading] = useState(true);
-  const [error, setError] = useState<FirestoreError | null>(null);
+  const [error, setError] = useState<FirestoreError | Error | null>(null);
 
 
   useEffect(() => {
@@ -118,8 +118,12 @@ export default function AddressesPage() {
           setError(null);
         },
         (err) => {
-          console.error("Error fetching addresses:", err);
-          setError(err);
+          const contextualError = new FirestorePermissionError({
+            operation: 'list',
+            path: `users/${user.uid}/addresses`,
+          });
+          setError(contextualError);
+          errorEmitter.emit('permission-error', contextualError);
           setIsAddressesLoading(false);
         }
       );
