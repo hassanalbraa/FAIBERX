@@ -21,7 +21,7 @@
  * - Public Product Reads: Any user (authenticated or not) can read the entire collection of products.
  * - User-Owned Profiles & Addresses: Users can create, read, update, and delete their own documents.
  *   They cannot access anyone else's data.
- * - Admin User Management: Admins can list, read, and update any user's profile (e.g., to ban them).
+ * - Admin User Management: Admins can read and update any user's profile (e.g., to ban them).
  * - Orders: Users can create their own orders and read them. Admins have full read/write access to all orders.
  * - Locked Admin Roles: The `/roles_admin` collection is not writeable from the
  *   client. This is a critical security measure ensuring that admin roles can only
@@ -74,18 +74,16 @@ service cloud.firestore {
        */
       allow create: if isSignedIn();
       allow get, update: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
       
       /**
        * @description
-       *   Manages a user's saved shipping addresses.
+       *   Manages a user's saved shipping addresses. A user can fully control their own
+       *   address book, but cannot access anyone else's.
+       *   `read` covers both `get` and `list`. `write` covers `create`, `update`, `delete`.
+       *   The rule ensures the authenticated user's UID matches the {userId} in the path.
        */
       match /addresses/{addressId} {
-        // A user can list their own addresses. This allows the useCollection hook to work.
-        allow list: if isOwner(userId);
-        
-        // A user can get, create, update, and delete their own individual address documents.
-        allow get, write: if isOwner(userId);
+        allow read, write: if isOwner(userId);
       }
     }
     
@@ -112,6 +110,10 @@ service cloud.firestore {
       // 2. Regular users can list orders ONLY IF they filter by their own userId.
       //    This also permits ordering the query, which is required by the app.
       allow list: if isAdmin() || (isSignedIn() && request.query.where.userId == request.auth.uid);
+    }
+    
+    match /users_admin/{adminId} {
+        allow read, list: if isAdmin();
     }
 
     /**
