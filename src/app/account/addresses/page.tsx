@@ -203,7 +203,7 @@ export default function AddressesPage() {
                          </div>
                     ) : error ? (
                         <div className="text-center py-10 border-2 border-dashed rounded-lg text-destructive">
-                            <p>خطأ في تحميل العناوين. يرجى المحاولة مرة أخرى.</p>
+                            <p>خطا في تحميل العناوين</p>
                         </div>
                     ) : addresses && addresses.length > 0 ? (
                         <div className="space-y-4">
