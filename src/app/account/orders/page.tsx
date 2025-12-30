@@ -19,15 +19,15 @@ export default function OrderHistoryPage() {
   const router = useRouter();
   const firestore = useFirestore();
 
+  // IMPORTANT: This query will only be created when `firestore` and `user.uid` are available.
   const userOrdersQuery = useMemoFirebase(() => {
-    // IMPORTANT: Only create the query if the user is loaded and exists.
-    if (!firestore || !user) return null;
+    if (!firestore || !user?.uid) return null;
     return query(
-      collection(firestore, 'orders'), 
+      collection(firestore, 'orders'),
       where('userId', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
-  }, [firestore, user]);
+  }, [firestore, user?.uid]);
 
   const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(userOrdersQuery);
 
@@ -37,10 +37,11 @@ export default function OrderHistoryPage() {
     }
   }, [user, isUserLoading, router]);
 
-  // Combine loading states: user loading OR orders loading (if query is active)
-  const isLoading = isUserLoading || (user && isOrdersLoading);
+  // Combined loading state: user is loading OR (user exists and orders are loading)
+  const isLoading = isUserLoading || (!!user && isOrdersLoading);
 
-  if (isLoading || !user) {
+  // This check is crucial. It shows a loader until the user object is fully available.
+  if (isUserLoading || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -77,13 +78,20 @@ export default function OrderHistoryPage() {
         <CardHeader>
             <CardTitle>طلباتك</CardTitle>
             <CardDescription>
-                {orders && orders.length > 0
-                ? `لديك ${orders.length} طلبات.`
-                : 'ليس لديك أي طلبات حتى الآن.'}
+                {isLoading 
+                    ? "جاري تحميل طلباتك..."
+                    : orders && orders.length > 0
+                        ? `لديك ${orders.length} طلبات.`
+                        : 'ليس لديك أي طلبات حتى الآن.'
+                }
             </CardDescription>
         </CardHeader>
         <CardContent>
-          {orders && orders.length > 0 ? (
+          {isLoading ? (
+             <div className="flex h-48 items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+             </div>
+          ) : orders && orders.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
