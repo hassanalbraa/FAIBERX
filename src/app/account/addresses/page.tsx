@@ -36,7 +36,7 @@ const addressSchema = z.object({
 
 type Address = z.infer<typeof addressSchema> & { id: string };
 
-function AddressForm({ onFormSubmit, isSubmitting }: { onFormSubmit: (values: z.infer<typeof addressSchema>) => void, isSubmitting: boolean }) {
+function AddressForm({ onFormSubmit, isSubmitting, onFormSuccess }: { onFormSubmit: (values: z.infer<typeof addressSchema>) => void, isSubmitting: boolean, onFormSuccess: () => void }) {
   const form = useForm<z.infer<typeof addressSchema>>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
@@ -49,9 +49,15 @@ function AddressForm({ onFormSubmit, isSubmitting }: { onFormSubmit: (values: z.
     },
   });
 
+  const handleSubmit = async (values: z.infer<typeof addressSchema>) => {
+    await onFormSubmit(values);
+    form.reset();
+    onFormSuccess();
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <div className="flex gap-4">
           <FormField control={form.control} name="firstName" render={({ field }) => (
             <FormItem className="flex-1"><FormLabel>الاسم الأول</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -104,24 +110,25 @@ export default function AddressesPage() {
 
   const { data: addresses, isLoading: isAddressesLoading, error } = useCollection<Address>(addressesQuery);
 
-  const handleAddAddress = (values: z.infer<typeof addressSchema>) => {
+  const handleAddAddress = async (values: z.infer<typeof addressSchema>) => {
     if (!firestore || !user) return;
     
     setIsSubmitting(true);
     const addressesCollectionRef = collection(firestore, 'users', user.uid, 'addresses');
     
-    addDocumentNonBlocking(addressesCollectionRef, values)
-      .then(() => {
-        toast({ title: "تم إضافة العنوان بنجاح" });
-      })
-      .catch((error) => {
-        // Errors are handled by the global error emitter, but we can log other types here.
-        console.error("Failed to add address:", error);
-      })
-      .finally(() => {
-        setIsSubmitting(false);
-      });
+    try {
+      await addDocumentNonBlocking(addressesCollectionRef, values);
+    } catch (error) {
+      // Errors are handled by the global error emitter, but we can log other types here.
+      console.error("Failed to add address:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const onAddressAdded = () => {
+    toast({ title: "تم إضافة العنوان بنجاح" });
+  }
 
   const handleDeleteAddress = (addressId: string) => {
     if (!firestore || !user) return;
@@ -150,7 +157,7 @@ export default function AddressesPage() {
               <CardTitle>إضافة عنوان جديد</CardTitle>
             </CardHeader>
             <CardContent>
-              <AddressForm onFormSubmit={handleAddAddress} isSubmitting={isSubmitting} />
+              <AddressForm onFormSubmit={handleAddAddress} isSubmitting={isSubmitting} onFormSuccess={onAddressAdded} />
             </CardContent>
           </Card>
         </div>

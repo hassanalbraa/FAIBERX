@@ -74,13 +74,12 @@ service cloud.firestore {
        */
       allow create: if isSignedIn();
       allow get, update: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin(); // Admin can list users for management purposes
       
       /**
        * @description
        *   Manages a user's saved shipping addresses. A user can fully control their own
        *   address book, but cannot access anyone else's.
-       *   `read` covers both `get` and `list`. `write` covers `create`, `update`, `delete`.
-       *   The rule ensures the authenticated user's UID matches the {userId} in the path.
        */
       match /addresses/{addressId} {
         allow read, write: if isOwner(userId);
@@ -99,7 +98,7 @@ service cloud.firestore {
       allow write: if isAdmin();
 
       // Users can create their own orders. The incoming document's userId must match the user's uid.
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
 
       // Admins can read any individual order.
       // Users can only read an order they own (the saved document's userId must match user's uid).
@@ -108,12 +107,7 @@ service cloud.firestore {
       // Rules are not filters: This rule allows a user to query the orders collection.
       // 1. Admins can list all orders without any constraints.
       // 2. Regular users can list orders ONLY IF they filter by their own userId.
-      //    This also permits ordering the query, which is required by the app.
       allow list: if isAdmin() || (isSignedIn() && request.query.where.userId == request.auth.uid);
-    }
-    
-    match /users_admin/{adminId} {
-        allow read, list: if isAdmin();
     }
 
     /**

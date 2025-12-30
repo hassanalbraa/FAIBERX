@@ -4,10 +4,10 @@ import { createContext, useContext, useState, ReactNode, useMemo, useEffect, use
 import { type Product } from '@/lib/products';
 import { useToast } from "@/hooks/use-toast";
 import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, useCollection } from '@/firebase';
-import { doc, collection, query } from 'firebase/firestore';
+import { doc, collection, query, writeBatch } from 'firebase/firestore';
 
 interface CartItem {
-  productId: string; // Storing only ID to keep document lighter
+  productId: string;
   quantity: number;
   size: string;
 }
@@ -30,6 +30,8 @@ interface CartContextType {
   isCartLoading: boolean;
 }
 
+const CART_LOCAL_STORAGE_KEY = 'firebase-studio-cart';
+
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -39,52 +41,84 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const [localCart, setLocalCart] = useState<CartItem[]>([]);
   
-  // Fetch all products from firestore to populate cart details
   const productsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'products'));
   }, [firestore]);
   const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
 
-  const userCartRef = useMemoFirebase(() => {
+  const userRef = useMemoFirebase(() => {
       if (!firestore || !user) return null;
       return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<{cart?: CartItem[]}>(userCartRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<{cart?: CartItem[]}>(userRef);
 
-  // Effect to sync remote cart to local state when user logs in or cart changes on remote
   useEffect(() => {
-    if (!isUserLoading && user && userProfile) {
-        setLocalCart(userProfile.cart || []);
-    }
-  }, [user, userProfile, isUserLoading]);
-
-  const updateRemoteCart = useCallback((newCart: CartItem[]) => {
-      if (user && userCartRef) {
-          updateDocumentNonBlocking(userCartRef, { cart: newCart });
+    if (typeof window !== 'undefined' && !user) {
+      const storedCart = localStorage.getItem(CART_LOCAL_STORAGE_KEY);
+      if (storedCart) {
+        setLocalCart(JSON.parse(storedCart));
       }
-  }, [user, userCartRef]);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user && userProfile && firestore) {
+      let localCartData: CartItem[] = [];
+      const storedCart = localStorage.getItem(CART_LOCAL_STORAGE_KEY);
+      if (storedCart) {
+        localCartData = JSON.parse(storedCart);
+      }
+      
+      const remoteCartData = userProfile.cart || [];
+
+      if (localCartData.length > 0) {
+        // Merge local and remote carts
+        const mergedCart = [...remoteCartData];
+        localCartData.forEach(localItem => {
+          const existingItemIndex = mergedCart.findIndex(
+            item => item.productId === localItem.productId && item.size === localItem.size
+          );
+          if (existingItemIndex > -1) {
+            mergedCart[existingItemIndex].quantity += localItem.quantity;
+          } else {
+            mergedCart.push(localItem);
+          }
+        });
+        
+        setLocalCart(mergedCart);
+        updateDocumentNonBlocking(userRef!, { cart: mergedCart });
+        localStorage.removeItem(CART_LOCAL_STORAGE_KEY);
+      } else {
+        setLocalCart(remoteCartData);
+      }
+    } else if (!user && !isUserLoading) {
+      const storedCart = localStorage.getItem(CART_LOCAL_STORAGE_KEY);
+      setLocalCart(storedCart ? JSON.parse(storedCart) : []);
+    }
+  }, [user, userProfile, isUserLoading, firestore, userRef]);
+
+  const updateCart = useCallback((newCart: CartItem[]) => {
+    setLocalCart(newCart);
+    if (user && userRef) {
+      updateDocumentNonBlocking(userRef, { cart: newCart });
+    } else if (typeof window !== 'undefined') {
+      localStorage.setItem(CART_LOCAL_STORAGE_KEY, JSON.stringify(newCart));
+    }
+  }, [user, userRef]);
   
   const addToCart = (product: Product, quantity: number, size: string) => {
-    let newCart: CartItem[] = [];
+    const newCart = [...localCart];
+    const existingItemIndex = newCart.findIndex(item => item.productId === product.id && item.size === size);
 
-    setLocalCart(prevCart => {
-        const existingItem = prevCart.find(item => item.productId === product.id && item.size === size);
-        if (existingItem) {
-            newCart = prevCart.map(item =>
-                item.productId === product.id && item.size === size
-                    ? { ...item, quantity: item.quantity + quantity }
-                    : item
-            );
-        } else {
-            newCart = [...prevCart, { productId: product.id, quantity, size }];
-        }
-        if (user) {
-            updateRemoteCart(newCart);
-        }
-        return newCart;
-    });
+    if (existingItemIndex > -1) {
+      newCart[existingItemIndex].quantity += quantity;
+    } else {
+      newCart.push({ productId: product.id, quantity, size });
+    }
+    
+    updateCart(newCart);
 
     toast({
         title: "أضيف إلى السلة",
@@ -94,16 +128,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const removeFromCart = (cartItemId: string) => {
     const [productId, size] = cartItemId.split('-');
-    let newCart: CartItem[] = [];
-
-    setLocalCart(prevCart => {
-        newCart = prevCart.filter(item => !(item.productId === productId && item.size === size));
-        if (user) {
-            updateRemoteCart(newCart);
-        }
-        return newCart;
-    });
-
+    const newCart = localCart.filter(item => !(item.productId === productId && item.size === size));
+    updateCart(newCart);
+    
     toast({
         title: "تمت الإزالة من السلة",
         variant: "destructive",
@@ -115,31 +142,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeFromCart(cartItemId);
     } else {
       const [productId, size] = cartItemId.split('-');
-      let newCart: CartItem[] = [];
-      setLocalCart(prevCart => {
-          newCart = prevCart.map(item =>
-              item.productId === productId && item.size === size ? { ...item, quantity } : item
-          );
-          if (user) {
-              updateRemoteCart(newCart);
-          }
-          return newCart;
-      });
+      const newCart = localCart.map(item =>
+          item.productId === productId && item.size === size ? { ...item, quantity } : item
+      );
+      updateCart(newCart);
     }
   };
 
   const clearCart = () => {
-    setLocalCart([]);
-    if (user) {
-        updateRemoteCart([]);
-    }
+    updateCart([]);
   };
 
   const populatedCartItems: PopulatedCartItem[] = useMemo(() => {
     if (!products) return [];
     return localCart.map(item => {
         const product = products.find(p => p.id === item.productId);
-        if (!product) return null; // or a placeholder
+        if (!product) return null;
         return {
             product,
             quantity: item.quantity,

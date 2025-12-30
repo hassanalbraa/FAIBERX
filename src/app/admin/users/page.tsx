@@ -33,7 +33,7 @@ export default function AdminUsersPage() {
 
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, 'users_admin'));
+    return query(collection(firestore, 'users'));
   }, [firestore, isAdmin]);
 
   const { data: users, isLoading: usersLoading } = useCollection<UserProfile>(usersQuery);
@@ -74,6 +74,14 @@ export default function AdminUsersPage() {
   }, [users, searchTerm]);
 
   const isLoading = isUserLoading || (isAdmin && usersLoading);
+
+  if (!isAdmin && !isUserLoading) {
+     return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="ml-4">غير مصرح به.</p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
