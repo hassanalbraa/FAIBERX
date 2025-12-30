@@ -36,29 +36,6 @@ export function getSdks(firebaseApp: FirebaseApp) {
   const firestore = getFirestore(firebaseApp);
   const auth = getAuth(firebaseApp);
 
-  // Create user document on sign up
-  onAuthStateChanged(auth, async (user: User | null) => {
-    if (user) {
-      const userRef = doc(firestore, 'users', user.uid);
-      const userDoc = await getDoc(userRef);
-
-      // If the user document does not exist, it's a new user. Create it.
-      if (!userDoc.exists()) {
-        const accountNumber = Math.floor(100000 + Math.random() * 900000).toString();
-        try {
-          await setDoc(userRef, {
-            email: user.email,
-            createdAt: serverTimestamp(),
-            accountNumber: accountNumber,
-          });
-        } catch (error) {
-          console.error("Error creating user document:", error);
-        }
-      }
-    }
-  });
-
-
   return {
     firebaseApp,
     auth: auth,

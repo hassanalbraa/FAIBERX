@@ -18,6 +18,8 @@ export default function SignupPage() {
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -28,9 +30,17 @@ export default function SignupPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!firstName || !lastName) {
+      toast({
+        variant: "destructive",
+        title: "الحقول مطلوبة",
+        description: "يرجى إدخال الاسم الأول والأخير.",
+      });
+      return;
+    }
     setIsSubmitting(true);
     try {
-        await initiateEmailSignUp(auth, email, password);
+        await initiateEmailSignUp(auth, email, password, firstName, lastName);
         toast({
             title: "تم إنشاء الحساب بنجاح!",
             description: "جاري تسجيل دخولك...",
@@ -61,11 +71,35 @@ export default function SignupPage() {
         <CardHeader>
           <CardTitle className="text-2xl font-headline">إنشاء حساب جديد</CardTitle>
           <CardDescription>
-            أدخل بريدك الإلكتروني وكلمة المرور للتسجيل.
+            أدخل بياناتك للتسجيل.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp} className="grid gap-4">
+             <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="first-name">الاسم الأول</Label>
+                <Input 
+                  id="first-name" 
+                  placeholder="أحمد" 
+                  required 
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="last-name">الاسم الأخير</Label>
+                <Input 
+                  id="last-name" 
+                  placeholder="علي" 
+                  required 
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="email">البريد الإلكتروني</Label>
               <Input

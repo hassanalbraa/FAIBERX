@@ -20,8 +20,8 @@ import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Banknote, Loader2 } from "lucide-react";
-import { useUser, useFirestore, addDocumentNonBlocking } from "@/firebase";
-import { collection, serverTimestamp } from "firebase/firestore";
+import { useUser, useFirestore, addDocumentNonBlocking, useDoc, useMemoFirebase } from "@/firebase";
+import { collection, serverTimestamp, doc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 
@@ -36,6 +36,11 @@ const formSchema = z.object({
   transactionId: z.string().min(4, "رقم العملية مطلوب ويبدو قصيراً جداً"),
 });
 
+type UserProfile = {
+  firstName?: string;
+  lastName?: string;
+}
+
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const router = useRouter();
@@ -43,6 +48,13 @@ export default function CheckoutPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,6 +69,17 @@ export default function CheckoutPage() {
       transactionId: "",
     },
   });
+
+  useEffect(() => {
+    if (userProfile) {
+        form.reset({
+            ...form.getValues(),
+            firstName: userProfile.firstName || '',
+            lastName: userProfile.lastName || '',
+            email: user?.email || '',
+        });
+    }
+  }, [userProfile, user, form]);
 
   useEffect(() => {
     // This effect handles redirection for unauthenticated users after the component has mounted.
@@ -199,13 +222,6 @@ export default function CheckoutPage() {
                   <CardDescription>أدخل عنوان الشحن الخاص بك.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>البريد الإلكتروني</FormLabel>
-                      <FormControl><Input placeholder="you@example.com" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}/>
                   <div className="flex gap-4">
                     <FormField control={form.control} name="firstName" render={({ field }) => (
                       <FormItem className="flex-1"><FormLabel>الاسم الأول</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -214,6 +230,13 @@ export default function CheckoutPage() {
                       <FormItem className="flex-1"><FormLabel>الاسم الأخير</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )}/>
                   </div>
+                   <FormField control={form.control} name="email" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>البريد الإلكتروني</FormLabel>
+                      <FormControl><Input placeholder="you@example.com" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}/>
                   <FormField control={form.control} name="address" render={({ field }) => (
                     <FormItem><FormLabel>العنوان</FormLabel><FormControl><Input placeholder="مثال: الخرطوم، شارع أفريقيا، مبنى رقم 5" {...field} /></FormControl><FormMessage /></FormItem>
                   )}/>
@@ -283,5 +306,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-    

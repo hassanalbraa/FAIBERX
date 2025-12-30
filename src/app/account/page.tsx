@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 
 type UserProfile = {
   email: string;
+  firstName?: string;
+  lastName?: string;
   createdAt: any;
   accountNumber?: string;
 }
@@ -32,6 +34,7 @@ export default function AccountPage() {
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   const isAdmin = user?.email === 'admin@example.com';
+  const displayName = userProfile?.firstName || user?.displayName || user?.email;
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -63,7 +66,7 @@ export default function AccountPage() {
     <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="mb-12">
             <h1 className="font-headline text-4xl md:text-5xl font-bold">حسابي</h1>
-            <p className="text-muted-foreground mt-2">أهلاً بعودتك، {user.email}!</p>
+            <p className="text-muted-foreground mt-2">أهلاً بعودتك، {displayName}!</p>
         </div>
         
         <div className="grid md:grid-cols-3 gap-8">
@@ -101,6 +104,15 @@ export default function AccountPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
+                          {userProfile?.firstName && userProfile?.lastName && (
+                            <>
+                              <div>
+                                <h3 className="font-semibold">الاسم</h3>
+                                <p className="text-muted-foreground">{userProfile.firstName} {userProfile.lastName}</p>
+                              </div>
+                              <Separator />
+                            </>
+                          )}
                           <div>
                             <h3 className="font-semibold">البريد الإلكتروني</h3>
                             <p className="text-muted-foreground">{userProfile?.email}</p>
