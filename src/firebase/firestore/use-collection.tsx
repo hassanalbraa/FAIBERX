@@ -100,8 +100,8 @@ export function useCollection<T = any>(
         setData(null)
         setIsLoading(false)
 
-        // trigger global error propagation
-        errorEmitter.emit('permission-error', contextualError);
+        // Removing the global error emission to handle the error locally in the component
+        // errorEmitter.emit('permission-error', contextualError);
       }
     );
 
