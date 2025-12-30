@@ -112,6 +112,12 @@ export function Header() {
                              حسابي
                            </Link>
                          </Button>
+                         <Button asChild variant="ghost" className="justify-start">
+                           <Link href="/account/orders" onClick={() => setIsSheetOpen(false)}>
+                             <ListOrdered className="ml-2 h-4 w-4" />
+                             سجل الطلبات
+                           </Link>
+                         </Button>
                        </>
                      )}
                   </nav>
