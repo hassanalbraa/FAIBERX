@@ -83,9 +83,6 @@ export default function AccountPage() {
                                 </Button>
                             )}
                             <Button variant="ghost" className="justify-start" asChild>
-                                <Link href="/account/orders"><ListOrdered className="ml-2 h-4 w-4" />سجل الطلبات</Link>
-                            </Button>
-                            <Button variant="ghost" className="justify-start" asChild>
                                 <Link href="/account/addresses"><MapPin className="ml-2 h-4 w-4" />العناوين المحفوظة</Link>
                             </Button>
                              <Separator className="my-2" />
