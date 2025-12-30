@@ -6,8 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { useUser, useFirestore, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc, onSnapshot, query, Unsubscribe, FirestoreError } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Loader2, MapPin, PlusCircle, Trash2 } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -90,6 +90,11 @@ export default function AddressesPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [isAddressesLoading, setIsAddressesLoading] = useState(true);
+  const [error, setError] = useState<FirestoreError | null>(null);
+
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -97,15 +102,45 @@ export default function AddressesPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const addressesCollectionRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'addresses');
-  }, [firestore, user]);
+  useEffect(() => {
+    let unsubscribe: Unsubscribe | undefined;
 
-  const { data: addresses, isLoading: isAddressesLoading } = useCollection<Address>(addressesCollectionRef);
+    if (firestore && user) {
+      setIsAddressesLoading(true);
+      const addressesQuery = query(collection(firestore, 'users', user.uid, 'addresses'));
+      
+      unsubscribe = onSnapshot(
+        addressesQuery,
+        (snapshot) => {
+          const fetchedAddresses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Address));
+          setAddresses(fetchedAddresses);
+          setIsAddressesLoading(false);
+          setError(null);
+        },
+        (err) => {
+          console.error("Error fetching addresses:", err);
+          setError(err);
+          setIsAddressesLoading(false);
+        }
+      );
+    } else if (!isUserLoading) {
+        // If there's no user and we're not loading, there are no addresses to fetch.
+        setIsAddressesLoading(false);
+        setAddresses([]);
+    }
+
+    // Cleanup subscription on unmount
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [firestore, user, isUserLoading]);
+
 
   const handleAddAddress = async (values: z.infer<typeof addressSchema>) => {
-    if (!addressesCollectionRef) return;
+    if (!firestore || !user) return;
+    const addressesCollectionRef = collection(firestore, 'users', user.uid, 'addresses');
     setIsSubmitting(true);
     try {
       await addDocumentNonBlocking(addressesCollectionRef, values);
@@ -166,6 +201,10 @@ export default function AddressesPage() {
                          <div className="flex justify-center items-center h-40">
                              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                          </div>
+                    ) : error ? (
+                        <div className="text-center py-10 border-2 border-dashed rounded-lg text-destructive">
+                            <p>خطأ في تحميل العناوين. يرجى المحاولة مرة أخرى.</p>
+                        </div>
                     ) : addresses && addresses.length > 0 ? (
                         <div className="space-y-4">
                             {addresses.map(address => (
