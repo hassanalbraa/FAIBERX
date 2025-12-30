@@ -25,8 +25,6 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">خدمة العملاء</h3>
             <ul className="space-y-2">
-              <li><Link href="/account" className="text-sm text-muted-foreground hover:text-foreground">حسابي</Link></li>
-              <li><Link href="/account/orders" className="text-sm text-muted-foreground hover:text-foreground">طلباتي</Link></li>
               <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">اتصل بنا</Link></li>
               <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">الأسئلة الشائعة</Link></li>
               <li><ShareButton variant="link" className="text-sm text-muted-foreground hover:text-foreground p-0 h-auto" /></li>
