@@ -22,6 +22,7 @@ export interface UseDocResult<T> {
   data: WithId<T> | null; // Document data with ID, or null.
   isLoading: boolean;       // True if loading.
   error: FirestoreError | Error | null; // Error object, or null.
+  refetch: () => void; // Function to manually refetch data
 }
 
 /**
@@ -46,6 +47,11 @@ export function useDoc<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  const [_, setVersion] = useState(0); // Used to trigger refetch
+
+  const refetch = () => {
+    setVersion(v => v + 1);
+  };
 
   useEffect(() => {
     if (!memoizedDocRef) {
@@ -87,7 +93,7 @@ export function useDoc<T = any>(
     );
 
     return () => unsubscribe();
-  }, [memoizedDocRef]); // Re-run if the memoizedDocRef changes.
+  }, [memoizedDocRef, _]); // Re-run if the memoizedDocRef or version changes.
 
-  return { data, isLoading, error };
+  return { data, isLoading, error, refetch };
 }

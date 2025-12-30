@@ -1,16 +1,40 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
-import { ListOrdered, User, LogOut, Loader2, Shield, Copy, MapPin } from "lucide-react"
-import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
+import { ListOrdered, User, LogOut, Loader2, Shield, Copy, MapPin, Edit } from "lucide-react"
+import { useUser, useDoc, useFirestore, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { getAuth, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
+
+const profileSchema = z.object({
+  firstName: z.string().min(2, "الاسم الأول قصير جدًا"),
+  lastName: z.string().min(2, "الاسم الأخير قصير جدًا"),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 type UserProfile = {
   email: string;
@@ -20,18 +44,105 @@ type UserProfile = {
   accountNumber?: string;
 }
 
+function EditProfileDialog({ user, userProfile, onProfileUpdate }: { user: NonNullable<ReturnType<typeof useUser>['user']>, userProfile: UserProfile, onProfileUpdate: () => void }) {
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const form = useForm<ProfileFormValues>({
+        resolver: zodResolver(profileSchema),
+        defaultValues: {
+            firstName: userProfile?.firstName || "",
+            lastName: userProfile?.lastName || "",
+        },
+    });
+
+    const onSubmit = async (values: ProfileFormValues) => {
+        if (!firestore || !user) return;
+        setIsSubmitting(true);
+        const userDocRef = doc(firestore, 'users', user.uid);
+        try {
+            await updateDocumentNonBlocking(userDocRef, values);
+            toast({ title: "تم تحديث الملف الشخصي بنجاح" });
+            onProfileUpdate();
+        } catch (error) {
+            console.error("Failed to update profile:", error);
+            toast({ title: "فشل تحديث الملف الشخصي", variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+    
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button>
+                    <Edit className="ml-2 h-4 w-4" />
+                    تعديل الملف الشخصي
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>تعديل الملف الشخصي</DialogTitle>
+                    <DialogDescription>
+                        قم بإجراء تغييرات على ملفك الشخصي هنا. انقر على حفظ عند الانتهاء.
+                    </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="firstName"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>الاسم الأول</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="lastName"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>الاسم الأخير</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <DialogFooter>
+                            <Button type="submit" disabled={isSubmitting}>
+                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                حفظ التغييرات
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+
 export default function AccountPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+  const { data: userProfile, isLoading: isProfileLoading, refetch } = useDoc<UserProfile>(userDocRef);
 
   const isAdmin = user?.email === 'admin@example.com';
   const displayName = userProfile?.firstName || user?.displayName || user?.email;
@@ -53,8 +164,12 @@ export default function AccountPage() {
     navigator.clipboard.writeText(text);
     toast({ title: 'تم نسخ رقم الحساب!' });
   };
+  
+  const onProfileUpdate = () => {
+    setDialogOpen(false);
+  }
 
-  if (isUserLoading || !user || isProfileLoading) {
+  if (isUserLoading || !user || !userProfile || isProfileLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -134,7 +249,7 @@ export default function AccountPage() {
                             <p className="text-muted-foreground">{userProfile?.createdAt?.toDate().toLocaleDateString('ar-EG') || 'غير متوفر'}</p>
                           </div>
                           <Separator />
-                           <Button disabled>الزر بلا وظيفة</Button>
+                           <EditProfileDialog user={user} userProfile={userProfile} onProfileUpdate={onProfileUpdate} />
                         </div>
                     </CardContent>
                 </Card>
