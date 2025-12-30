@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCart, User, Menu, Shirt, LogIn, UserPlus } from 'lucide-react';
+import { ShoppingCart, User, Menu, Shirt, LogIn, UserPlus, ListOrdered } from 'lucide-react';
 import { Button } from './ui/button';
 import { useCart } from '@/context/CartContext';
 import { useUser } from '@/firebase';
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sheet"
 import { useState } from 'react';
 import { ShareButton } from './ShareButton';
+import { Separator } from './ui/separator';
 
 const navLinks = [
   { href: '/products', label: 'جميع المنتجات' },
@@ -89,7 +90,7 @@ export function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="p-0">
-                <SheetHeader className="p-6">
+                <SheetHeader className="p-6 border-b">
                     <SheetTitle className="sr-only">القائمة</SheetTitle>
                     <SheetDescription className="sr-only">روابط التنقل الرئيسية في الموقع.</SheetDescription>
                     <Link href="/" className="flex items-center gap-2" onClick={() => setIsSheetOpen(false)}>
@@ -97,9 +98,15 @@ export function Header() {
                        <span className="font-headline text-xl font-semibold tracking-wider">FiberX</span>
                     </Link>
                 </SheetHeader>
-                <div className="px-6 flex flex-col h-full">
-                  <nav className="flex flex-col gap-4 mt-8">
+                <div className="p-6 flex flex-col h-full">
+                  <nav className="flex flex-col gap-4">
                     <NavLinkItems />
+                    <Button asChild variant="ghost">
+                        <Link href="/account/orders" onClick={() => setIsSheetOpen(false)}>
+                            <ListOrdered className="ml-2 h-4 w-4" />
+                            تتبع الطلب
+                        </Link>
+                    </Button>
                   </nav>
                    <div className="mt-auto pt-4 border-t">
                     {!user && (
