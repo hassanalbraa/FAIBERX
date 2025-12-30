@@ -35,7 +35,7 @@ export const products: Product[] = [
     name: 'هودي فايبركس دافئ',
     description: 'هودي مبطن بالصوف الناعم ليوفر لك الدفء في الأيام الباردة. تصميم عصري بجودة عالية.',
     price: 350,
-    image: 'https://i.top4top.io/p_30706e2fh1.png', // Assuming different hoodie image exists
+    image: 'https://j.top4top.io/p_3070bdl4x1.png',
     category: 'Hoodies',
   },
   {

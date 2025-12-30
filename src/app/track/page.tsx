@@ -37,8 +37,8 @@ export default function TrackOrderPage() {
         return;
     }
     
-    // The current implementation redirects to the admin-facing order details page
-    // as the user-specific one was removed. This should be adjusted if user pages are re-added.
+    // Redirect to the correct user-facing order details page.
+    // Admins will be redirected from there if necessary.
     router.push(`/orders/${orderId.trim()}`);
   };
 
