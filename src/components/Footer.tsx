@@ -4,6 +4,10 @@ import { Button } from './ui/button';
 import { ShareButton } from './ShareButton';
 
 export function Footer() {
+  const whatsappNumber = "+249909466854";
+  const defaultMessage = encodeURIComponent("مرحباً، أحتاج إلى مساعدة بخصوص FiberX.");
+  const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/\+/g, '')}?text=${defaultMessage}`;
+
   return (
     <footer className="bg-secondary/50 border-t">
       <div className="container mx-auto px-4 py-8 md:py-12">
@@ -25,7 +29,7 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">خدمة العملاء</h3>
             <ul className="space-y-2">
-              <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">اتصل بنا</Link></li>
+              <li><a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground">اتصل بنا</a></li>
               <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">الأسئلة الشائعة</Link></li>
               <li><ShareButton variant="link" className="text-sm text-muted-foreground hover:text-foreground p-0 h-auto" /></li>
             </ul>
