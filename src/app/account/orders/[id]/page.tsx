@@ -2,93 +2,20 @@
 'use client';
 
 import { useRouter } from "next/navigation";
-import { type Order, OrderStatus } from "@/lib/orders";
+import type { Order } from "@/lib/orders";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderTracker } from "@/components/OrderTracker";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { Button } from "@/components/ui/button";
-import { Mail, SearchX, Hash, Loader2, MessageSquare } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useEffect, useRef, useMemo } from "react";
+import { Mail, SearchX, Hash, Loader2, MessageSquare, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { doc } from "firebase/firestore";
 
-export default function UserOrderTrackingPage({ params }: { params: { id: string } }) {
-    const { user, isUserLoading } = useUser();
-    const router = useRouter();
-    const firestore = useFirestore();
-
-    const orderRef = useMemoFirebase(() => {
-        if (!firestore || !params.id) return null;
-        return doc(firestore, 'orders', params.id);
-    }, [firestore, params.id]);
-
-    const { data: order, isLoading } = useDoc<Order>(orderRef);
-    
-    useEffect(() => {
-        if (!isUserLoading && !user) {
-            router.push('/login');
-        }
-    }, [user, isUserLoading, router]);
-
-    if (isLoading || isUserLoading) {
-        return (
-             <div className="flex h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-             </div>
-        )
-    }
-
-    if (!order) {
-        return (
-            <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
-                 <SearchX className="h-24 w-24 text-muted-foreground mb-4" />
-                <h1 className="font-headline text-4xl font-bold">لم يتم العثور على الطلب</h1>
-                <p className="text-muted-foreground mt-2">عذرًا، لم نتمكن من العثور على الطلب رقم #{params.id}.</p>
-                <div className="flex gap-4 mt-6">
-                    <Button asChild>
-                        <Link href="/account/orders">العودة إلى سجل الطلبات</Link>
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-    
-    if (user?.uid !== order.userId) {
-         return (
-            <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
-                 <SearchX className="h-24 w-24 text-muted-foreground mb-4" />
-                <h1 className="font-headline text-4xl font-bold">غير مصرح به</h1>
-                <p className="text-muted-foreground mt-2">أنت غير مصرح لك بعرض هذا الطلب.</p>
-                 <div className="flex gap-4 mt-6">
-                    <Button asChild>
-                        <Link href="/account/orders">العودة إلى سجل الطلبات</Link>
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-
-    return <OrderDetails order={order} />;
-}
-
-function OrderDetails({ order }: { order: Order }) {
-    const { toast } = useToast();
-    const prevStatusRef = useRef<OrderStatus | undefined>();
-
-    useEffect(() => {
-        if (order && prevStatusRef.current && order.status !== prevStatusRef.current) {
-            toast({
-                title: "تحديث حالة الطلب",
-                description: `تم تحديث حالة طلبك #${order.id.slice(0, 7).toUpperCase()} إلى: ${order.status}`
-            });
-        }
-        prevStatusRef.current = order?.status;
-    }, [order, toast]);
-
+// This component handles the logic and rendering of the order details.
+function OrderDetailsContent({ order }: { order: Order }) {
     return (
         <div className="container mx-auto px-4 py-8 md:py-12">
             <div className="flex justify-between items-start mb-8">
@@ -193,4 +120,69 @@ function OrderDetails({ order }: { order: Order }) {
     );
 }
 
-  
+
+export default function UserOrderTrackingPage({ params }: { params: { id: string } }) {
+    const { user, isUserLoading } = useUser();
+    const router = useRouter();
+    const firestore = useFirestore();
+
+    const orderRef = useMemoFirebase(() => {
+        if (!firestore || !params.id) return null;
+        return doc(firestore, 'orders', params.id);
+    }, [firestore, params.id]);
+
+    const { data: order, isLoading: isOrderLoading, error } = useDoc<Order>(orderRef);
+
+    // Redirect if not logged in
+    useEffect(() => {
+        if (!isUserLoading && !user) {
+            router.push('/login');
+        }
+    }, [user, isUserLoading, router]);
+    
+    const isLoading = isUserLoading || (user && isOrderLoading);
+
+    if (isLoading) {
+        return (
+             <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+             </div>
+        );
+    }
+    
+    // Once loading is complete, check for authorization and data existence
+    if (!order) {
+        return (
+            <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
+                 <SearchX className="h-24 w-24 text-muted-foreground mb-4" />
+                <h1 className="font-headline text-4xl font-bold">لم يتم العثور على الطلب</h1>
+                <p className="text-muted-foreground mt-2">عذرًا، لم نتمكن من العثور على الطلب رقم #{params.id}. ربما تم حذفه أو أنك لا تملك الصلاحية لعرضه.</p>
+                <div className="flex gap-4 mt-6">
+                    <Button asChild>
+                        <Link href="/account/orders">العودة إلى سجل الطلبات</Link>
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+    
+    // Security check: ensure the logged-in user is the owner of the order.
+    // This is a client-side check that complements the Firestore security rules.
+    if (user?.uid !== order.userId) {
+         return (
+            <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
+                 <ShieldAlert className="h-24 w-24 text-destructive mb-4" />
+                <h1 className="font-headline text-4xl font-bold">غير مصرح به</h1>
+                <p className="text-muted-foreground mt-2">أنت غير مصرح لك بعرض هذا الطلب.</p>
+                 <div className="flex gap-4 mt-6">
+                    <Button asChild>
+                        <Link href="/account/orders">العودة إلى سجل الطلبات</Link>
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
+    // If all checks pass, render the order details.
+    return <OrderDetailsContent order={order} />;
+}
