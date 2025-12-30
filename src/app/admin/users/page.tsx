@@ -73,7 +73,7 @@ export default function AdminUsersPage() {
     );
   }, [users, searchTerm]);
 
-  const isLoading = isUserLoading || !isAdmin;
+  const isLoading = isUserLoading || (isAdmin && usersLoading);
 
   if (isLoading) {
     return (
