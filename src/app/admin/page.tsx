@@ -28,7 +28,10 @@ type UserProfile = {
 function AdminDashboardContent({ user, isAdmin }: { user: NonNullable<ReturnType<typeof useUser>['user']>, isAdmin: boolean }) {
   const firestore = useFirestore();
 
-  const productsQuery = useMemoFirebase(() => query(collection(firestore, 'products')), [firestore]);
+  const productsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'products'));
+  }, [firestore]);
   const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
   
   const ordersQuery = useMemoFirebase(() => {

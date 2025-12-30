@@ -50,7 +50,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const userRef = useMemoFirebase(() => {
       if (!firestore || !user) return null;
       return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
+  }, [firestore, user?.uid]);
 
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<{cart?: CartItem[]}>(userRef);
 
@@ -64,7 +64,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    if (user && userProfile && firestore) {
+    if (user && userProfile && firestore && userRef) {
       let localCartData: CartItem[] = [];
       const storedCart = localStorage.getItem(CART_LOCAL_STORAGE_KEY);
       if (storedCart) {
@@ -88,7 +88,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         });
         
         setLocalCart(mergedCart);
-        updateDocumentNonBlocking(userRef!, { cart: mergedCart });
+        updateDocumentNonBlocking(userRef, { cart: mergedCart });
         localStorage.removeItem(CART_LOCAL_STORAGE_KEY);
       } else {
         setLocalCart(remoteCartData);
