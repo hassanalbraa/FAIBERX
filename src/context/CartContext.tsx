@@ -1,10 +1,10 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useMemo, useEffect, useCallback } from 'react';
-import { products as mockProducts, type Product } from '@/lib/products';
+import { type Product } from '@/lib/products';
 import { useToast } from "@/hooks/use-toast";
-import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, useCollection } from '@/firebase';
+import { doc, collection, query } from 'firebase/firestore';
 
 interface CartItem {
   productId: string; // Storing only ID to keep document lighter
@@ -39,8 +39,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const [localCart, setLocalCart] = useState<CartItem[]>([]);
   
-  // Use mockProducts directly instead of fetching from Firestore.
-  const products = mockProducts; 
+  // Fetch all products from firestore to populate cart details
+  const productsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'products'));
+  }, [firestore]);
+  const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
+
   const [isCartLoading, setIsCartLoading] = useState(true);
 
   const userCartRef = useMemoFirebase(() => {
@@ -54,12 +59,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isUserLoading && user && userProfile) {
         setLocalCart(userProfile.cart || []);
-        setIsCartLoading(isProfileLoading);
+        setIsCartLoading(isProfileLoading || productsLoading);
     } else if (!user && !isUserLoading) {
         // Guest user, cart is already in localCart state
-        setIsCartLoading(false);
+        setIsCartLoading(productsLoading);
     }
-  }, [user, userProfile, isUserLoading, isProfileLoading]);
+  }, [user, userProfile, isUserLoading, isProfileLoading, productsLoading]);
 
   const updateRemoteCart = useCallback((newCart: CartItem[]) => {
       if (user && userCartRef) {
@@ -138,6 +143,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const populatedCartItems: PopulatedCartItem[] = useMemo(() => {
+    if (!products) return [];
     return localCart.map(item => {
         const product = products.find(p => p.id === item.productId);
         if (!product) return null; // or a placeholder
@@ -168,7 +174,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         cartCount,
         cartTotal,
-        isCartLoading: isCartLoading || (user && isProfileLoading),
+        isCartLoading: isCartLoading || (user && isProfileLoading) || productsLoading,
       }}
     >
       {children}
