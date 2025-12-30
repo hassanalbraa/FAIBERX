@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -47,15 +48,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   }
   
   const handleAddToCart = () => {
-    if (!selectedSize) {
-        toast({
-            title: "يرجى تحديد المقاس",
-            description: "يجب اختيار مقاس قبل إضافة المنتج إلى السلة.",
-            variant: "destructive"
-        })
-        return;
-    }
-    addToCart(product, quantity, selectedSize);
+    // Use selected size or default to "L" if none is selected
+    const sizeToAdd = selectedSize || 'L';
+    addToCart(product, quantity, sizeToAdd);
   };
 
   const getCategoryArabicName = (category: string | undefined) => {
@@ -102,7 +97,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           <p className="mt-6 text-muted-foreground leading-relaxed">{product.description}</p>
           
           <div className='mt-8'>
-            <Label className='text-base font-semibold'>اختر المقاس</Label>
+            <Label className='text-base font-semibold'>اختر المقاس (اختياري)</Label>
              <RadioGroup
                 value={selectedSize || ''}
                 onValueChange={setSelectedSize}
