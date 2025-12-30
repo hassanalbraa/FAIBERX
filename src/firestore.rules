@@ -80,10 +80,10 @@ service cloud.firestore {
        * @description
        *   Manages a user's saved shipping addresses. A user can fully control their own
        *   address book, but cannot access anyone else's.
+       *   The `read` rule covers both `get` and `list` operations.
        */
       match /addresses/{addressId} {
-        allow list: if isOwner(userId);
-        allow get, write: if isOwner(userId);
+        allow read, write: if isOwner(userId);
       }
     }
     
