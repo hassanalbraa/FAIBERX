@@ -51,7 +51,7 @@ service cloud.firestore {
 
       // Users can read an order if they are the owner.
       // We add this to the admin 'read' rule.
-      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid;
 
       // Users can list their own orders, which is required for some client-side queries.
       // This rule is scoped narrowly and requires a query with a 'where' clause.
