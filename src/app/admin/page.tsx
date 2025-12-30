@@ -116,7 +116,7 @@ function AdminDashboardContent({ user }: { user: NonNullable<ReturnType<typeof u
                     <CardDescription>
                         {usersLoading ? "جاري تحميل عدد المستخدمين..." : `لديك ${users?.length || 0} مستخدم مسجل.`}
                     </CardDescription>
-                </CardHeader>
+                </Header>
                 <CardContent>
                     <Button asChild className="w-full">
                         <Link href="/admin/users">عرض المستخدمين</Link>
