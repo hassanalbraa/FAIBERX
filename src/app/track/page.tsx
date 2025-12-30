@@ -8,11 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Truck, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/firebase';
+import Link from 'next/link';
 
 export default function TrackOrderPage() {
   const [orderId, setOrderId] = useState('');
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useUser();
 
   const handleTrackOrder = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,11 +27,19 @@ export default function TrackOrderPage() {
       });
       return;
     }
-    // Note: This redirects to a user-specific page.
-    // For a public tracking page, you might need a different URL structure like /track/[id]
-    // and adjust security rules accordingly.
-    // The current implementation redirects to the user's private order page.
-    router.push(`/account/orders/${orderId.trim()}`);
+    if (!user) {
+        toast({
+            variant: 'destructive',
+            title: 'يرجى تسجيل الدخول',
+            description: 'يجب تسجيل الدخول لعرض تفاصيل الطلب.',
+        });
+        router.push(`/login?redirect=/track`);
+        return;
+    }
+    
+    // The current implementation redirects to the admin-facing order details page
+    // as the user-specific one was removed. This should be adjusted if user pages are re-added.
+    router.push(`/orders/${orderId.trim()}`);
   };
 
   return (
@@ -55,7 +66,7 @@ export default function TrackOrderPage() {
             </Button>
           </form>
           <p className="text-xs text-muted-foreground mt-4 text-center">
-            يمكنك العثور على رقم طلبك في رسالة تأكيد الطلب الإلكترونية أو في <a href="/account/orders" className="underline">سجل طلباتك</a>.
+            يمكنك العثور على رقم طلبك في رسالة تأكيد الطلب الإلكترونية.
           </p>
         </CardContent>
       </Card>
