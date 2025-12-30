@@ -8,6 +8,9 @@ import { useUser } from '@/firebase';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { useState } from 'react';
@@ -85,13 +88,17 @@ export function Header() {
                   <span className="sr-only">فتح القائمة</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right">
-                <div className="p-6 flex flex-col h-full">
-                  <Link href="/" className="flex items-center gap-2 mb-8" onClick={() => setIsSheetOpen(false)}>
-                     <Shirt className="h-6 w-6 text-primary" />
-                     <span className="font-headline text-xl font-semibold tracking-wider">FiberX</span>
-                  </Link>
-                  <nav className="flex flex-col gap-4">
+              <SheetContent side="right" className="p-0">
+                <SheetHeader className="p-6">
+                    <SheetTitle className="sr-only">القائمة</SheetTitle>
+                    <SheetDescription className="sr-only">روابط التنقل الرئيسية في الموقع.</SheetDescription>
+                    <Link href="/" className="flex items-center gap-2" onClick={() => setIsSheetOpen(false)}>
+                       <Shirt className="h-6 w-6 text-primary" />
+                       <span className="font-headline text-xl font-semibold tracking-wider">FiberX</span>
+                    </Link>
+                </SheetHeader>
+                <div className="px-6 flex flex-col h-full">
+                  <nav className="flex flex-col gap-4 mt-8">
                     <NavLinkItems />
                   </nav>
                    <div className="mt-auto pt-4 border-t">
