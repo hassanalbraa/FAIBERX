@@ -28,11 +28,13 @@ import { useToast } from '@/hooks/use-toast';
 function AdminOrdersContent() {
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { user } = useUser();
+  const isAdmin = user?.email === 'admin@example.com';
 
   const allOrdersQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !isAdmin) return null;
     return query(collection(firestore, 'orders'), orderBy('createdAt', 'desc'));
-  }, [firestore]);
+  }, [firestore, isAdmin]);
 
   const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(allOrdersQuery);
 
