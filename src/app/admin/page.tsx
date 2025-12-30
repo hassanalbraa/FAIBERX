@@ -2,18 +2,17 @@
 
 import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, PlusCircle, LogOut, ShoppingCart, Users, CheckCheck } from 'lucide-react';
 import AddProductForm from '@/components/admin/AddProductForm';
 import { ProductList } from '@/components/admin/ProductList';
 import type { Product } from '@/lib/products';
-import { products } from '@/lib/products';
-import type { Order } from '@/lib/orders';
 import { mockOrders } from '@/lib/orders';
 import { getAuth, signOut } from 'firebase/auth';
 import Link from 'next/link';
+import { collection, query } from 'firebase/firestore';
 
 type UserProfile = {
     id: string;
@@ -31,9 +30,16 @@ const mockUsers: UserProfile[] = [
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
 
-  // Using mock data instead of Firestore
-  const productsLoading = false;
+  // Re-enabled Firestore fetching for products
+  const productsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'products'));
+  }, [firestore]);
+  const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
+
+  // Using mock data for other sections
   const usersLoading = false;
   const ordersLoading = false;
   const orders = mockOrders;
