@@ -46,8 +46,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [firestore]);
   const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
 
-  const [isCartLoading, setIsCartLoading] = useState(true);
-
   const userCartRef = useMemoFirebase(() => {
       if (!firestore || !user) return null;
       return doc(firestore, 'users', user.uid);
@@ -59,12 +57,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isUserLoading && user && userProfile) {
         setLocalCart(userProfile.cart || []);
-        setIsCartLoading(isProfileLoading || productsLoading);
-    } else if (!user && !isUserLoading) {
-        // Guest user, cart is already in localCart state
-        setIsCartLoading(productsLoading);
     }
-  }, [user, userProfile, isUserLoading, isProfileLoading, productsLoading]);
+  }, [user, userProfile, isUserLoading]);
 
   const updateRemoteCart = useCallback((newCart: CartItem[]) => {
       if (user && userCartRef) {
@@ -73,7 +67,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [user, userCartRef]);
   
   const addToCart = (product: Product, quantity: number, size: string) => {
-    const cartItemId = product.id + '-' + size;
     let newCart: CartItem[] = [];
 
     setLocalCart(prevCart => {
@@ -163,6 +156,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const cartTotal = useMemo(() => {
      return populatedCartItems.reduce((total, item) => total + item.product.price * item.quantity, 0);
   }, [populatedCartItems]);
+  
+  const isCartLoading = isUserLoading || (user && isProfileLoading) || productsLoading;
 
   return (
     <CartContext.Provider
@@ -174,7 +169,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         cartCount,
         cartTotal,
-        isCartLoading: isCartLoading || (user && isProfileLoading) || productsLoading,
+        isCartLoading,
       }}
     >
       {children}
