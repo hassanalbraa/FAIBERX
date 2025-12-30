@@ -43,15 +43,23 @@ export default function SignupPage() {
         await initiateEmailSignUp(auth, email, password, firstName, lastName);
         toast({
             title: "تم إنشاء الحساب بنجاح!",
-            description: "جاري تسجيل دخولك...",
+            description: "جاري توجيهك...",
         });
-        // The onAuthStateChanged listener in FirebaseProvider will handle the redirect
+        // The onAuthStateChanged listener in FirebaseProvider will handle the redirect,
+        // but we can push explicitly for faster UX.
+        router.push('/account');
     } catch (error: any) {
         console.error("Signup failed:", error);
+        let errorMessage = "يرجى المحاولة مرة أخرى.";
+        if (error.code === 'auth/email-already-in-use') {
+          errorMessage = "هذا البريد الإلكتروني مستخدم بالفعل. يرجى تسجيل الدخول أو استخدام بريد آخر.";
+        } else if (error.code === 'auth/weak-password') {
+          errorMessage = "كلمة المرور ضعيفة جداً. يجب أن تتكون من 6 أحرف على الأقل.";
+        }
         toast({
             variant: "destructive",
             title: "فشل إنشاء الحساب",
-            description: error.message || "يرجى المحاولة مرة أخرى.",
+            description: errorMessage,
         });
         setIsSubmitting(false);
     }
