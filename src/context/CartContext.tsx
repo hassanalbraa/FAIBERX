@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useMemo } from 'react';
+import { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
 import type { Product } from '@/lib/products';
 import { useToast } from "@/hooks/use-toast"
 
@@ -24,8 +24,31 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    // Load initial state from localStorage
+    if (typeof window === 'undefined') {
+      return [];
+    }
+    try {
+      const savedCart = window.localStorage.getItem('cart-items');
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch (error) {
+      console.error('Failed to parse cart items from localStorage', error);
+      return [];
+    }
+  });
+
   const { toast } = useToast()
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('cart-items', JSON.stringify(cartItems));
+    } catch (error) {
+      console.error('Failed to save cart items to localStorage', error);
+    }
+  }, [cartItems]);
+
 
   const addToCart = (product: Product, quantity: number, size: string) => {
     setCartItems(prevItems => {
