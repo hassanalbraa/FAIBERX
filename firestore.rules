@@ -21,7 +21,7 @@
  * - User-Owned Profiles: Users can create, read, and update their own document in the `/users` collection.
  *   They cannot access anyone else's data.
  * - Admin User Management: Admins can list, read, and update any user's profile (e.g., to ban them).
- * - Orders: Users can create their own orders and read them. Admins can read and update all orders.
+ * - Orders: Users can create their own orders and read them. Admins have full read/write access to all orders.
  * - Locked Admin Roles: The `/roles_admin` collection is not writeable from the
  *   client. This is a critical security measure ensuring that admin roles can only
  *   be assigned through the Firebase Console or a trusted server-side process.
@@ -76,12 +76,17 @@ service cloud.firestore {
     /**
      * @description
      *   Manages order data.
+     *   - Admins have full read/write access.
+     *   - Authenticated users can create their own orders.
+     *   - Users can only read their own orders.
      */
     match /orders/{orderId} {
+      allow read, write: if isAdmin();
       allow create: if isSignedIn() && isOwner(request.resource.data.userId);
-      allow get: if isOwner(resource.data.userId) || isAdmin();
-      allow list: if isAdmin() || (isSignedIn() && request.query.where.userId == request.auth.uid);
-      allow update: if isAdmin();
+      allow get: if isOwner(resource.data.userId);
+      // Note: Admin list is covered by `allow read`. User list is intentionally not allowed
+      // to prevent users from querying all orders, even if the query is filtered.
+      // The app logic should fetch orders one by one if needed for a non-admin user.
     }
 
     /**
