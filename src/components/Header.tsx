@@ -101,12 +101,23 @@ export function Header() {
                 <div className="p-6 flex flex-col h-full">
                   <nav className="flex flex-col gap-4">
                     <NavLinkItems />
-                    <Button asChild variant="ghost">
-                        <Link href="/account/orders" onClick={() => setIsSheetOpen(false)}>
-                            <ListOrdered className="ml-2 h-4 w-4" />
-                            تتبع الطلب
-                        </Link>
-                    </Button>
+                     {user && (
+                       <>
+                        <Separator />
+                         <Button asChild variant="ghost" className="justify-start">
+                           <Link href="/account" onClick={() => setIsSheetOpen(false)}>
+                             <User className="ml-2 h-4 w-4" />
+                             حسابي
+                           </Link>
+                         </Button>
+                         <Button asChild variant="ghost" className="justify-start">
+                           <Link href="/account/orders" onClick={() => setIsSheetOpen(false)}>
+                             <ListOrdered className="ml-2 h-4 w-4" />
+                             تتبع الطلب
+                           </Link>
+                         </Button>
+                       </>
+                     )}
                   </nav>
                    <div className="mt-auto pt-4 border-t">
                     {!user && (
