@@ -78,12 +78,14 @@ service cloud.firestore {
       
       /**
        * @description
-       *   Manages a user's saved shipping addresses. A user can fully control their own
-       *   address book, but cannot access anyone else's.
-       *   The `read` rule covers both `get` and `list` operations.
+       *   Manages a user's saved shipping addresses.
        */
       match /addresses/{addressId} {
-        allow read, write: if request.auth.uid == userId;
+        // A user can list their own addresses. This allows the useCollection hook to work.
+        allow list: if isOwner(userId);
+        
+        // A user can get, create, update, and delete their own individual address documents.
+        allow get, write: if isOwner(userId);
       }
     }
     
