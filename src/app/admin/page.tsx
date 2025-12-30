@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, PlusCircle, LogOut, ShoppingCart, Users, CheckCheck } from 'lucide-react';
@@ -12,6 +12,7 @@ import type { Product } from '@/lib/products';
 import type { Order } from '@/lib/orders';
 import { getAuth, signOut } from 'firebase/auth';
 import Link from 'next/link';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 
 type UserProfile = {
@@ -22,50 +23,25 @@ type UserProfile = {
     isBanned?: boolean;
 }
 
-export default function AdminDashboard() {
-  const router = useRouter();
-  const { user, isUserLoading } = useUser();
+// This component fetches and displays the data. It will only be rendered if the user is an admin.
+function AdminDashboardContent({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']> }) {
   const firestore = useFirestore();
 
-  const isAdmin = user?.email === 'admin@example.com';
-
-  useEffect(() => {
-    if (!isUserLoading) {
-      if (!user) {
-        router.replace('/admin/login');
-      } else if (!isAdmin) {
-        router.replace('/account');
-      }
-    }
-  }, [user, isUserLoading, isAdmin, router]);
-  
-  // Firestore fetching for products - only if admin
-  const productsQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, 'products'));
-  }, [firestore, isAdmin]);
+  const productsQuery = useMemoFirebase(() => query(collection(firestore, 'products')), [firestore]);
   const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
   
-  // Firestore fetching for orders to calculate stats - only if admin
-  const ordersQuery = useMemoFirebase(() => {
-      if (!firestore || !isAdmin) return null;
-      return query(collection(firestore, 'orders'));
-  }, [firestore, isAdmin]);
+  const ordersQuery = useMemoFirebase(() => query(collection(firestore, 'orders')), [firestore]);
   const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
 
-  // Firestore fetching for users to get count - only if admin
-  const usersQuery = useMemoFirebase(() => {
-      if (!firestore || !isAdmin) return null;
-      return query(collection(firestore, 'users'));
-  }, [firestore, isAdmin]);
+  const usersQuery = useMemoFirebase(() => query(collection(firestore, 'users')), [firestore]);
   const { data: users, isLoading: usersLoading } = useCollection<UserProfile>(usersQuery);
-
 
   const completedOrdersCount = useMemo(() => {
     if (!orders) return 0;
     return orders.filter(order => order.status === 'Delivered').length;
   }, [orders]);
 
+  const router = useRouter();
 
   const handleLogout = async () => {
     try {
@@ -76,18 +52,7 @@ export default function AdminDashboard() {
         console.error("Logout failed:", error);
     }
   };
-
-  const isLoading = isUserLoading || !user || !isAdmin;
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <p className="ml-4">جاري التحقق من صلاحيات الأدمن...</p>
-      </div>
-    );
-  }
-
+  
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <div className="flex justify-between items-center mb-8">
@@ -178,5 +143,40 @@ export default function AdminDashboard() {
         </div>
       </div>
     </div>
-  );
+  )
+}
+
+
+// This is the main component for the page. It handles auth checks and redirection.
+export default function AdminDashboard() {
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+  const isAdmin = user?.email === 'admin@example.com';
+
+  useEffect(() => {
+    // Wait until the user loading is complete
+    if (!isUserLoading) {
+      if (!user) {
+        // If no user, redirect to admin login
+        router.replace('/admin/login');
+      } else if (!isAdmin) {
+        // If user is not an admin, redirect to their account page
+        router.replace('/account');
+      }
+    }
+  }, [user, isUserLoading, isAdmin, router]);
+
+  // While loading or if user is not yet confirmed as admin, show a loader.
+  // This prevents the content component from ever rendering for non-admins.
+  if (isUserLoading || !isAdmin) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-4">جاري التحقق من صلاحيات المشرف...</p>
+      </div>
+    );
+  }
+  
+  // Only render the dashboard content if the user is a confirmed admin
+  return <AdminDashboardContent user={user} />;
 }
