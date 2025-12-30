@@ -9,7 +9,7 @@ import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { useUser, useFirestore, useMemoFirebase, updateDocumentNonBlocking, useDoc } from "@/firebase";
 import { Button } from "@/components/ui/button";
-import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash, Loader2, MessageSquare } from "lucide-react";
+import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash, Loader2, MessageSquare, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
@@ -29,26 +29,17 @@ import { doc } from "firebase/firestore";
 import { Badge } from "@/components/ui/badge";
 
 
-export default function OrderTrackingPage({ params }: { params: { id: string } }) {
+function AdminOrderDetailsPageContent({ params }: { params: { id: string } }) {
     const firestore = useFirestore();
-    const { user, isUserLoading } = useUser();
-    const isAdmin = user?.email === 'admin@example.com';
-    const router = useRouter();
+    const { toast } = useToast();
 
-    useEffect(() => {
-        if (!isUserLoading && !user) {
-            router.push('/login');
-        }
-    }, [user, isUserLoading, router]);
-
-    // Only attempt to fetch if the user is a loaded admin
+    // The query will only run because we've already confirmed the user is an admin in the parent.
     const orderRef = useMemoFirebase(() => {
-        if (!firestore || !params.id || !isAdmin) return null;
+        if (!firestore) return null;
         return doc(firestore, 'orders', params.id);
-    }, [firestore, params.id, isAdmin]);
+    }, [firestore, params.id]);
 
     const { data: order, isLoading: isOrderLoading } = useDoc<Order>(orderRef);
-    const { toast } = useToast();
 
     const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
         if (!firestore) {
@@ -66,10 +57,8 @@ export default function OrderTrackingPage({ params }: { params: { id: string } }
             description: `تم تغيير حالة الطلب #${orderId.slice(0, 7).toUpperCase()} إلى "${newStatus}".`,
         });
     }
-
-    const isLoading = isUserLoading || (isAdmin && isOrderLoading);
-
-    if (isLoading) {
+    
+    if (isOrderLoading) {
         return (
              <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
@@ -77,17 +66,6 @@ export default function OrderTrackingPage({ params }: { params: { id: string } }
         )
     }
 
-    // Authorization check after loading.
-    if (!isAdmin) {
-         return (
-            <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
-                 <SearchX className="h-24 w-24 text-muted-foreground mb-4" />
-                <h1 className="font-headline text-4xl font-bold">غير مصرح به</h1>
-                <p className="text-muted-foreground mt-2">هذه الصفحة مخصصة للمشرفين فقط.</p>
-            </div>
-        );
-    }
-    
     if (!order) {
         return (
             <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
@@ -103,7 +81,48 @@ export default function OrderTrackingPage({ params }: { params: { id: string } }
         );
     }
 
-    return <OrderDetails order={order} isAdmin={isAdmin} onStatusChange={handleStatusChange} />;
+    return <OrderDetails order={order} isAdmin={true} onStatusChange={handleStatusChange} />;
+}
+
+
+export default function OrderTrackingPage({ params }: { params: { id: string } }) {
+    const { user, isUserLoading } = useUser();
+    const router = useRouter();
+    const isAdmin = user?.email === 'admin@example.com';
+
+    useEffect(() => {
+        if (!isUserLoading && !user) {
+            router.push('/login');
+        }
+    }, [user, isUserLoading, router]);
+
+    if (isUserLoading) {
+        return (
+             <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+             </div>
+        )
+    }
+
+    // This is the critical authorization check.
+    // We will not render the content (which fetches data) unless the user is an admin.
+    if (!isAdmin) {
+         return (
+            <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
+                 <ShieldAlert className="h-24 w-24 text-destructive mb-4" />
+                <h1 className="font-headline text-4xl font-bold">غير مصرح به</h1>
+                <p className="text-muted-foreground mt-2">هذه الصفحة مخصصة للمشرفين فقط.</p>
+                 <div className="flex gap-4 mt-6">
+                    <Button asChild>
+                        <Link href="/account">العودة إلى الحساب</Link>
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+    
+    // Only if the user is an admin, we render the component that actually fetches data.
+    return <AdminOrderDetailsPageContent params={params} />;
 }
 
 function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmin: boolean; onStatusChange: (id: string, status: OrderStatus) => void }) {
@@ -270,3 +289,5 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
     );
 }
 
+
+    
