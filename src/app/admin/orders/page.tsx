@@ -34,9 +34,10 @@ export default function AdminOrdersPage() {
   const isAdmin = user?.email === 'admin@example.com';
   
   const allOrdersQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    // Only create the query if the user is an admin
+    if (!firestore || !isAdmin) return null;
     return query(collection(firestore, 'orders'), orderBy('createdAt', 'desc'));
-  }, [firestore]);
+  }, [firestore, isAdmin]);
 
   const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(allOrdersQuery);
 
