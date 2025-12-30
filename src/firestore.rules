@@ -74,6 +74,7 @@ service cloud.firestore {
        */
       allow create: if isSignedIn();
       allow get, update: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin(); // This rule is for admins to list all users.
       
       /**
        * @description
@@ -110,10 +111,6 @@ service cloud.firestore {
       // 2. Regular users can list orders ONLY IF they filter by their own userId.
       //    This also permits ordering the query, which is required by the app.
       allow list: if isAdmin() || (isSignedIn() && request.query.where.userId == request.auth.uid);
-    }
-    
-    match /users_admin/{userId} {
-        allow list: if isAdmin();
     }
 
     /**
