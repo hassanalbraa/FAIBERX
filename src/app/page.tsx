@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/ProductCard';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { ArrowLeft, Sparkles, Palette } from 'lucide-react';
 import { placeholderImages } from '@/lib/placeholder-images';
 import type { Product } from '@/lib/products';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
@@ -22,6 +22,11 @@ export default function Home() {
   const { data: products, isLoading } = useCollection<Product>(productsQuery);
 
   const heroImage = placeholderImages.find(p => p.id === 'hero');
+
+  const whatsappNumber = "+249909466854";
+  const customDesignMessage = encodeURIComponent("مرحباً، أرغب في عمل تصميم خاص.");
+  const customDesignWhatsappUrl = `https://wa.me/${whatsappNumber.replace('+', '')}?text=${customDesignMessage}`;
+
 
   return (
     <div className="space-y-16 md:space-y-24">
@@ -43,11 +48,18 @@ export default function Home() {
           <p className="mt-4 text-lg md:text-xl max-w-2xl mx-auto">
             اكتشف مجموعتنا الجديدة، حيث يلتقي الأسلوب الخالد مع التصميم المعاصر.
           </p>
-          <Button asChild size="lg" className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground font-bold group">
-            <Link href="/products">
-              تسوق الآن <ArrowLeft className="mr-2 h-5 w-5 transition-transform group-hover:-translate-x-1" />
-            </Link>
-          </Button>
+          <div className="mt-8 flex flex-wrap gap-4 justify-center">
+            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold group">
+              <Link href="/products">
+                تسوق الآن <ArrowLeft className="mr-2 h-5 w-5 transition-transform group-hover:-translate-x-1" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="secondary" className="font-bold group">
+              <Link href={customDesignWhatsappUrl} target="_blank" rel="noopener noreferrer">
+                 عمل تصميم خاص <Palette className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
 
