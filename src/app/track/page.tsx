@@ -19,7 +19,8 @@ export default function TrackOrderPage() {
 
   const handleTrackOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orderId.trim()) {
+    const trimmedOrderId = orderId.trim();
+    if (!trimmedOrderId) {
       toast({
         variant: 'destructive',
         title: 'حقل فارغ',
@@ -33,13 +34,12 @@ export default function TrackOrderPage() {
             title: 'يرجى تسجيل الدخول',
             description: 'يجب تسجيل الدخول لعرض تفاصيل الطلب.',
         });
-        router.push(`/login?redirect=/track`);
+        router.push(`/login?redirect=/orders/${trimmedOrderId}`);
         return;
     }
     
     // Redirect to the correct user-facing order details page.
-    // Admins will be redirected from there if necessary.
-    router.push(`/orders/${orderId.trim()}`);
+    router.push(`/orders/${trimmedOrderId}`);
   };
 
   return (
@@ -65,9 +65,15 @@ export default function TrackOrderPage() {
               تتبع
             </Button>
           </form>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            يمكنك العثور على رقم طلبك في رسالة تأكيد الطلب الإلكترونية.
-          </p>
+          {user ? (
+            <p className="text-xs text-muted-foreground mt-4 text-center">
+             يمكنك أيضاً عرض جميع طلباتك في <Link href="/account" className="underline hover:text-primary">صفحة حسابك</Link>.
+            </p>
+          ) : (
+             <p className="text-xs text-muted-foreground mt-4 text-center">
+              يمكنك العثور على رقم طلبك في رسالة تأكيد الطلب الإلكترونية.
+             </p>
+          )}
         </CardContent>
       </Card>
     </div>
