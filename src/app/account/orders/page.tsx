@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -19,7 +19,8 @@ function OrdersContent() {
   const firestore = useFirestore();
 
   const userOrdersQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null; // Defensive check, though user.uid should exist
+    // This query is now inside a component that only renders when user.uid is available.
+    if (!firestore || !user?.uid) return null;
     return query(
       collection(firestore, 'orders'),
       where('userId', '==', user.uid),
@@ -113,6 +114,7 @@ export default function OrderHistoryPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // If loading is finished and there's no user, redirect to login.
     if (!isUserLoading && !user) {
       router.push('/login');
     }
@@ -129,10 +131,13 @@ export default function OrderHistoryPage() {
       </div>
 
       {isUserLoading ? (
+        // Show a loading spinner while checking for the user.
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       ) : user ? (
+        // Only render the OrdersContent component if the user exists.
+        // This guarantees that user.uid is available within it.
         <OrdersContent />
       ) : null}
     </div>
