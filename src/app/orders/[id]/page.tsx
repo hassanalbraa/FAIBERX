@@ -1,6 +1,6 @@
-
 'use client';
 
+import { use } from 'react';
 import { useRouter } from "next/navigation";
 import { OrderStatus, type Order } from "@/lib/orders";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -192,7 +192,8 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
     );
 }
 
-export default function OrderTrackingPage({ params }: { params: { id: string } }) {
+export default function OrderTrackingPage({ params: paramsProp }: { params: { id: string } }) {
+    const params = use(paramsProp);
     const { user, isUserLoading } = useUser();
     const router = useRouter();
     const firestore = useFirestore();
@@ -278,3 +279,5 @@ export default function OrderTrackingPage({ params }: { params: { id: string } }
     
     return <OrderDetails order={order} isAdmin={isAdmin} onStatusChange={handleStatusChange} />;
 }
+
+    

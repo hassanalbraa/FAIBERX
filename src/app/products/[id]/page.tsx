@@ -165,3 +165,5 @@ function ProductDetailSkeleton() {
     </div>
   );
 }
+
+    
