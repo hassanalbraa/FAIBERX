@@ -21,7 +21,6 @@ import { Separator } from './ui/separator';
 const navLinks = [
   { href: '/products', label: 'جميع المنتجات' },
   { href: '/style-finder', label: 'خبير الأزياء الذكي' },
-  { href: '/track', label: 'تتبع الطلب' },
 ];
 
 export function Header() {
@@ -36,6 +35,11 @@ export function Header() {
           <Link href={link.href} onClick={() => setIsSheetOpen(false)}>{link.label}</Link>
         </Button>
       ))}
+       <Button asChild variant="ghost">
+          <Link href="/track" onClick={() => setIsSheetOpen(false)}>
+              تتبع الطلب
+          </Link>
+        </Button>
     </>
   );
 
@@ -71,6 +75,12 @@ export function Header() {
                 </Button>
             </div>
           )}
+          <Button asChild variant="ghost" size="icon">
+            <Link href="/track">
+              <Truck className="h-5 w-5" />
+              <span className="sr-only">تتبع الطلب</span>
+            </Link>
+          </Button>
           <Button asChild variant="ghost" size="icon" className="relative">
             <Link href="/cart">
               <ShoppingCart className="h-5 w-5" />
@@ -111,6 +121,12 @@ export function Header() {
                              <User className="ml-2 h-4 w-4" />
                              حسابي
                            </Link>
+                         </Button>
+                         <Button asChild variant="ghost" className="justify-start">
+                            <Link href="/account/orders" onClick={() => setIsSheetOpen(false)}>
+                                <ListOrdered className="ml-2 h-4 w-4" />
+                                طلباتي
+                            </Link>
                          </Button>
                        </>
                      )}
