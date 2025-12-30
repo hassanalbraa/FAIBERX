@@ -22,7 +22,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // User data collection
+    // User data collection and subcollections
     match /users/{userId} {
       // Create: Any signed-in user can create their own document.
       allow create: if isOwner(userId);
@@ -31,28 +31,23 @@ service cloud.firestore {
       allow get, update: if isOwner(userId) || isAdmin();
       
       // List: ONLY an admin can list the users collection.
-      // This rule is now safe because it does not interfere with subcollection access.
       allow list: if isAdmin();
 
       // Addresses: A user has full control over their own addresses subcollection.
-      // This rule will now work correctly without the conflicting parent 'list' rule.
       match /addresses/{addressId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Orders: A user has full control over their own orders subcollection.
+      match /orders/{orderId} {
         allow read, write: if isOwner(userId);
       }
     }
     
-    // Orders: Users can create/read their own. Admins have full access.
-    match /orders/{orderId} {
-      // Admins have full read/write access.
-      allow read, write: if isAdmin();
-
-      // Users can create their own orders.
-      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
-
-      // Users can read (get/list) their own orders.
-      // This works for `get` by checking the existing document's data.
-      // This works for `list` when the query has a `where('userId', '==', request.auth.uid)` clause.
-      allow read: if isSignedIn() && isOwner(resource.data.userId);
+    // Admins can read all orders via a collectionGroup query.
+    // This is separate from the user-specific rule above.
+    match /{path=**}/orders/{orderId} {
+      allow read: if isAdmin();
     }
 
     // roles_admin should not be client-writable to prevent privilege escalation.
@@ -61,3 +56,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

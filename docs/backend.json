@@ -357,17 +357,21 @@
         }
       },
       {
-        "path": "/orders/{orderId}",
+        "path": "/users/{userId}/orders/{orderId}",
         "definition": {
           "entityName": "Order",
           "schema": {
             "$ref": "#/backend/entities/Order"
           },
-          "description": "Stores customer order information. Users can read their own orders. Admins can read and update all orders.",
+          "description": "Stores a user's orders in a subcollection. Users can only access their own orders. Admins can read all orders via collection group query.",
           "params": [
             {
+              "name": "userId",
+              "description": "The UID of the user who owns the subcollection."
+            },
+            {
               "name": "orderId",
-              "description": "Unique identifier for the order."
+              "description": "The unique ID for the order."
             }
           ]
         }
@@ -376,3 +380,5 @@
     "reasoning": "This Firestore data structure is designed to support the Threads of Couture application, focusing on product management by administrators and user-specific data. The key principle is Authorization Independence, achieved by avoiding `get()` calls in security rules through structural segregation and explicit role definitions. Products are stored in a top-level `/products` collection, and admin users are managed via the `/roles_admin/{uid}` collection. Regular user data is stored in `/users/{uid}`. The existence of a document in `/roles_admin/{uid}` grants administrative privileges.\n\n**Authorization Independence:** Authorization is determined by checking document ownership (`request.auth.uid == userId`) for user data, or checking the existence of a document in the `/roles_admin/{uid}` collection for admin privileges. This eliminates hierarchical authorization dependencies.\n\n**QAPs (Rules Are Not Filters):** List operations on products are public. Admins are allowed to list users for management purposes, but regular users cannot list other users.\n\n**Segregation:** The `/products` collection stores product data, the `/roles_admin/{uid}` collection manages admin user roles, and `/users/{uid}` stores individual user data. This separation ensures that security rules are applied correctly and independently for each data type."
   }
 }
+
+    
