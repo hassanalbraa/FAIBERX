@@ -44,7 +44,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
 
       // If the user document does not exist, it's a new user. Create it.
       if (!userDoc.exists()) {
-        const accountNumber = `${Date.now()}${Math.floor(Math.random() * 100)}`;
+        const accountNumber = Math.floor(100000 + Math.random() * 900000).toString();
         try {
           await setDoc(userRef, {
             email: user.email,
