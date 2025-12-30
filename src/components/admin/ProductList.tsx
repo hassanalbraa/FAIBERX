@@ -21,7 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useFirestore, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { useFirestore, deleteDocumentNonBlocking, updateDocumentNonBlocking, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -37,7 +37,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -51,14 +51,25 @@ const formSchema = z.object({
   stock: z.coerce.number().int().nonnegative('يجب أن يكون المخزون رقمًا صحيحًا غير سالب'),
 });
 
-function EditProductDialog({ product, children }: { product: Product, children: React.ReactNode }) {
+export function EditProductDialog({ product: initialProduct, children, onUpdate }: { product: Product, children: React.ReactNode, onUpdate?: () => void }) {
     const { toast } = useToast();
     const firestore = useFirestore();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
 
+    // Fetch the full, real-time product data when the dialog opens
+    const productRef = useMemoFirebase(() => {
+        if (!firestore || !initialProduct.id) return null;
+        return doc(firestore, 'products', initialProduct.id);
+    }, [firestore, initialProduct.id, isOpen]); // Re-fetch if dialog is re-opened
+
+    const { data: realProduct, isLoading: isLoadingProduct } = useDoc<Product>(productRef);
+
+    const product = realProduct || initialProduct;
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
+        // Default values from initial product, will be updated by useEffect
         defaultValues: {
             name: product.name,
             description: product.description,
@@ -68,20 +79,36 @@ function EditProductDialog({ product, children }: { product: Product, children: 
             stock: product.stock || 0,
         },
     });
+    
+    // This effect ensures the form is populated with the latest data from Firestore
+    useEffect(() => {
+        if (realProduct) {
+            form.reset({
+                name: realProduct.name,
+                description: realProduct.description,
+                price: realProduct.price,
+                category: realProduct.category,
+                image: realProduct.image,
+                stock: realProduct.stock || 0,
+            });
+        }
+    }, [realProduct, form]);
+
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         if (!firestore) return;
         setIsSubmitting(true);
 
         try {
-            const productRef = doc(firestore, 'products', product.id);
-            await updateDocumentNonBlocking(productRef, values);
+            const productDocRef = doc(firestore, 'products', product.id);
+            await updateDocumentNonBlocking(productDocRef, values);
 
             toast({
                 title: 'تم تحديث المنتج بنجاح!',
                 description: `تم تحديث "${values.name}".`,
             });
             setIsOpen(false); // Close dialog on success
+            if (onUpdate) onUpdate();
         } catch (error) {
             console.error('Error updating product: ', error);
             toast({
@@ -104,45 +131,51 @@ function EditProductDialog({ product, children }: { product: Product, children: 
                         قم بتحديث تفاصيل المنتج أدناه.
                     </DialogDescription>
                 </DialogHeader>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField control={form.control} name="name" render={({ field }) => (
-                            <FormItem><FormLabel>اسم المنتج</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="description" render={({ field }) => (
-                            <FormItem><FormLabel>الوصف</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="price" render={({ field }) => (
-                            <FormItem><FormLabel>سعر البيع</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <div className="flex gap-4">
-                            <FormField control={form.control} name="stock" render={({ field }) => (
-                                <FormItem className='flex-1'><FormLabel>المخزون</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                {isLoadingProduct ? (
+                    <div className="flex items-center justify-center h-48">
+                        <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                ) : (
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <FormField control={form.control} name="name" render={({ field }) => (
+                                <FormItem><FormLabel>اسم المنتج</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
-                            <FormField control={form.control} name="category" render={({ field }) => (
-                                <FormItem className='flex-1'><FormLabel>الفئة</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="T-shirts">تشيرتات</SelectItem>
-                                            <SelectItem value="Hoodies">هودي</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                <FormMessage /></FormItem>
+                            <FormField control={form.control} name="description" render={({ field }) => (
+                                <FormItem><FormLabel>الوصف</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
-                        </div>
-                        <FormField control={form.control} name="image" render={({ field }) => (
-                            <FormItem><FormLabel>رابط الصورة</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>إلغاء</Button>
-                            <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                حفظ التغييرات
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </Form>
+                            <FormField control={form.control} name="price" render={({ field }) => (
+                                <FormItem><FormLabel>سعر البيع</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <div className="flex gap-4">
+                                <FormField control={form.control} name="stock" render={({ field }) => (
+                                    <FormItem className='flex-1'><FormLabel>المخزون</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                                <FormField control={form.control} name="category" render={({ field }) => (
+                                    <FormItem className='flex-1'><FormLabel>الفئة</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="T-shirts">تشيرتات</SelectItem>
+                                                <SelectItem value="Hoodies">هودي</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    <FormMessage /></FormItem>
+                                )} />
+                            </div>
+                            <FormField control={form.control} name="image" render={({ field }) => (
+                                <FormItem><FormLabel>رابط الصورة</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <DialogFooter>
+                                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>إلغاء</Button>
+                                <Button type="submit" disabled={isSubmitting}>
+                                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    حفظ التغييرات
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </Form>
+                )}
             </DialogContent>
         </Dialog>
     )
@@ -244,3 +277,5 @@ export function ProductList({ products }: ProductListProps) {
     </Table>
   );
 }
+
+    

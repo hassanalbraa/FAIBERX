@@ -9,9 +9,9 @@ import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { useUser, useFirestore, useMemoFirebase, updateDocumentNonBlocking, useDoc } from "@/firebase";
 import { Button } from "@/components/ui/button";
-import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash, Loader2, MessageSquare, ShieldAlert } from "lucide-react";
+import { Mail, CheckCircle, Truck, XCircle, PauseCircle, MoreVertical, SearchX, Hash, Loader2, MessageSquare, ShieldAlert, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { doc } from "firebase/firestore";
 import { Badge } from "@/components/ui/badge";
+import { Product } from '@/lib/products';
+import { EditProductDialog } from '@/components/admin/ProductList';
 
 function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmin: boolean; onStatusChange: (id: string, status: OrderStatus) => void }) {
 
@@ -114,22 +116,44 @@ function OrderDetails({ order, isAdmin, onStatusChange }: { order: Order; isAdmi
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                {order.items.map((item: any, index: number) => (
-                                    <div key={`${item.productId || index}-${item.size || ''}`} className="flex items-center gap-4">
-                                        <div className="relative w-20 h-24 rounded-md overflow-hidden">
-                                            <Image src={item.image} alt={item.name} fill className="object-cover" sizes="80px"/>
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold">{item.name}</p>
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                                                <span>الكمية: {item.quantity}</span>
-                                                {item.size && <Badge variant="secondary">مقاس: {item.size}</Badge>}
+                                {order.items.map((item: any, index: number) => {
+                                    // We need to construct a partial Product object to pass to EditProductDialog
+                                    const product: Product = {
+                                        id: item.productId,
+                                        name: item.name,
+                                        description: '', // Not available in order item, dialog will fetch full product
+                                        price: item.price,
+                                        image: item.image,
+                                        category: 'T-shirts', // Placeholder, dialog should fetch real data
+                                        stock: 0, // Placeholder
+                                    };
+                                    return (
+                                        <div key={`${item.productId || index}-${item.size || ''}`} className="flex items-center gap-4">
+                                            <div className="relative w-20 h-24 rounded-md overflow-hidden">
+                                                <Image src={item.image} alt={item.name} fill className="object-cover" sizes="80px"/>
                                             </div>
-                                            <p className="text-sm text-muted-foreground">السعر: {item.price.toFixed(2)} SDG</p>
+                                            <div>
+                                                <p className="font-semibold">{item.name}</p>
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                                    <span>الكمية: {item.quantity}</span>
+                                                    {item.size && <Badge variant="secondary">مقاس: {item.size}</Badge>}
+                                                </div>
+                                                <p className="text-sm text-muted-foreground">السعر: {item.price.toFixed(2)} SDG</p>
+                                            </div>
+                                            <div className='mr-auto flex items-center gap-2'>
+                                                <p className="font-semibold">{(item.price * item.quantity).toFixed(2)} SDG</p>
+                                                {isAdmin && (
+                                                     <EditProductDialog product={product}>
+                                                         <Button variant="outline" size="sm">
+                                                             <Pencil className="h-3 w-3" />
+                                                             <span className="sr-only">تعديل المنتج</span>
+                                                         </Button>
+                                                     </EditProductDialog>
+                                                )}
+                                            </div>
                                         </div>
-                                        <p className="mr-auto font-semibold">{(item.price * item.quantity).toFixed(2)} SDG</p>
-                                    </div>
-                                ))}
+                                    )
+                                })}
                             </div>
                         </CardContent>
                     </Card>
