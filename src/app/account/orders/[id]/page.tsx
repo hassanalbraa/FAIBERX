@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from "next/navigation";
-import { OrderStatus, type Order } from "@/lib/orders";
+import { type Order, OrderStatus } from "@/lib/orders";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderTracker } from "@/components/OrderTracker";
 import Image from "next/image";
@@ -10,15 +10,13 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Mail, SearchX, Hash, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useRef, useMemo, use } from "react";
+import { useEffect, useRef, use } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { doc } from "firebase/firestore";
 
-export default function UserOrderTrackingPage({ params: paramsProp }: { params: { id: string } }) {
-    const params = use(paramsProp);
+export default function UserOrderTrackingPage({ params }: { params: { id: string } }) {
     const { user, isUserLoading } = useUser();
-    const { toast } = useToast();
     const router = useRouter();
     const firestore = useFirestore();
 
@@ -28,25 +26,12 @@ export default function UserOrderTrackingPage({ params: paramsProp }: { params: 
     }, [firestore, params.id]);
 
     const { data: order, isLoading } = useDoc<Order>(orderRef);
-
-    const prevStatusRef = useRef<OrderStatus | undefined>();
-
-    useEffect(() => {
-        if (order && prevStatusRef.current && order.status !== prevStatusRef.current) {
-            toast({
-                title: "تحديث حالة الطلب",
-                description: `تم تحديث حالة طلبك #${order.id.slice(0, 7).toUpperCase()} إلى: ${order.status}`
-            });
-        }
-        prevStatusRef.current = order?.status;
-    }, [order, toast]);
-
+    
     useEffect(() => {
         if (!isUserLoading && !user) {
             router.push('/login');
         }
     }, [user, isUserLoading, router]);
-
 
     if (isLoading || isUserLoading) {
         return (
@@ -90,6 +75,18 @@ export default function UserOrderTrackingPage({ params: paramsProp }: { params: 
 }
 
 function OrderDetails({ order }: { order: Order }) {
+    const { toast } = useToast();
+    const prevStatusRef = useRef<OrderStatus | undefined>();
+
+    useEffect(() => {
+        if (order && prevStatusRef.current && order.status !== prevStatusRef.current) {
+            toast({
+                title: "تحديث حالة الطلب",
+                description: `تم تحديث حالة طلبك #${order.id.slice(0, 7).toUpperCase()} إلى: ${order.status}`
+            });
+        }
+        prevStatusRef.current = order?.status;
+    }, [order, toast]);
 
     return (
         <div className="container mx-auto px-4 py-8 md:py-12">
