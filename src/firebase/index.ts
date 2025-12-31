@@ -2,50 +2,43 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, User, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+// IMPORTANT: SAFE FOR VERCEL + NEXT.JS BUILD
 export function initializeFirebase() {
-  // During Vercel build, VERCEL is '1' and CI is 'true'
-  const isVercel = process.env.VERCEL === '1' && process.env.CI === 'true';
-
-  if (getApps().length) {
-    // If already initialized, return the SDKs with the already initialized App
-    return getSdks(getApp());
+  // 🚫 امنع التنفيذ خارج المتصفح (وقت build / server)
+  if (typeof window === 'undefined') {
+    return null;
   }
-  
-  let firebaseApp;
-  
-  // If it's a Vercel build, or if we are in a non-browser environment (like build process),
-  // directly use the config to avoid the "no-options" error.
-  if (isVercel || typeof window === 'undefined') {
-    firebaseApp = initializeApp(firebaseConfig);
-  } else {
+
+  if (!getApps().length) {
+    let firebaseApp: FirebaseApp;
+
     try {
-      // For client-side execution in a browser that might be on Firebase Hosting,
-      // attempt automatic initialization first.
+      // Firebase App Hosting (لو متوفر)
       firebaseApp = initializeApp();
     } catch (e) {
-      // Fallback for local development or other browser environments.
       if (process.env.NODE_ENV === 'production') {
-          console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
+        console.warn(
+          'Automatic initialization failed. Falling back to firebase config object.',
+          e
+        );
       }
       firebaseApp = initializeApp(firebaseConfig);
     }
+
+    return getSdks(firebaseApp);
   }
 
-  return getSdks(firebaseApp);
+  return getSdks(getApp());
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
-  const firestore = getFirestore(firebaseApp);
-  const auth = getAuth(firebaseApp);
-
   return {
     firebaseApp,
-    auth: auth,
-    firestore: firestore
+    auth: getAuth(firebaseApp),
+    firestore: getFirestore(firebaseApp),
   };
 }
 
