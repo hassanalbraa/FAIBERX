@@ -97,33 +97,3 @@ export default function Home() {
     </div>
   );
 }
-          <Button asChild variant="outline">
-            <Link href="/products">عرض كل المنتجات</Link>
-          </Button>
-        </div>
-      </section>
-
-      <section className="bg-secondary/50 py-16 md:py-24">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="font-headline text-3xl md:text-4xl font-bold">
-            ابحث عن أسلوبك الخاص
-          </h2>
-          <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
-            حمّل صورة ودع خبير الأزياء الذكي يقترح عليك القطع المثالية
-            التي تكمل إطلالتك.
-          </p>
-          <Button
-            asChild
-            size="lg"
-            className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground font-bold group"
-          >
-            <Link href="/style-finder">
-              جرّب خبير الأزياء الذكي{' '}
-              <Sparkles className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-            </Link>
-          </Button>
-        </div>
-      </section>
-    </div>
-  );
-}
