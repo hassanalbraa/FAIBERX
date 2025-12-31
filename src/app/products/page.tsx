@@ -1,88 +1,44 @@
-'use client';
+// app/products/page.js
 
-import { useSearchParams } from 'next/navigation';
+import React from 'react';
 import { ProductCard } from '@/components/ProductCard';
+import { placeholderImages } from '@/lib/placeholder-images';
 import type { Product } from '@/lib/products';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { useMemo } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
 
-export default function ProductsPage() {
-  const searchParams = useSearchParams();
-  const category = searchParams.get('category');
-  const firestore = useFirestore();
+// صفحة Server Component
+export default function ProductsPage({ searchParams }: { searchParams: { [key: string]: string } }) {
+  // استخرج القيمة من الـ searchParams بدل useSearchParams
+  const category = searchParams.category || 'all';
 
-  // Fetch products from Firestore, filtering by category if provided
-  const productsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    const productsCollection = collection(firestore, 'products');
-    if (category) {
-      return query(productsCollection, where('category', '==', category));
-    }
-    return query(productsCollection);
-  }, [firestore, category]);
+  // هنا ممكن تجيب المنتجات من Firebase أو أي مصدر بيانات
+  const products: Product[] = [
+    {
+      id: '1',
+      name: 'منتج تجريبي 1',
+      price: 100,
+      image: placeholderImages[0],
+    },
+    {
+      id: '2',
+      name: 'منتج تجريبي 2',
+      price: 200,
+      image: placeholderImages[1],
+    },
+  ];
 
-  const { data: filteredProducts, isLoading } = useCollection<Product>(productsQuery);
-
-
-  const getCategoryArabicName = (category: string | null) => {
-    switch (category) {
-      case 'T-shirts': return 'تشيرتات';
-      case 'Hoodies': return 'هودي';
-      default: return 'كل المنتجات';
-    }
-  }
-
-  const title = getCategoryArabicName(category);
+  // لو عايز، ممكن تصفي المنتجات حسب الـ category
+  const filteredProducts = category === 'all'
+    ? products
+    : products.filter(p => p.name.toLowerCase().includes(category.toLowerCase()));
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12">
-      <Breadcrumb className="mb-8">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/">الرئيسية</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{title}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-    
-      <div className="text-center mb-12">
-        <h1 className="font-headline text-4xl md:text-5xl font-bold">{title}</h1>
-        <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
-          {category 
-            ? `استكشف مجموعتنا المختارة من ${getCategoryArabicName(category)?.toLowerCase()}.`
-            : 'اكتشف البراعة والأناقة المنسوجة في كل قطعة من مجموعتنا.'}
-        </p>
+    <div>
+      <h1>المنتجات للـ category: {category}</h1>
+      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+        {filteredProducts.map(product => (
+          <ProductCard key={product.id} product={product} />
+        ))}
       </div>
-
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {[...Array(8)].map((_, i) => (
-            <ProductCard.Skeleton key={i} />
-          ))}
-        </div>
-      ) : filteredProducts && filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {filteredProducts.map((product: Product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">لم يتم العثور على منتجات في هذه الفئة.</p>
-        </div>
-      )}
     </div>
   );
 }
