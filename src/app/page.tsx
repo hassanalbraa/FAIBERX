@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -13,26 +15,31 @@ import { collection, query, limit } from 'firebase/firestore';
 export default function Home() {
   const firestore = useFirestore();
 
-  // Fetch the 4 most recent products from Firestore
+  // 🔒 آمن وقت build — لو firestore ما جاهز ما ننفّذ query
   const productsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'products'), limit(4));
   }, [firestore]);
 
-  const { data: products, isLoading } = useCollection<Product>(productsQuery);
+  const { data: products, isLoading } =
+    useCollection<Product>(productsQuery);
 
   const heroImage = placeholderImages.find(p => p.id === 'hero');
 
-  const whatsappNumber = "+249909466854";
-  const customDesignMessage = encodeURIComponent("مرحباً، أرغب في عمل تصميم خاص.");
-  const customDesignWhatsappUrl = `https://wa.me/${whatsappNumber.replace('+', '')}?text=${customDesignMessage}`;
-
+  const whatsappNumber = '+249909466854';
+  const customDesignMessage = encodeURIComponent(
+    'مرحباً، أرغب في عمل تصميم خاص.'
+  );
+  const customDesignWhatsappUrl = `https://wa.me/${whatsappNumber.replace(
+    '+',
+    ''
+  )}?text=${customDesignMessage}`;
 
   return (
     <div className="space-y-16 md:space-y-24">
       <section className="relative h-[60vh] md:h-[80vh] w-full flex items-center justify-center text-center text-white">
         {heroImage && (
-           <Image
+          <Image
             src={heroImage.imageUrl}
             alt={heroImage.description}
             fill
@@ -49,14 +56,29 @@ export default function Home() {
             اكتشف مجموعتنا الجديدة، حيث يلتقي الأسلوب الخالد مع التصميم المعاصر.
           </p>
           <div className="mt-8 flex flex-wrap gap-4 justify-center">
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold group">
+            <Button
+              asChild
+              size="lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold group"
+            >
               <Link href="/products">
-                تسوق الآن <ArrowLeft className="mr-2 h-5 w-5 transition-transform group-hover:-translate-x-1" />
+                تسوق الآن{' '}
+                <ArrowLeft className="mr-2 h-5 w-5 transition-transform group-hover:-translate-x-1" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="secondary" className="font-bold group">
-              <Link href={customDesignWhatsappUrl} target="_blank" rel="noopener noreferrer">
-                 عمل تصميم خاص <Palette className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+            <Button
+              asChild
+              size="lg"
+              variant="secondary"
+              className="font-bold group"
+            >
+              <Link
+                href={customDesignWhatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                عمل تصميم خاص{' '}
+                <Palette className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
               </Link>
             </Button>
           </div>
@@ -65,16 +87,26 @@ export default function Home() {
 
       <section className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="font-headline text-3xl md:text-4xl font-bold">منتجات مميزة</h2>
-          <p className="text-muted-foreground mt-2">مختارة بعناية للخبراء العصريين</p>
+          <h2 className="font-headline text-3xl md:text-4xl font-bold">
+            منتجات مميزة
+          </h2>
+          <p className="text-muted-foreground mt-2">
+            مختارة بعناية للخبراء العصريين
+          </p>
         </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {isLoading && [...Array(4)].map((_, i) => <ProductCard.Skeleton key={i} />)}
+          {isLoading &&
+            [...Array(4)].map((_, i) => (
+              <ProductCard.Skeleton key={i} />
+            ))}
+
           {products?.map(product => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
-         <div className="text-center mt-12">
+
+        <div className="text-center mt-12">
           <Button asChild variant="outline">
             <Link href="/products">عرض كل المنتجات</Link>
           </Button>
@@ -83,15 +115,23 @@ export default function Home() {
 
       <section className="bg-secondary/50 py-16 md:py-24">
         <div className="container mx-auto px-4 text-center">
-            <h2 className="font-headline text-3xl md:text-4xl font-bold">ابحث عن أسلوبك الخاص</h2>
-            <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
-              حمّل صورة ودع خبير الأزياء الذكي يقترح عليك القطع المثالية التي تكمل إطلالتك.
-            </p>
-            <Button asChild size="lg" className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground font-bold group">
-              <Link href="/style-finder">
-                جرّب خبير الأزياء الذكي <Sparkles className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-              </Link>
-            </Button>
+          <h2 className="font-headline text-3xl md:text-4xl font-bold">
+            ابحث عن أسلوبك الخاص
+          </h2>
+          <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
+            حمّل صورة ودع خبير الأزياء الذكي يقترح عليك القطع المثالية
+            التي تكمل إطلالتك.
+          </p>
+          <Button
+            asChild
+            size="lg"
+            className="mt-8 bg-primary hover:bg-primary/90 text-primary-foreground font-bold group"
+          >
+            <Link href="/style-finder">
+              جرّب خبير الأزياء الذكي{' '}
+              <Sparkles className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+            </Link>
+          </Button>
         </div>
       </section>
     </div>
