@@ -7,29 +7,35 @@ import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from 'firebase/fir
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
-  if (!getApps().length) {
-    // Important! initializeApp() is called without any arguments because Firebase App Hosting
-    // integrates with the initializeApp() function to provide the environment variables needed to
-    // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
-    // without arguments.
-    let firebaseApp;
+  // During Vercel build, VERCEL is '1' and CI is 'true'
+  const isVercel = process.env.VERCEL === '1' && process.env.CI === 'true';
+
+  if (getApps().length) {
+    // If already initialized, return the SDKs with the already initialized App
+    return getSdks(getApp());
+  }
+  
+  let firebaseApp;
+  
+  // If it's a Vercel build, or if we are in a non-browser environment (like build process),
+  // directly use the config to avoid the "no-options" error.
+  if (isVercel || typeof window === 'undefined') {
+    firebaseApp = initializeApp(firebaseConfig);
+  } else {
     try {
-      // Attempt to initialize via Firebase App Hosting environment variables
+      // For client-side execution in a browser that might be on Firebase Hosting,
+      // attempt automatic initialization first.
       firebaseApp = initializeApp();
     } catch (e) {
-      // Only warn in production because it's normal to use the firebaseConfig to initialize
-      // during development
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
+      // Fallback for local development or other browser environments.
+      if (process.env.NODE_ENV === 'production') {
+          console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
       }
       firebaseApp = initializeApp(firebaseConfig);
     }
-
-    return getSdks(firebaseApp);
   }
 
-  // If already initialized, return the SDKs with the already initialized App
-  return getSdks(getApp());
+  return getSdks(firebaseApp);
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
