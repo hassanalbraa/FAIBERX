@@ -5,7 +5,6 @@ import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
 
-// تعريف الـ Context
 const FirebaseContext = createContext<{
   firebaseApp: FirebaseApp | null;
   auth: Auth | null;
@@ -23,9 +22,9 @@ export function FirebaseProvider({
   firestore 
 }: { 
   children: React.ReactNode;
-  firebaseApp: FirebaseApp;
-  auth: Auth;
-  firestore: Firestore;
+  firebaseApp: any; // استخدم any مؤقتاً لتجاوز تعارض الإصدارات في الـ Build
+  auth: any;
+  firestore: any;
 }) {
   const value = useMemo(() => ({ firebaseApp, auth, firestore }), [firebaseApp, auth, firestore]);
   return (
@@ -35,12 +34,5 @@ export function FirebaseProvider({
   );
 }
 
-// الدوال التي تستخدمها صفحة page.tsx
-export const useFirestore = () => {
-  const context = useContext(FirebaseContext);
-  return context.firestore;
-};
-
-export const useMemoFirebase = (factory: () => any, deps: any[]) => {
-  return useMemo(factory, deps);
-};
+export const useFirestore = () => useContext(FirebaseContext).firestore;
+export const useMemoFirebase = (factory: () => any, deps: any[]) => useMemo(factory, deps);
