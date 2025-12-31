@@ -5,33 +5,29 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// دالة التهيئة الأساسية
 export function initializeFirebase() {
+  let firebaseApp: FirebaseApp;
+  
   if (!getApps().length) {
-    let firebaseApp;
     try {
-      // محاولة التهيئة التلقائية لبيئة App Hosting
-      firebaseApp = initializeApp();
+      firebaseApp = initializeApp(); 
     } catch (e) {
-      // العودة للإعدادات اليدوية في حال الفشل
       firebaseApp = initializeApp(firebaseConfig);
     }
-    return getSdks(firebaseApp);
+  } else {
+    firebaseApp = getApp();
   }
-  return getSdks(getApp());
+  
+  return getSdks(firebaseApp);
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
   const firestore = getFirestore(firebaseApp);
   const auth = getAuth(firebaseApp);
-  return {
-    firebaseApp,
-    auth,
-    firestore
-  };
+  return { firebaseApp, auth, firestore };
 }
 
-// تصديرات صريحة لضمان التعرف عليها في الـ Build
+// تصديرات هامة جداً لعمل الصفحات
 export * from './provider';
 export * from './client-provider';
 export { useCollection } from './firestore/use-collection';
