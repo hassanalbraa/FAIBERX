@@ -5,7 +5,6 @@ import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from '@/firebase';
 
 export function FirebaseClientProvider({ children }: { children: ReactNode }) {
-  // تهيئة Firebase لمرة واحدة عند تحميل المكون
   const services = useMemo(() => initializeFirebase(), []);
 
   return (
