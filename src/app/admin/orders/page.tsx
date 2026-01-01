@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ShoppingCart, MoreHorizontal, CheckCircle, Truck, XCircle, PauseCircle, Mail, MessageSquare, AlertCircle } from 'lucide-react';
-import { doc, query, orderBy, collectionGroup } from 'firebase/firestore';
+import { doc, query, orderBy, collectionGroup, collection } from 'firebase/firestore';
 import type { Order, OrderStatus } from '@/lib/orders';
 import {
   DropdownMenu,
@@ -25,79 +25,138 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useToast } from '@/hooks/use-toast';
 
-// ⚠️ تأكد من أن هذا هو إيميلك المسجل في Firebase تماماً
+// تأكد أن هذا الإيميل مطابق تماماً لما في Firebase
 const ADMIN_EMAIL = 'admin@example.com';
 
 function AdminOrdersContent() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const { user } = useUser();
-  
-  // التحقق من الأدمن (بدون طرد من الصفحة)
   const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   const allOrdersQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
-    return query(collectionGroup(firestore, 'orders'), orderBy('createdAt', 'desc'));
+    
+    // الحل: سنقوم بجلب الطلبات من الـ collectionGroup 
+    // إذا لم تظهر البيانات، فالمشكلة غالباً في حقل createdAt
+    try {
+      return query(
+        collectionGroup(firestore, 'orders'), 
+        orderBy('createdAt', 'desc')
+      );
+    } catch (e) {
+      console.error("خطأ في الاستعلام:", e);
+      return null;
+    }
   }, [firestore, isAdmin]);
 
-  const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(allOrdersQuery);
+  const { data: orders, isLoading: isOrdersLoading, error } = useCollection<Order>(allOrdersQuery);
 
   const handleStatusChange = (order: Order, newStatus: OrderStatus) => {
     if (!firestore) return;
+    // تحديث المسار ليشمل معرف المستخدم والطلب
     const orderRef = doc(firestore, 'users', order.userId, 'orders', order.id);
     updateDocumentNonBlocking(orderRef, { status: newStatus });
-    toast({
-        title: "تم تحديث الحالة",
-        description: `تم تغيير حالة الطلب إلى ${newStatus}`,
-    });
+    toast({ title: "تم التحديث", description: `حالة الطلب الآن: ${newStatus}` });
   }
 
   if (isOrdersLoading) {
-      return (
-          <div className="flex h-64 items-center justify-center flex-col gap-2">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <p>جاري سحب الطلبات من قاعدة البيانات...</p>
-          </div>
-      )
+    return (
+      <div className="flex h-64 items-center justify-center flex-col gap-2">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p>جاري جلب الطلبات...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 text-red-600 rounded-md">
+        حدث خطأ أثناء جلب البيانات: {error.message}
+      </div>
+    );
   }
 
   return (
     <Card>
-        <CardHeader>
-            <CardTitle>جميع الطلبات</CardTitle>
-            <CardDescription>
-                {orders && orders.length > 0
-                ? `لديك ${orders.length} طلب إجمالاً.`
-                : 'لا توجد طلبات لعرضها حاليًا (تأكد من وجود مجموعة orders في Firestore).'}
-            </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {orders && orders.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>رقم الطلب</TableHead>
-                  <TableHead>الزبون</TableHead>
-                  <TableHead>التاريخ</TableHead>
-                  <TableHead>الحالة</TableHead>
-                  <TableHead className="text-right">الإجمالي</TableHead>
-                  <TableHead className="w-[100px] text-center">الإجراءات</TableHead>
+      <CardHeader>
+        <CardTitle>طلبات الزبائن</CardTitle>
+        <CardDescription>
+          {orders && orders.length > 0 ? `إجمالي الطلبات: ${orders.length}` : 'لم يتم العثور على طلبات في نظام المجموعات الفرعية.'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {orders && orders.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>رقم الطلب</TableHead>
+                <TableHead>الزبون</TableHead>
+                <TableHead>التاريخ</TableHead>
+                <TableHead>الحالة</TableHead>
+                <TableHead className="text-right">المبلغ</TableHead>
+                <TableHead className="text-center">إجراء</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {orders.map(order => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-medium">#{order.id.slice(0, 7).toUpperCase()}</TableCell>
+                  <TableCell>{order.shippingAddress?.name || 'مجهول'}</TableCell>
+                  <TableCell>{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString('ar-EG') : 'بدون تاريخ'}</TableCell>
+                  <TableCell><Badge variant="secondary">{order.status}</Badge></TableCell>
+                  <TableCell className="text-right">{order.total} SDG</TableCell>
+                  <TableCell className="text-center">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MoreHorizontal /></Button></DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleStatusChange(order, 'Delivered')}>تم التوصيل</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleStatusChange(order, 'Cancelled')}>إلغاء</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.map(order => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">#{order.id.slice(0, 7).toUpperCase()}</TableCell>
-                    <TableCell>{order.shippingAddress?.name || 'غير معروف'}</TableCell>
-                    <TableCell>{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString('ar-EG') : 'بلا تاريخ'}</TableCell>
-                    <TableCell><Badge variant="outline">{order.status}</Badge></TableCell>
-                    <TableCell className="text-right">{order.total} SDG</TableCell>
-                    <TableCell className="text-center">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button>
-                            </DropdownMenuTrigger>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-20">
+            <p className="text-muted-foreground">لا توجد طلبات لعرضها حالياً.</p>
+            <p className="text-xs text-muted-foreground mt-2">تأكد من أن حقل "createdAt" موجود في كل طلب داخل Firestore.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function AdminOrdersPage() {
+  const { user, isUserLoading } = useUser();
+  const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+  if (isUserLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
+
+  return (
+    <div className="container mx-auto px-4 py-10">
+      <div className="mb-10 flex items-center justify-between">
+        <h1 className="text-3xl font-bold flex items-center gap-3">
+          <ShoppingCart /> إدارة الطلبات
+        </h1>
+        <div className="text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-100">
+          الأدمن: {user?.email}
+        </div>
+      </div>
+      
+      {isAdmin ? <AdminOrdersContent /> : (
+        <div className="p-10 text-center border-2 border-dashed rounded-xl">
+          <AlertCircle className="mx-auto h-10 w-10 text-red-400 mb-4" />
+          <h2 className="text-xl font-semibold text-red-600">وصول مرفوض</h2>
+          <p className="text-muted-foreground">هذا الحساب لا يملك صلاحيات الأدمن.</p>
+        </div>
+      )}
+    </div>
+  );
+}
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleStatusChange(order, 'Delivered')}>تم التوصيل</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleStatusChange(order, 'Cancelled')} className="text-destructive">إلغاء</DropdownMenuItem>
