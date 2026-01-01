@@ -6,8 +6,8 @@ import { Toaster } from "@/components/ui/toaster"
 import { CartProvider } from '@/context/CartContext';
 import { FirebaseClientProvider } from '@/firebase';
 import Link from 'next/link';
-import { UpdateNotification } from '@/components/UpdateNotification';
-
+// ❌ احذف السطر التالي تماماً
+// import { UpdateNotification } from '@/components/UpdateNotification'; 
 
 export const metadata: Metadata = {
   title: 'FiberX',
@@ -31,7 +31,6 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -52,7 +51,9 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <CartProvider>
-            <UpdateNotification />
+            {/* ❌ احذف السطر التالي أيضاً */}
+            {/* <UpdateNotification /> */}
+            
             <div className="flex flex-col min-h-screen">
               <Header />
               <main className="flex-grow">{children}</main>
