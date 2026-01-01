@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useMemo } from 'react';
@@ -26,15 +25,19 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useToast } from '@/hooks/use-toast';
 
+// إيميل الأدمن الموحد - يفضل وضعه في متغير ثابت لتجنب أخطاء الكتابة
+const ADMIN_EMAIL = 'admin@example.com';
+
 function AdminOrdersContent() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const { user } = useUser();
-  const isAdmin = user?.email === 'admin@example.com';
+  
+  // التحقق من الأدمن هنا أيضاً لضمان عدم تنفيذ الاستعلام إلا للشخص المصرح له
+  const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   const allOrdersQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
-    // Change: Use a collectionGroup query to get all orders from all users
     return query(collectionGroup(firestore, 'orders'), orderBy('createdAt', 'desc'));
   }, [firestore, isAdmin]);
 
@@ -49,7 +52,6 @@ function AdminOrdersContent() {
         });
         return;
     };
-    // The reference must now point to the subcollection path
     const orderRef = doc(firestore, 'users', order.userId, 'orders', order.id);
     updateDocumentNonBlocking(orderRef, { status: newStatus });
     toast({
@@ -60,16 +62,12 @@ function AdminOrdersContent() {
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'Delivered':
-        return 'default';
+      case 'Delivered': return 'default';
       case 'Shipped':
-      case 'Out for Delivery':
-        return 'secondary';
+      case 'Out for Delivery': return 'secondary';
       case 'Cancelled':
-      case 'Suspended':
-        return 'destructive';
-      default:
-        return 'outline';
+      case 'Suspended': return 'destructive';
+      default: return 'outline';
     }
   };
   
@@ -111,7 +109,7 @@ function AdminOrdersContent() {
                         <Link href={`/orders/${order.id}?userId=${order.userId}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
                     </TableCell>
                     <TableCell>{order.shippingAddress.name}</TableCell>
-                    <TableCell>{order.createdAt?.toDate().toLocaleDateString('ar-EG') || 'غير متوفر'}</TableCell>
+                    <TableCell>{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString('ar-EG') : 'غير متوفر'}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(order.status) as any}>{order.status}</Badge>
                     </TableCell>
@@ -136,7 +134,7 @@ function AdminOrdersContent() {
                                   </a>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                  <a href={`https://wa.me/${order.shippingAddress.whatsappNumber.replace(/\s/g, '').replace('+', '')}`} target="_blank" rel="noopener noreferrer">
+                                  <a href={`https://wa.me/${order.shippingAddress.whatsappNumber?.replace(/\s/g, '').replace('+', '')}`} target="_blank" rel="noopener noreferrer">
                                     <MessageSquare className="ml-2 h-4 w-4" />
                                     عبر واتساب
                                   </a>
@@ -193,31 +191,39 @@ function AdminOrdersContent() {
   );
 }
 
-
 export default function AdminOrdersPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
-  const isAdmin = user?.email === 'admin@example.com';
+  
+  // التحقق من الأدمن مع تحويل الأحرف لصغيرة لتجنب أخطاء المطابقة
+  const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
   
   useEffect(() => {
+    // التعديل الجوهري: لا نتخذ أي قرار إلا بعد انتهاء التحميل بالكامل
     if (!isUserLoading) {
       if (!user) {
+        // إذا انتهى التحميل ولم نجد مستخدماً، نذهب لصفحة الدخول
         router.replace('/admin/login');
       } else if (!isAdmin) {
+        // إذا وجدنا مستخدماً ولكن الإيميل غير مطابق، نذهب لصفحة الحساب
+        // نصيحة: يمكنك تعطيل هذا السطر مؤقتاً بوضع // قبله إذا أردت التأكد
         router.replace('/account');
       }
     }
   }, [user, isUserLoading, isAdmin, router]);
 
-
-  if (isUserLoading || !isAdmin) {
+  // حالة الانتظار الأولي لضمان عدم ظهور "ومضة" البيانات
+  if (isUserLoading || (user && !isAdmin)) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center flex-col gap-4">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <p className="ml-4">جاري التحقق من صلاحيات الأدمن...</p>
+        <p className="text-muted-foreground">جاري التحقق من صلاحيات الأدمن...</p>
       </div>
     );
   }
+
+  // إذا لم يكن هناك يوزر ولا يزال يحمل، نظهر أيضاً صفحة التحميل
+  if (!user && !isUserLoading) return null;
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
