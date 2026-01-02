@@ -45,26 +45,19 @@ import {
   useCollection,
   useMemoFirebase,
 } from "@/firebase";
-import {
-  collection,
-  serverTimestamp,
-  doc,
-  setDoc,
-} from "firebase/firestore";
+import { collection, serverTimestamp, doc, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 
-/* ---------------- schema ---------------- */
-
 const formSchema = z.object({
-  email: z.string().email(),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  address: z.string().min(1),
-  city: z.string().min(1),
-  country: z.string().min(1),
-  whatsappNumber: z.string().min(10),
-  transactionId: z.string().min(4),
+  email: z.string().email("بريد إلكتروني غير صالح"),
+  firstName: z.string().min(1, "الاسم الأول مطلوب"),
+  lastName: z.string().min(1, "الاسم الأخير مطلوب"),
+  address: z.string().min(1, "العنوان مطلوب"),
+  city: z.string().min(1, "المدينة مطلوبة"),
+  country: z.string().min(1, "الدولة مطلوبة"),
+  whatsappNumber: z.string().min(10, "رقم الواتساب قصير").regex(/^\+?\d{10,}$/, "يجب أن يبدأ الرقم بـ + أو يكون رقم صالح"),
+  transactionId: z.string().min(4, "رقم العملية مطلوب"),
   savedAddressId: z.string().optional(),
 });
 
@@ -82,8 +75,6 @@ type Address = {
   country: string;
   whatsappNumber: string;
 };
-
-/* ---------------- page ---------------- */
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -107,7 +98,7 @@ export default function CheckoutPage() {
     return collection(firestore, "users", user.uid, "addresses");
   }, [firestore, user]);
 
-  const { data: savedAddresses } =
+  const { data: savedAddresses, isLoading: isAddressesLoading } =
     useCollection<Address>(addressesRef);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -125,25 +116,81 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    if (userProfile) {
-      form.setValue("firstName", userProfile.firstName || "");
-      form.setValue("lastName", userProfile.lastName || "");
+    if (userProfile && !form.getValues("firstName")) {
+      form.reset({
+        ...form.getValues(),
+        firstName: userProfile.firstName || "",
+        lastName: userProfile.lastName || "",
+        email: user?.email || "",
+      });
     }
-  }, [userProfile, form]);
+  }, [userProfile, user, form]);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      router.push("/login");
+      toast({
+        title: "يرجى تسجيل الدخول",
+        description: "يجب تسجيل الدخول للمتابعة إلى الدفع.",
+        variant: "destructive",
+      });
+      router.push("/login?redirect=/checkout");
     }
-  }, [isUserLoading, user, router]);
+  }, [isUserLoading, user, router, toast]);
 
-  /* ---------------- submit ---------------- */
+  useEffect(() => {
+    if (!isUserLoading && cartItems.length === 0) {
+      router.push("/cart");
+    }
+  }, [isUserLoading, cartItems.length, router]);
+
+  useEffect(() => {
+    if (savedAddresses && savedAddresses.length > 0) {
+      setShowNewAddressForm(false);
+    } else {
+      setShowNewAddressForm(true);
+    }
+  }, [savedAddresses]);
+
+  const handleAddressSelection = (addressId: string) => {
+    form.setValue("savedAddressId", addressId);
+    if (addressId === "new") {
+      setShowNewAddressForm(true);
+      form.reset({
+        ...form.getValues(),
+        firstName: userProfile?.firstName || "",
+        lastName: userProfile?.lastName || "",
+        address: "",
+        city: "الخرطوم",
+        whatsappNumber: "+249",
+      });
+      return;
+    }
+    setShowNewAddressForm(false);
+    const selectedAddress = savedAddresses?.find((addr) => addr.id === addressId);
+    if (selectedAddress) {
+      form.reset({
+        ...form.getValues(),
+        firstName: selectedAddress.firstName,
+        lastName: selectedAddress.lastName,
+        address: selectedAddress.address,
+        city: selectedAddress.city,
+        country: selectedAddress.country,
+        whatsappNumber: selectedAddress.whatsappNumber,
+      });
+    }
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user || !firestore) return;
+    if (!user || !firestore) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في المصادقة",
+        description: "يجب تسجيل الدخول لإتمام الطلب.",
+      });
+      return;
+    }
 
     setIsSubmitting(true);
-
     const orderId = crypto.randomUUID();
 
     const orderData = {
@@ -177,184 +224,326 @@ export default function CheckoutPage() {
     };
 
     try {
-      // 🔥 orders في الجذر
-      await setDoc(
-        doc(firestore, "orders", orderId),
-        orderData
-      );
-
-      // 🔥 orders داخل المستخدم
-      await setDoc(
-        doc(firestore, "users", user.uid, "orders", orderId),
-        orderData
-      );
+      // حفظ في الجذر
+      await setDoc(doc(firestore, "orders", orderId), orderData);
+      // حفظ داخل المستخدم
+      await setDoc(doc(firestore, "users", user.uid, "orders", orderId), orderData);
 
       toast({
-        title: "تم استلام الطلب",
-        description: "طلبك قيد المراجعة",
+        title: "تم استلام الطلب!",
+        description: "شكراً لك على شرائك. طلبك قيد المراجعة.",
       });
 
       clearCart();
       router.push(`/order-success?orderId=${orderId}`);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       toast({
         variant: "destructive",
-        title: "خطأ",
-        description: "فشل إرسال الطلب",
+        title: "حدث خطأ",
+        description: "فشل في إرسال الطلب. يرجى المحاولة مرة أخرى.",
       });
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  /* ---------------- loading ---------------- */
+  const isLoading =
+    isUserLoading || !user || cartItems.length === 0 || isAddressesLoading;
 
-  if (isUserLoading) {
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader2 className="animate-spin" />
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
-  /* ---------------- UI ---------------- */
-
   return (
-    <div className="container mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold text-center mb-10">
-        إتمام الدفع
-      </h1>
-
-      <div className="grid lg:grid-cols-2 gap-10">
-        {/* -------- summary -------- */}
-        <Card>
-          <CardHeader>
-            <CardTitle>ملخص الطلب</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {cartItems.map((item) => (
-              <div
-                key={item.id}
-                className="flex justify-between items-center"
-              >
-                <div className="flex gap-4">
-                  <Image
-                    src={item.product.image}
-                    alt={item.product.name}
-                    width={60}
-                    height={80}
-                  />
-                  <div>
+    <div className="container mx-auto px-4 py-8 md:py-12">
+      <div className="text-center mb-12">
+        <h1 className="font-headline text-4xl md:text-5xl font-bold">الدفع</h1>
+      </div>
+      <div className="grid lg:grid-cols-2 gap-12">
+        {/* -------- ملخص الطلب -------- */}
+        <div>
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>ملخص الطلب</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {cartItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="relative w-16 h-20 rounded-md overflow-hidden">
+                        <Image
+                          src={item.product.image}
+                          alt={item.product.name}
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                        />
+                      </div>
+                      <div>
+                        <p className="font-semibold">{item.product.name}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>الكمية: {item.quantity}</span>
+                          <Badge variant="secondary">مقاس: {item.size}</Badge>
+                        </div>
+                      </div>
+                    </div>
                     <p className="font-semibold">
-                      {item.product.name}
+                      {(item.product.price * item.quantity).toFixed(2)} SDG
                     </p>
-                    <Badge>الكمية: {item.quantity}</Badge>
                   </div>
-                </div>
-                <p>{item.product.price * item.quantity} SDG</p>
+                ))}
               </div>
-            ))}
+              <div className="border-t mt-4 pt-4 space-y-2">
+                <div className="flex justify-between">
+                  <span>المجموع الفرعي</span>
+                  <span>{cartTotal.toFixed(2)} SDG</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>الشحن</span>
+                  <span>حسب المكان</span>
+                </div>
+                <div className="flex justify-between font-bold text-lg">
+                  <span>الإجمالي</span>
+                  <span>{cartTotal.toFixed(2)} SDG</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-            <div className="border-t pt-4 font-bold">
-              الإجمالي: {cartTotal} SDG
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* -------- form -------- */}
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-6"
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>معلومات الشحن</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>الاسم الأول</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>الاسم الأخير</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>العنوان</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>الدفع</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="bank">
-                    <AccordionTrigger>
-                      <Banknote className="mr-2" />
-                      التحويل البنكي
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      رقم الحساب: 8312783
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-
-                <FormField
-                  control={form.control}
-                  name="transactionId"
-                  render={({ field }) => (
-                    <FormItem className="mt-4">
-                      <FormLabel>رقم العملية</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting}
+        {/* -------- نموذج الدفع -------- */}
+        <div>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-8"
             >
-              {isSubmitting ? "جارٍ الإرسال..." : "إتمام الطلب"}
-            </Button>
-          </form>
-        </Form>
+              <Card>
+                <CardHeader>
+                  <CardTitle>معلومات الشحن</CardTitle>
+                  <CardDescription>
+                    اختر عنوانًا محفوظًا أو أدخل عنوانًا جديدًا.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {savedAddresses && savedAddresses.length > 0 && (
+                    <FormField
+                      control={form.control}
+                      name="savedAddressId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>اختر عنوان</FormLabel>
+                          <Select
+                            onValueChange={handleAddressSelection}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="اختر من عناوينك..." />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {savedAddresses.map((addr) => (
+                                <SelectItem key={addr.id} value={addr.id}>
+                                  {addr.address}, {addr.city}
+                                </SelectItem>
+                              ))}
+                              <SelectItem value="new">
+                                -- إضافة عنوان جديد --
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  {showNewAddressForm && (
+                    <div className="space-y-4 pt-4 border-t border-dashed">
+                      <div className="flex gap-4">
+                        <FormField
+                          control={form.control}
+                          name="firstName"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel>الاسم الأول</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="lastName"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel>الاسم الأخير</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>البريد الإلكتروني</FormLabel>
+                            <FormControl>
+                              <Input placeholder="you@example.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>العنوان</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="مثال: الخرطوم، شارع أفريقيا، مبنى 5"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex gap-4">
+                        <FormField
+                          control={form.control}
+                          name="city"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel>المدينة</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="country"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel>الدولة</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="whatsappNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>رقم واتساب</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>تفاصيل الدفع</CardTitle>
+                  <CardDescription>
+                    أكمل الدفع عبر التحويل البنكي ثم أدخل رقم العملية.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="item-1">
+                      <AccordionTrigger className="font-semibold">
+                        <div className="flex items-center gap-2">
+                          <Banknote className="h-5 w-5" />
+                          الدفع عن طريق البنك
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-4 space-y-2 bg-muted/50 p-4 rounded-md">
+                        <p className="text-sm">
+                          يرجى تحويل المبلغ الإجمالي إلى الحساب التالي:
+                        </p>
+                        <div className="font-mono bg-background p-3 rounded-md text-center">
+                          <p>
+                            <span className="font-semibold">اسم الحساب:</span>{" "}
+                            يوسف عصام
+                          </p>
+                          <p>
+                            <span className="font-semibold">رقم الحساب:</span>{" "}
+                            8312783
+                          </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground pt-2">
+                          بعد التحويل، أدخل رقم العملية في الحقل أدناه.
+                        </p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+
+                  <FormField
+                    control={form.control}
+                    name="transactionId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>رقم العملية</FormLabel>
+                        <FormControl>
+                          <Input placeholder="أدخل رقم العملية..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  "إتمام الطلب"
+                )}
+              </Button>
+            </form>
+          </Form>
+        </div>
       </div>
     </div>
   );
