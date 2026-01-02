@@ -54,6 +54,8 @@ import {
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 
+/* ---------------- schema ---------------- */
+
 const formSchema = z.object({
   email: z.string().email(),
   firstName: z.string().min(1),
@@ -61,9 +63,7 @@ const formSchema = z.object({
   address: z.string().min(1),
   city: z.string().min(1),
   country: z.string().min(1),
-  whatsappNumber: z
-    .string()
-    .regex(/^\+?\d{10,}$/),
+  whatsappNumber: z.string().min(10),
   transactionId: z.string().min(4),
   savedAddressId: z.string().optional(),
 });
@@ -83,14 +83,17 @@ type Address = {
   whatsappNumber: string;
 };
 
+/* ---------------- page ---------------- */
+
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const router = useRouter();
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
+  const [showNewAddressForm, setShowNewAddressForm] = useState(true);
 
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -99,13 +102,13 @@ export default function CheckoutPage() {
 
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
-  const addressesCollectionRef = useMemoFirebase(() => {
+  const addressesRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, "users", user.uid, "addresses");
   }, [firestore, user]);
 
-  const { data: savedAddresses, isLoading: isAddressesLoading } =
-    useCollection<Address>(addressesCollectionRef);
+  const { data: savedAddresses } =
+    useCollection<Address>(addressesRef);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -122,12 +125,19 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    if (savedAddresses && savedAddresses.length > 0) {
-      setShowNewAddressForm(false);
-    } else {
-      setShowNewAddressForm(true);
+    if (userProfile) {
+      form.setValue("firstName", userProfile.firstName || "");
+      form.setValue("lastName", userProfile.lastName || "");
     }
-  }, [savedAddresses]);
+  }, [userProfile, form]);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push("/login");
+    }
+  }, [isUserLoading, user, router]);
+
+  /* ---------------- submit ---------------- */
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user || !firestore) return;
@@ -167,13 +177,13 @@ export default function CheckoutPage() {
     };
 
     try {
-      // ✅ الجذر
+      // 🔥 orders في الجذر
       await setDoc(
         doc(firestore, "orders", orderId),
         orderData
       );
 
-      // ✅ داخل المستخدم
+      // 🔥 orders داخل المستخدم
       await setDoc(
         doc(firestore, "users", user.uid, "orders", orderId),
         orderData
@@ -186,7 +196,8 @@ export default function CheckoutPage() {
 
       clearCart();
       router.push(`/order-success?orderId=${orderId}`);
-    } catch (err) {
+    } catch (e) {
+      console.error(e);
       toast({
         variant: "destructive",
         title: "خطأ",
@@ -197,21 +208,154 @@ export default function CheckoutPage() {
     }
   }
 
-  if (isUserLoading || isAddressesLoading) {
+  /* ---------------- loading ---------------- */
+
+  if (isUserLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader2 className="animate-spin h-8 w-8" />
+        <Loader2 className="animate-spin" />
       </div>
     );
   }
 
+  /* ---------------- UI ---------------- */
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "جارٍ الإرسال..." : "إتمام الطلب"}
-        </Button>
-      </form>
-    </Form>
+    <div className="container mx-auto px-4 py-12">
+      <h1 className="text-4xl font-bold text-center mb-10">
+        إتمام الدفع
+      </h1>
+
+      <div className="grid lg:grid-cols-2 gap-10">
+        {/* -------- summary -------- */}
+        <Card>
+          <CardHeader>
+            <CardTitle>ملخص الطلب</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {cartItems.map((item) => (
+              <div
+                key={item.id}
+                className="flex justify-between items-center"
+              >
+                <div className="flex gap-4">
+                  <Image
+                    src={item.product.image}
+                    alt={item.product.name}
+                    width={60}
+                    height={80}
+                  />
+                  <div>
+                    <p className="font-semibold">
+                      {item.product.name}
+                    </p>
+                    <Badge>الكمية: {item.quantity}</Badge>
+                  </div>
+                </div>
+                <p>{item.product.price * item.quantity} SDG</p>
+              </div>
+            ))}
+
+            <div className="border-t pt-4 font-bold">
+              الإجمالي: {cartTotal} SDG
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* -------- form -------- */}
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>معلومات الشحن</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>الاسم الأول</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>الاسم الأخير</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>العنوان</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>الدفع</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="bank">
+                    <AccordionTrigger>
+                      <Banknote className="mr-2" />
+                      التحويل البنكي
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      رقم الحساب: 8312783
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
+                <FormField
+                  control={form.control}
+                  name="transactionId"
+                  render={({ field }) => (
+                    <FormItem className="mt-4">
+                      <FormLabel>رقم العملية</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "جارٍ الإرسال..." : "إتمام الطلب"}
+            </Button>
+          </form>
+        </Form>
+      </div>
+    </div>
   );
 }
