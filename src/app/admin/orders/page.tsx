@@ -1,141 +1,96 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { useUser, useFirestore } from '@/firebase';
-import { Loader2 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useMemo } from 'react';
+import { useUser, useFirestore, useCollection } from '@/firebase';
+import { Loader2, ShoppingCart, MoreHorizontal, AlertCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+import type { Order } from '@/lib/orders';
 
 const ADMIN_UID = "5Kp5lbgb8fOJSr0OS5p1J4MMg2q1";
-const ORDER_STATUSES = ['قيد المعالجة', 'قيد الشحن', 'تم الشحن', 'تم التوصيل', 'ملغي'];
 
-export default function AdminOrderDetails() {
-  const { orderId } = useParams();
+export default function AdminOrdersPage() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
-  const { toast } = useToast();
   const router = useRouter();
 
-  const [order, setOrder] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const isAdmin = !isUserLoading && user?.uid === ADMIN_UID;
 
-  useEffect(() => {
-    if (!firestore || !orderId) return;
+  const ordersQuery = useMemo(() => {
+    if (!firestore || !isAdmin) return null;
+    return firestore.collection('orders').orderBy('createdAt', 'desc'); // أو استخدم useCollection
+  }, [firestore, isAdmin]);
 
-    async function fetchOrder() {
-      try {
-        const orderRef = doc(firestore, 'orders', orderId);
-        const snap = await getDoc(orderRef);
-        if (!snap.exists()) {
-          toast({ title: "الطلب غير موجود", variant: "destructive" });
-          router.push('/admin/orders');
-          return;
-        }
-        setOrder({ id: snap.id, ...snap.data() });
-      } catch (e) {
-        toast({ title: "فشل جلب الطلب", variant: "destructive" });
-      } finally {
-        setLoading(false);
-      }
-    }
+  const { data: orders, isLoading } = useCollection<Order>(ordersQuery);
 
-    fetchOrder();
-  }, [firestore, orderId, router, toast]);
+  if (isUserLoading) return <Loader2 className="animate-spin h-8 w-8 mx-auto mt-20" />;
 
-  const handleStatusChange = async (status: string) => {
-    if (!firestore || user?.uid !== ADMIN_UID || !order) return;
-    const orderRef = doc(firestore, 'orders', order.id);
-    try {
-      await updateDoc(orderRef, { status });
-      setOrder({ ...order, status });
-      toast({ title: "تم تحديث الحالة", description: status });
-    } catch {
-      toast({ title: "فشل التحديث", variant: "destructive" });
-    }
-  };
-
-  if (isUserLoading || loading) {
+  if (!isAdmin) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="animate-spin h-8 w-8" />
+      <div className="text-center mt-20 p-10 border-2 border-dashed rounded-xl">
+        <AlertCircle className="mx-auto h-10 w-10 text-red-400 mb-4" />
+        <h2 className="text-xl font-semibold text-red-600">وصول مرفوض</h2>
+        <p>هذا الحساب لا يملك صلاحيات الأدمن</p>
       </div>
     );
   }
 
-  if (!order) {
-    return <div className="text-center mt-20">الطلب غير موجود</div>;
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12">
-      <div className="text-center mb-8">
-        <h1 className="font-headline text-4xl md:text-5xl font-bold">تفاصيل الطلب #{order.id.slice(0,7).toUpperCase()}</h1>
-        <Badge variant="secondary">{order.status}</Badge>
+    <div className="container mx-auto px-4 py-10">
+      <div className="mb-10 flex items-center gap-3">
+        <h1 className="text-3xl font-bold flex items-center gap-3">
+          <ShoppingCart /> إدارة الطلبات
+        </h1>
       </div>
 
-      {/* أزرار تغيير الحالة */}
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {ORDER_STATUSES.map(status => (
-          <Button key={status} size="sm" onClick={() => handleStatusChange(status)}>
-            {status}
-          </Button>
-        ))}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>طلبات الزبائن</CardTitle>
+          <CardDescription>
+            {orders?.length > 0 ? `إجمالي الطلبات: ${orders.length}` : 'لا توجد طلبات حالياً'}
+          </CardDescription>
+        </CardHeader>
 
-      <div className="grid lg:grid-cols-2 gap-12">
-        {/* ملخص الطلب */}
-        <Card>
-          <CardHeader>
-            <CardTitle>ملخص الطلب</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {order.items?.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-20 rounded-md overflow-hidden relative">
-                      <img src={item.image} alt={item.name} className="object-cover w-full h-full"/>
-                    </div>
-                    <div>
-                      <p className="font-semibold">{item.name}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>الكمية: {item.quantity}</span>
-                        {item.size && <Badge variant="secondary">مقاس: {item.size}</Badge>}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="font-semibold">{(item.price * item.quantity).toFixed(2)} SDG</p>
-                </div>
-              ))}
-            </div>
-            <div className="border-t mt-4 pt-4 space-y-2">
-              <div className="flex justify-between"><span>المجموع الفرعي</span><span>{order.subTotal} SDG</span></div>
-              <div className="flex justify-between"><span>الشحن</span><span>{order.shippingCost} SDG</span></div>
-              <div className="flex justify-between font-bold text-lg"><span>الإجمالي</span><span>{order.total} SDG</span></div>
-            </div>
-          </CardContent>
-        </Card>
+        <CardContent>
+          {isLoading ? (
+            <Loader2 className="animate-spin h-8 w-8 mx-auto" />
+          ) : orders?.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>رقم الطلب</TableHead>
+                  <TableHead>الزبون</TableHead>
+                  <TableHead>التاريخ</TableHead>
+                  <TableHead>الحالة</TableHead>
+                  <TableHead className="text-right">المبلغ</TableHead>
+                  <TableHead className="text-center">تفاصيل</TableHead>
+                </TableRow>
+              </TableHeader>
 
-        {/* بيانات الزبون */}
-        <Card>
-          <CardHeader>
-            <CardTitle>بيانات الشحن والدفع</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <p><strong>الاسم:</strong> {order.shippingAddress?.name}</p>
-            <p><strong>البريد:</strong> {order.shippingAddress?.email}</p>
-            <p><strong>العنوان:</strong> {order.shippingAddress?.address}, {order.shippingAddress?.city}</p>
-            <p><strong>الدولة:</strong> {order.shippingAddress?.country}</p>
-            <p><strong>واتساب:</strong> {order.shippingAddress?.whatsappNumber}</p>
-            <p><strong>طريقة الدفع:</strong> {order.payment?.method}</p>
-            <p><strong>رقم العملية:</strong> {order.payment?.transactionId}</p>
-          </CardContent>
-        </Card>
-      </div>
+              <TableBody>
+                {orders.map(order => (
+                  <TableRow key={order.id}>
+                    <TableCell>#{order.id.slice(0,7).toUpperCase()}</TableCell>
+                    <TableCell>{order.shippingAddress?.name || 'مجهول'}</TableCell>
+                    <TableCell>{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString('ar-EG') : 'بدون تاريخ'}</TableCell>
+                    <TableCell>{order.status}</TableCell>
+                    <TableCell className="text-right">{order.total} SDG</TableCell>
+                    <TableCell className="text-center">
+                      <Button size="sm" onClick={() => router.push(`/admin/orders/${order.id}`)}>
+                        التفاصيل...
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-20 text-muted-foreground">لا توجد طلبات لعرضها</div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
