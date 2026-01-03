@@ -58,8 +58,8 @@ export function Footer() {
         <div className="mt-8 border-t pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground">&copy; 2026 FiberX. جميع الحقوق محفوظة.</p>
           <div className="flex space-x-4 mt-4 md:mt-0">
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">شروط الخدمة</Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">سياسة الخصوصية</Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground"> شروط الخدمة </Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground"> سياسة الخصوصية </Link>
           </div>
         </div>
       </div>
