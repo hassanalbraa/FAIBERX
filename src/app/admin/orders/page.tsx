@@ -12,56 +12,40 @@ import { useToast } from '@/hooks/use-toast';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import type { Order, OrderStatus } from '@/lib/orders';
 
-const ADMIN_EMAIL = 'admin@example.com';
+const ADMIN_UID = '5Kp5lbgb8fOJSr0OS5p1J4MMg2q1';
 
-// كل الحالات الممكنة للطلبات
-const ORDER_STATUSES: OrderStatus[] = ['قيد المعالجة', 'قيد الشحن', 'تم الشحن', 'تم التوصيل', 'ملغي'];
+// كل الحالات الممكنة للطلب
+const ORDER_STATUSES: OrderStatus[] = [
+  'قيد المعالجة',
+  'قيد الشحن',
+  'تم الشحن',
+  'تم التوصيل',
+  'ملغي'
+];
 
 function AdminOrdersContent() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
 
-  const isAdmin =
-    !isUserLoading &&
-    user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  const isAdmin = !isUserLoading && user?.uid === ADMIN_UID;
 
-  // ===== Query مباشرة من orders على الجذر =====
+  // Query الطلبات من الجذر
   const ordersQuery = useMemo(() => {
     if (!firestore || !isAdmin) return null;
-    return query(
-      collection(firestore, 'orders'),
-      orderBy('createdAt', 'desc')
-    );
+    return query(collection(firestore, 'orders'), orderBy('createdAt', 'desc'));
   }, [firestore, isAdmin]);
 
   const { data: orders, isLoading, error } = useCollection<Order>(ordersQuery);
 
-  // تحديث مزدوج: نسخة الأدمن ونسخة الزبون
-  const handleStatusChange = async (order: Order, newStatus: OrderStatus) => {
-    if (!firestore || !order.id || !order.userId) return;
-
-    try {
-      // نسخة الأدمن
-      const adminOrderRef = doc(firestore, 'orders', order.id);
-      await updateDocumentNonBlocking(adminOrderRef, { status: newStatus });
-
-      // نسخة المستخدم
-      const userOrderRef = doc(firestore, 'users', order.userId, 'orders', order.id);
-      await updateDocumentNonBlocking(userOrderRef, { status: newStatus });
-
-      toast({
-        title: 'تم التحديث',
-        description: `حالة الطلب الآن: ${newStatus}`,
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'خطأ',
-        description: 'فشل تحديث حالة الطلب. حاول مرة أخرى.',
-      });
-      console.error(error);
-    }
+  const handleStatusChange = (order: Order, newStatus: OrderStatus) => {
+    if (!firestore) return;
+    const orderRef = doc(firestore, 'orders', order.id);
+    updateDocumentNonBlocking(orderRef, { status: newStatus });
+    toast({
+      title: 'تم التحديث',
+      description: `حالة الطلب الآن: ${newStatus}`,
+    });
   };
 
   if (isUserLoading || !isAdmin) {
@@ -113,6 +97,7 @@ function AdminOrdersContent() {
                 <TableHead>الزبون</TableHead>
                 <TableHead>التاريخ</TableHead>
                 <TableHead>الحالة</TableHead>
+                <TableHead>تفاصيل المنتجات</TableHead>
                 <TableHead className="text-right">المبلغ</TableHead>
                 <TableHead className="text-center">إجراء</TableHead>
               </TableRow>
@@ -125,7 +110,21 @@ function AdminOrdersContent() {
                   <TableCell>{order.shippingAddress?.name || 'مجهول'}</TableCell>
                   <TableCell>{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString('ar-EG') : 'بدون تاريخ'}</TableCell>
                   <TableCell><Badge variant="secondary">{order.status}</Badge></TableCell>
+
+                  {/* تفاصيل المنتجات */}
+                  <TableCell>
+                    {order.items?.map((item, idx) => (
+                      <div key={idx} className="flex flex-col mb-1">
+                        <span className="font-medium">{item.name}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {item.quantity} × {item.price} SDG {item.size ? `(مقاس: ${item.size})` : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </TableCell>
+
                   <TableCell className="text-right">{order.total} SDG</TableCell>
+
                   <TableCell className="text-center">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -133,10 +132,7 @@ function AdminOrdersContent() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         {ORDER_STATUSES.map(status => (
-                          <DropdownMenuItem
-                            key={status}
-                            onClick={() => handleStatusChange(order, status)}
-                          >
+                          <DropdownMenuItem key={status} onClick={() => handleStatusChange(order, status)}>
                             {status}
                           </DropdownMenuItem>
                         ))}
