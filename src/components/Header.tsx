@@ -19,8 +19,7 @@ import { ShareButton } from './ShareButton';
 import { Separator } from './ui/separator';
 
 const navLinks = [
-  { href: '/products', label: 'جميع المنتجات' },
-  { href: '/style-finder', label: 'خبير الأزياء الذكي' },
+  { href: '/products', label: 'جميع المنتجات' }
 ];
 
 export function Header() {
