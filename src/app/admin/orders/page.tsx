@@ -14,6 +14,9 @@ import type { Order, OrderStatus } from '@/lib/orders';
 
 const ADMIN_EMAIL = 'admin@example.com';
 
+// كل الحالات الممكنة للطلبات
+const ORDER_STATUSES: OrderStatus[] = ['قيد المعالجة', 'قيد الشحن', 'تم الشحن', 'تم التوصيل', 'ملغي'];
+
 function AdminOrdersContent() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
@@ -34,14 +37,31 @@ function AdminOrdersContent() {
 
   const { data: orders, isLoading, error } = useCollection<Order>(ordersQuery);
 
-  const handleStatusChange = (order: Order, newStatus: OrderStatus) => {
-    if (!firestore) return;
-    const orderRef = doc(firestore, 'orders', order.id);
-    updateDocumentNonBlocking(orderRef, { status: newStatus });
-    toast({
-      title: 'تم التحديث',
-      description: `حالة الطلب الآن: ${newStatus}`,
-    });
+  // تحديث مزدوج: نسخة الأدمن ونسخة الزبون
+  const handleStatusChange = async (order: Order, newStatus: OrderStatus) => {
+    if (!firestore || !order.id || !order.userId) return;
+
+    try {
+      // نسخة الأدمن
+      const adminOrderRef = doc(firestore, 'orders', order.id);
+      await updateDocumentNonBlocking(adminOrderRef, { status: newStatus });
+
+      // نسخة المستخدم
+      const userOrderRef = doc(firestore, 'users', order.userId, 'orders', order.id);
+      await updateDocumentNonBlocking(userOrderRef, { status: newStatus });
+
+      toast({
+        title: 'تم التحديث',
+        description: `حالة الطلب الآن: ${newStatus}`,
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'خطأ',
+        description: 'فشل تحديث حالة الطلب. حاول مرة أخرى.',
+      });
+      console.error(error);
+    }
   };
 
   if (isUserLoading || !isAdmin) {
@@ -112,8 +132,14 @@ function AdminOrdersContent() {
                         <Button size="sm" variant="ghost"><MoreHorizontal /></Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        <DropdownMenuItem onClick={() => handleStatusChange(order, 'Delivered')}>تم التوصيل</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleStatusChange(order, 'Cancelled')}>إلغاء</DropdownMenuItem>
+                        {ORDER_STATUSES.map(status => (
+                          <DropdownMenuItem
+                            key={status}
+                            onClick={() => handleStatusChange(order, status)}
+                          >
+                            {status}
+                          </DropdownMenuItem>
+                        ))}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -140,4 +166,4 @@ export default function AdminOrdersPage() {
       <AdminOrdersContent />
     </div>
   );
-                  }
+}
