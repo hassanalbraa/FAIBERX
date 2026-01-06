@@ -2,54 +2,49 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    /* ===== Helpers ===== */
     function isSignedIn() {
       return request.auth != null;
     }
 
+    // Admin by UID (متطابق مع الفرونت)
     function isAdmin() {
-      // In a real app, this would check a custom claim, not email.
-      return isSignedIn() && request.auth.token.email == 'admin@example.com';
+      return isSignedIn()
+        && request.auth.uid == "5Kp5lbgb8fOJSr0OS5p1J4MMg2q1";
     }
-    
+
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Products: Publicly readable, admin-only writes.
+    /* ===== Products ===== */
     match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // User data collection
+    /* ===== Users ===== */
     match /users/{userId} {
-      // Create: Any signed-in user can create their own document.
       allow create: if isOwner(userId);
-      
-      // Get/Update: A user can get/update their own profile. An admin can get/update any profile.
       allow get, update: if isOwner(userId) || isAdmin();
-      
-      // List: ONLY an admin can list the users collection.
       allow list: if isAdmin();
 
-      // Addresses: A user has full control over their own addresses subcollection.
       match /addresses/{addressId} {
         allow read, write: if isOwner(userId);
       }
-      
-      // Orders: A user has full control over their own orders subcollection.
+
       match /orders/{orderId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) || isAdmin();
       }
     }
-    
-    // Admins can read all orders via a collectionGroup query
-    match /{path=**}/orders/{orderId} {
+
+    /* ===== ROOT orders (ده المهم لصفحة الأدمن) ===== */
+    match /orders/{orderId} {
       allow read: if isAdmin();
+      allow write: if false; // أو isAdmin() لو الأدمن يعدّل
     }
 
-    // roles_admin should not be client-writable to prevent privilege escalation.
+    /* ===== Prevent privilege escalation ===== */
     match /roles_admin/{adminId} {
       allow read, write: if false;
     }
