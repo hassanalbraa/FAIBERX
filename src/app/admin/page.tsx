@@ -2,63 +2,44 @@
 
 import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, PlusCircle, LogOut, ShoppingCart, Users } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Loader2, PlusCircle, LogOut, ShoppingCart, Users, CheckCheck } from 'lucide-react';
 import AddProductForm from '@/components/admin/AddProductForm';
 import { ProductList } from '@/components/admin/ProductList';
 import type { Product } from '@/lib/products';
 import type { Order } from '@/lib/orders';
 import { getAuth, signOut } from 'firebase/auth';
+import Link from 'next/link';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, collectionGroup } from 'firebase/firestore';
 
 type UserProfile = {
-  id: string;
-  email: string;
-  createdAt: any;
-  accountNumber?: string;
-  isBanned?: boolean;
+    id: string;
+    email: string;
+    createdAt: any;
+    accountNumber?: string;
+    isBanned?: boolean;
 }
 
-// UID الأدمن (متطابق مع Firestore Rules)
-const ADMIN_UID = "5Kp5lbgb8fOJSr0OS5p1J4MMg2q1";
-
-export default function AdminDashboardPage() {
+// This component fetches and displays the data. It will only be rendered if the user is an admin.
+function AdminDashboardContent({ user, isAdmin }: { user: NonNullable<ReturnType<typeof useUser>['user']>, isAdmin: boolean }) {
   const firestore = useFirestore();
-  const { user, isUserLoading } = useUser();
-  const router = useRouter();
 
-  // ===== تحقق الأدمن =====
-  const isAdmin = useMemo(() => {
-    return !isUserLoading && user?.uid === ADMIN_UID;
-  }, [user, isUserLoading]);
-
-  const handleLogout = async () => {
-    try {
-      const auth = getAuth();
-      await signOut(auth);
-      router.push('/admin/login');
-    } catch(error) {
-      console.error("Logout failed:", error);
-    }
-  };
-
-  // ===== Products =====
   const productsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'products'));
   }, [firestore]);
   const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
-
-  // ===== Orders =====
+  
   const ordersQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
+    // Change: Use a collectionGroup query to get all orders from all users
     return query(collectionGroup(firestore, 'orders'));
   }, [firestore, isAdmin]);
   const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
 
-  // ===== Users =====
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return query(collection(firestore, 'users'));
@@ -70,83 +51,153 @@ export default function AdminDashboardPage() {
     return orders.filter(order => order.status === 'Delivered').length;
   }, [orders]);
 
-  // ===== Loading user =====
-  if (isUserLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-muted-foreground">
-          جاري التحقق من الصلاحيات...
-        </p>
-      </div>
-    );
-  }
+  const router = useRouter();
 
-  // ===== Not admin =====
-  if (!isAdmin) {
-    return (
-      <div className="container max-w-md mx-auto mt-20 p-6 text-center border rounded-xl">
-        <p className="text-destructive text-lg font-bold mb-4">وصول مرفوض</p>
-        <p className="text-muted-foreground mb-6">هذا الحساب لا يملك صلاحيات الأدمن</p>
-        <Button onClick={() => router.push('/')} className="w-full">الرجوع للرئيسية</Button>
-      </div>
-    );
-  }
-
-  // ===== Dashboard =====
+  const handleLogout = async () => {
+    try {
+        const auth = getAuth();
+        await signOut(auth);
+        router.push('/admin/login');
+    } catch(error) {
+        console.error("Logout failed:", error);
+    }
+  };
+  
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
-      {/* Header */}
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <ShoppingCart className="h-6 w-6" />
-          لوحة التحكم
-        </h1>
-
-        <Button variant="destructive" onClick={handleLogout}>
-          <LogOut className="h-4 w-4 ml-2" />
-          تسجيل خروج
+        <div>
+            <h1 className="font-headline text-4xl font-bold">لوحة تحكم المشرف</h1>
+            <p className="text-muted-foreground">مرحبًا, {user.email}</p>
+        </div>
+        <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="ml-2 h-4 w-4" />
+            تسجيل الخروج
         </Button>
       </div>
 
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>المنتجات</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {productsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : products?.length ?? 0}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>الطلبات</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {ordersLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : orders?.length ?? 0}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>المستخدمين</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {usersLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : users?.length ?? 0}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Products management */}
-      <div className="mb-10">
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <PlusCircle className="h-5 w-5" /> إدارة المنتجات
-        </h2>
-        <AddProductForm />
-        <ProductList products={products || []} isLoading={productsLoading} />
+      <div className="grid md:grid-cols-3 gap-8 items-start">
+        <div className="md:col-span-1 space-y-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <PlusCircle />
+                        إضافة منتج جديد
+                    </CardTitle>
+                    <CardDescription>املأ النموذج لإضافة منتج إلى متجرك.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <AddProductForm />
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <ShoppingCart />
+                        طلبات الزبائن
+                    </CardTitle>
+                     <CardDescription>
+                        {ordersLoading ? "جاري تحميل الطلبات..." : `لديك ${orders?.length || 0} طلب إجمالاً.`}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild className="w-full">
+                        <Link href="/admin/orders">عرض الطلبات</Link>
+                    </Button>
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <CheckCheck />
+                        الطلبات المكتملة
+                    </CardTitle>
+                     <CardDescription>
+                        {ordersLoading ? "جاري الحساب..." : `تم توصيل ${completedOrdersCount} طلب بنجاح.`}
+                    </CardDescription>
+                </CardHeader>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Users />
+                        إدارة المستخدمين
+                    </CardTitle>
+                    <CardDescription>
+                        {usersLoading ? "جاري تحميل عدد المستخدمين..." : `لديك ${users?.length || 0} مستخدم مسجل.`}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild className="w-full">
+                        <Link href="/admin/users">عرض المستخدمين</Link>
+                    </Button>
+                </CardContent>
+            </Card>
+        </div>
+        <div className="md:col-span-2">
+          <Card>
+            <CardHeader>
+                <CardTitle>قائمة المنتجات</CardTitle>
+                <CardDescription>عرض وإدارة منتجاتك الحالية.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {productsLoading ? (
+                    <div className="flex justify-center items-center h-48">
+                        <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                ) : (
+                    <ProductList products={products || []} />
+                )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
-  );
+  )
+}
+
+
+// This is the main component for the page. It handles auth checks and redirection.
+export default function AdminDashboard() {
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+  const isAdmin = user?.email === 'admin@example.com';
+
+  useEffect(() => {
+    // Wait until the user loading is complete
+    if (!isUserLoading) {
+      if (!user) {
+        // If no user, redirect to admin login
+        router.replace('/admin/login');
+      } else if (!isAdmin) {
+        // If user is not an admin, redirect to their account page
+        router.replace('/account');
+      }
+    }
+  }, [user, isUserLoading, isAdmin, router]);
+
+  // While loading or if user is not yet confirmed as admin, show a loader.
+  // This prevents the content component from ever rendering for non-admins.
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-4">جاري التحقق من صلاحيات المشرف...</p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    // This is an additional safeguard. The useEffect should already have redirected.
+    // It prevents a flicker of the AdminDashboardContent.
+     return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-4">إعادة توجيه...</p>
+      </div>
+    );
+  }
+  
+  // Only render the dashboard content if the user is a confirmed admin
+  return <AdminDashboardContent user={user} isAdmin={isAdmin} />;
 }
