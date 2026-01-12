@@ -9,11 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 
 export default function OrderDetailPage() {
-  const { id } = useParams(); // ID الطلب من الرابط
+  const { id } = useParams();
   const firestore = useFirestore();
   const router = useRouter();
 
-  // المرجع للمستند في Firestore
   const orderDocRef = useMemo(() => {
     if (!firestore || !id) return null;
     return doc(firestore, 'orders', id);
@@ -42,12 +41,19 @@ export default function OrderDetailPage() {
     );
   }
 
-  // Helper: Items array
-  const items = order.items ?? [];
+  const shipping = order.shippingAddress ?? {};
+  const items = Array.isArray(order.items) ? order.items : [];
+
+  // Safely parse date
+  let createdDate = '—';
+  try {
+    if (order.createdAt?.toDate) createdDate = order.createdAt.toDate().toLocaleDateString('ar');
+  } catch (e) {
+    console.warn('Invalid createdAt:', e);
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Back button */}
       <Button variant="ghost" onClick={() => router.back()} className="mb-6">
         <ArrowLeft className="h-4 w-4 ml-2" />
         العودة
@@ -57,16 +63,14 @@ export default function OrderDetailPage() {
         تفاصيل الطلب #{order.id?.slice(0, 8) ?? '—'}
       </h1>
 
-      {/* Order Info */}
       <div className="mb-6 space-y-2">
-        <p><strong>الزبون:</strong> {order.shippingAddress?.name ?? 'غير معروف'}</p>
-        <p><strong>العنوان:</strong> {order.shippingAddress?.address ?? '—'}</p>
+        <p><strong>الزبون:</strong> {shipping.name ?? 'غير معروف'}</p>
+        <p><strong>العنوان:</strong> {shipping.address ?? '—'}</p>
         <p><strong>الحالة:</strong> {order.status ?? 'معلق'}</p>
         <p><strong>المبلغ الإجمالي:</strong> {(order.total ?? 0).toLocaleString()} SDG</p>
-        <p><strong>تاريخ الإنشاء:</strong> {order.createdAt?.toDate?.().toLocaleDateString('ar') ?? '—'}</p>
+        <p><strong>تاريخ الإنشاء:</strong> {createdDate}</p>
       </div>
 
-      {/* Items Table */}
       {items.length > 0 ? (
         <Table>
           <TableHeader>
@@ -82,16 +86,14 @@ export default function OrderDetailPage() {
             {items.map((item, idx) => (
               <TableRow key={idx}>
                 <TableCell>
-                  {item.image ? (
-                    <img src={item.image} alt={item.name} className="h-12 w-12 object-cover rounded" />
-                  ) : (
-                    '—'
-                  )}
+                  {item?.image ? (
+                    <img src={item.image} alt={item?.name ?? '—'} className="h-12 w-12 object-cover rounded" />
+                  ) : '—'}
                 </TableCell>
-                <TableCell>{item.name ?? '—'}</TableCell>
-                <TableCell>{item.quantity ?? 0}</TableCell>
-                <TableCell>{(item.price ?? 0).toLocaleString()} SDG</TableCell>
-                <TableCell>{((item.price ?? 0) * (item.quantity ?? 0)).toLocaleString()} SDG</TableCell>
+                <TableCell>{item?.name ?? '—'}</TableCell>
+                <TableCell>{item?.quantity ?? 0}</TableCell>
+                <TableCell>{(item?.price ?? 0).toLocaleString()} SDG</TableCell>
+                <TableCell>{((item?.price ?? 0) * (item?.quantity ?? 0)).toLocaleString()} SDG</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -101,4 +103,4 @@ export default function OrderDetailPage() {
       )}
     </div>
   );
-        }
+}
