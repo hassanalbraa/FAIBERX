@@ -1,190 +1,234 @@
+
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { collection, query, orderBy } from 'firebase/firestore';
-
-import { useUser, useFirestore, useCollection } from '@/firebase';
-import type { Order } from '@/lib/orders';
-
-import {
-  Loader2,
-  ShoppingCart,
-  AlertCircle,
-  Eye,
-  Package
-} from 'lucide-react';
-
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
-
+import { useUser, useFirestore, updateDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Loader2, ShoppingCart, MoreHorizontal, CheckCircle, Truck, XCircle, PauseCircle, Mail, MessageSquare } from 'lucide-react';
+import { doc, collection, query, orderBy, collectionGroup } from 'firebase/firestore';
+import type { Order, OrderStatus } from '@/lib/orders';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+} from "@/components/ui/dropdown-menu"
+import { useToast } from '@/hooks/use-toast';
 
-const ADMIN_UID = '5Kp5lbgb8fOJSr0OS5p1J4MMg2q1';
-
-export default function AdminOrdersPage() {
+function AdminOrdersContent() {
   const firestore = useFirestore();
-  const { user, isUserLoading } = useUser();
-  const router = useRouter();
+  const { toast } = useToast();
+  const { user } = useUser();
+  const isAdmin = user?.email === 'admin@example.com';
 
-  // ===== تحقق الأدمن =====
-  const isAdmin = useMemo(() => {
-    return !isUserLoading && user?.uid === ADMIN_UID;
-  }, [user, isUserLoading]);
-
-  // ===== استعلام الطلبات (Firebase v9) =====
-  const ordersQuery = useMemo(() => {
+  const allOrdersQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
-
-    return query(
-      collection(firestore, 'orders'),
-      orderBy('createdAt', 'desc')
-    );
+    // Change: Use a collectionGroup query to get all orders from all users
+    return query(collectionGroup(firestore, 'orders'), orderBy('createdAt', 'desc'));
   }, [firestore, isAdmin]);
 
-  const { data: orders, isLoading, error } =
-    useCollection<Order>(ordersQuery);
+  const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(allOrdersQuery);
 
-  // ===== تحميل المستخدم =====
-  if (isUserLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-muted-foreground">
-          جاري التحقق من الصلاحيات...
-        </p>
-      </div>
-    );
+  const handleStatusChange = (order: Order, newStatus: OrderStatus) => {
+    if (!firestore) {
+        toast({ 
+            title: "خطأ في قاعدة البيانات",
+            description: "لا يمكن تحديث الطلب حاليًا.",
+            variant: "destructive"
+        });
+        return;
+    };
+    // The reference must now point to the subcollection path
+    const orderRef = doc(firestore, 'users', order.userId, 'orders', order.id);
+    updateDocumentNonBlocking(orderRef, { status: newStatus });
+    toast({
+        title: "تم تحديث حالة الطلب",
+        description: `تم تغيير حالة الطلب #${order.id.slice(0,7).toUpperCase()} إلى "${newStatus}".`,
+    });
   }
 
-  // ===== ليس أدمن =====
-  if (!isAdmin) {
-    return (
-      <div className="container max-w-md mx-auto mt-20 p-6 text-center border rounded-xl">
-        <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-        <h2 className="text-2xl font-bold text-destructive mb-2">
-          وصول مرفوض
-        </h2>
-        <p className="text-muted-foreground mb-6">
-          الحساب دا ما عنده صلاحيات أدمن
-        </p>
-        <Button onClick={() => router.push('/')} className="w-full">
-          الرجوع
-        </Button>
-      </div>
-    );
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'Delivered':
+        return 'default';
+      case 'Shipped':
+      case 'Out for Delivery':
+        return 'secondary';
+      case 'Cancelled':
+      case 'Suspended':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+  
+  if (isOrdersLoading) {
+      return (
+          <div className="flex h-64 items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+      )
   }
 
-  // ===== الصفحة =====
   return (
-    <div className="container mx-auto px-4 py-10" dir="rtl">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <ShoppingCart /> إدارة الطلبات
-        </h1>
-        <span className="text-sm font-medium">
-          عدد الطلبات: {orders?.length || 0}
-        </span>
-      </div>
-
-      <Card>
+    <Card>
         <CardHeader>
-          <CardTitle>سجل الطلبات</CardTitle>
+            <CardTitle>جميع الطلبات</CardTitle>
+            <CardDescription>
+                {orders && orders.length > 0
+                ? `لديك ${orders.length} طلب إجمالاً.`
+                : 'لا توجد طلبات لعرضها حاليًا.'}
+            </CardDescription>
         </CardHeader>
-
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="py-20 flex justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : error ? (
-            <div className="p-10 text-center text-destructive">
-              خطأ: {error.message}
-            </div>
-          ) : orders && orders.length > 0 ? (
+        <CardContent>
+          {orders && orders.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-right">رقم</TableHead>
-                  <TableHead className="text-right">الزبون</TableHead>
-                  <TableHead className="text-right">التاريخ</TableHead>
-                  <TableHead className="text-right">الحالة</TableHead>
-                  <TableHead className="text-left">المبلغ</TableHead>
-                  <TableHead className="text-center">تفاصيل</TableHead>
+                  <TableHead>رقم الطلب</TableHead>
+                  <TableHead>الزبون</TableHead>
+                  <TableHead>التاريخ</TableHead>
+                  <TableHead>الحالة</TableHead>
+                  <TableHead className="text-right">الإجمالي</TableHead>
+                  <TableHead className="w-[100px] text-center">الإجراءات</TableHead>
                 </TableRow>
               </TableHeader>
-
               <TableBody>
                 {orders.map(order => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-mono text-xs">
-                      #{order.id?.slice(0, 8)}
+                    <TableCell className="font-medium">
+                        <Link href={`/orders/${order.id}?userId=${order.userId}`} className="hover:underline">#{order.id.slice(0, 7).toUpperCase()}</Link>
                     </TableCell>
-
+                    <TableCell>{order.shippingAddress.name}</TableCell>
+                    <TableCell>{order.createdAt?.toDate().toLocaleDateString('ar-EG') || 'غير متوفر'}</TableCell>
                     <TableCell>
-                      {order.shippingAddress?.name || 'غير معروف'}
+                      <Badge variant={getStatusVariant(order.status) as any}>{order.status}</Badge>
                     </TableCell>
-
-                    <TableCell>
-                      {order.createdAt?.toDate
-                        ? order.createdAt.toDate().toLocaleDateString('ar')
-                        : '—'}
-                    </TableCell>
-
-                    <TableCell>
-                      <Badge
-                        variant={
-                          order.status === 'completed'
-                            ? 'default'
-                            : 'secondary'
-                        }
-                      >
-                        {order.status || 'pending'}
-                      </Badge>
-                    </TableCell>
-
-                    <TableCell className="text-left font-bold">
-                      {(order.total || 0).toLocaleString()} SDG
-                    </TableCell>
-
+                    <TableCell className="text-right">{order.total.toFixed(2)} SDG</TableCell>
                     <TableCell className="text-center">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() =>
-                          router.push(`/admin/orders/${order.id}`)
-                        }
-                      >
-                        <Eye className="h-4 w-4 ml-1" />
-                        عرض
-                      </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">قائمة الإجراءات</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>إجراءات</DropdownMenuLabel>
+                                <DropdownMenuItem asChild><Link href={`/orders/${order.id}?userId=${order.userId}`}>عرض التفاصيل</Link></DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuLabel>تواصل مع الزبون</DropdownMenuLabel>
+                                <DropdownMenuItem asChild>
+                                  <a href={`mailto:${order.shippingAddress.email}`}>
+                                    <Mail className="ml-2 h-4 w-4"/>
+                                    عبر البريد الإلكتروني
+                                  </a>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <a href={`https://wa.me/${order.shippingAddress.whatsappNumber.replace(/\s/g, '').replace('+', '')}`} target="_blank" rel="noopener noreferrer">
+                                    <MessageSquare className="ml-2 h-4 w-4" />
+                                    عبر واتساب
+                                  </a>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                 <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>تغيير الحالة</DropdownMenuSubTrigger>
+                                    <DropdownMenuPortal>
+                                    <DropdownMenuSubContent>
+                                        <DropdownMenuItem onClick={() => handleStatusChange(order, 'Processing')}>
+                                            <CheckCircle className="ml-2 h-4 w-4" />
+                                            قيد المعالجة
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleStatusChange(order, 'Shipped')}>
+                                            <Truck className="ml-2 h-4 w-4" />
+                                            تم الشحن
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleStatusChange(order, 'Out for Delivery')}>
+                                            <Truck className="ml-2 h-4 w-4" />
+                                            قيد التوصيل
+                                        </DropdownMenuItem>
+                                         <DropdownMenuItem onClick={() => handleStatusChange(order, 'Delivered')}>
+                                            <CheckCircle className="ml-2 h-4 w-4" />
+                                            تم التوصيل
+                                        </DropdownMenuItem>
+                                    </DropdownMenuSubContent>
+                                    </DropdownMenuPortal>
+                                </DropdownMenuSub>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-amber-600 focus:text-amber-700" onClick={() => handleStatusChange(order, 'Suspended')}>
+                                    <PauseCircle className="ml-2 h-4 w-4" />
+                                    تعليق الطلب
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleStatusChange(order, 'Cancelled')}>
+                                    <XCircle className="ml-2 h-4 w-4" />
+                                    رفض الطلب
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           ) : (
-            <div className="py-20 text-center">
-              <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              لا توجد طلبات
+            <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                <ShoppingCart className="mx-auto h-16 w-16 text-muted-foreground" />
+                <h2 className="mt-6 text-xl font-semibold">لا توجد طلبات</h2>
+                <p className="mt-2 text-muted-foreground">لم يتم استلام أي طلبات بعد.</p>
             </div>
           )}
         </CardContent>
       </Card>
+  );
+}
+
+
+export default function AdminOrdersPage() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+  const isAdmin = user?.email === 'admin@example.com';
+  
+  useEffect(() => {
+    if (!isUserLoading) {
+      if (!user) {
+        router.replace('/admin/login');
+      } else if (!isAdmin) {
+        router.replace('/account');
+      }
+    }
+  }, [user, isUserLoading, isAdmin, router]);
+
+
+  if (isUserLoading || !isAdmin) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-4">جاري التحقق من صلاحيات الأدمن...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 md:py-12">
+      <div className="mb-12">
+        <h1 className="font-headline text-4xl md:text-5xl font-bold flex items-center gap-4">
+          <ShoppingCart className="h-10 w-10" />
+          طلبات الزبائن
+        </h1>
+        <p className="text-muted-foreground mt-2">عرض وإدارة جميع الطلبات الواردة.</p>
+      </div>
+      <AdminOrdersContent />
     </div>
   );
 }
