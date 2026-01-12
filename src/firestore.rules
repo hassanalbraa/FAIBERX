@@ -2,51 +2,50 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /* ===== Helpers ===== */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // Admin by UID (متطابق مع الفرونت)
+    // دالة مساعدة للتحقق من الأدمن لتقليل التكرار
     function isAdmin() {
-      return isSignedIn()
-        && request.auth.uid == "5Kp5lbgb8fOJSr0OS5p1J4MMg2q1";
+      return request.auth != null && request.auth.uid == "5Kp5lbgb8fOJSr0OS5p1J4MMg2q1";
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    /* ===== Products ===== */
+    /* =========================
+       🛍️ PRODUCTS
+       ========================= */
     match /products/{productId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read: if true; // أي زول يقدر يقرا المنتجات
+      allow write: if isAdmin(); // الأدمن فقط يقدر يضيف/يعدل
     }
 
-    /* ===== Users ===== */
+    /* =========================
+       👤 USERS & SUB-COLLECTIONS
+       ========================= */
     match /users/{userId} {
-      allow create: if isOwner(userId);
-      allow get, update: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && request.auth.uid == userId;
 
-      match /addresses/{addressId} {
-        allow read, write: if isOwner(userId);
-      }
-
+      // السماح للأدمن برؤية أي طلبات فرعية داخل المستخدمين
       match /orders/{orderId} {
-        allow read, write: if isOwner(userId) || isAdmin();
+        allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+        allow write: if request.auth != null && request.auth.uid == userId;
       }
     }
 
-    /* ===== ROOT orders (ده المهم لصفحة الأدمن) ===== */
+    /* =========================
+       🧾 ORDERS (المجموعة الرئيسية)
+       ========================= */
     match /orders/{orderId} {
-      allow read: if isAdmin();
-      allow write: if false; // أو isAdmin() لو الأدمن يعدّل
+      // إنشاء الطلب متاح لأي مستخدم مسجل
+      allow create: if request.auth != null;
+      
+      // القراءة متاحة لصاحب الطلب أو للأدمن
+      allow read: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+      
+      // التعديل والحذف للأدمن فقط
+      allow update, delete: if isAdmin();
     }
 
-    /* ===== Prevent privilege escalation ===== */
-    match /roles_admin/{adminId} {
-      allow read, write: if false;
-    }
+    /* =========================
+       📢 الـ Indexing
+       ========================= */
+    // تأكد من تشغيل الاستعلام بدون orderBy أولاً لتجربة القواعد
   }
 }
